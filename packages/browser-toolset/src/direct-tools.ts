@@ -18,6 +18,7 @@
 
 import type { BrowserDriver, DriverPage } from './driver.ts';
 import { BrowserToolsetExecutor, ToolsetError } from './executor.ts';
+import type { BrowserSafetyOptions } from './safety.ts';
 
 export type DirectToolName =
   | 'navigate'
@@ -252,6 +253,11 @@ export type DirectBrowserToolsOptions = {
   /** Overridable for tests. */
   settleMs?: number;
   toolTimeoutMs?: number;
+  /**
+   * The executor's pay / sign-up / secrets guards. Every Index arm turns them
+   * on, since the Index promises its sessions never pay or register for real.
+   */
+  safety?: BrowserSafetyOptions;
 };
 
 /**
@@ -270,6 +276,7 @@ export class DirectBrowserTools {
     this.executor = new BrowserToolsetExecutor(driver, {
       navigationTimeoutMs: NAVIGATION_TIMEOUT_MS,
       screenshotTimeoutMs: SCREENSHOT_TIMEOUT_MS,
+      ...(options.safety ? { safety: options.safety } : {}),
     });
     this.viewport = options.viewport;
     this.settleMs = options.settleMs ?? SETTLE_MS;
