@@ -14,22 +14,36 @@
 // way in, and it JSON-encodes its arguments, so nothing a model supplies is
 // ever spliced into the script as code.
 
+import { CARD_FIELD_PATTERN, type ElementFacts, PAYMENT_PROVIDER_DOMAINS } from './safety.ts';
+
 export type PageOp =
   | { op: 'read'; filter: 'visible' | 'interactive' | 'all'; depth: number; ref?: string }
   | { op: 'find'; query: string }
   | { op: 'text' }
   | { op: 'resolve'; ref: string; scroll: boolean }
   | { op: 'form'; ref: string; value: string | number | boolean }
-  | { op: 'viewport' };
+  | { op: 'viewport' }
+  | { op: 'inspect'; target: InspectTarget };
+
+/** An element to describe: a ref, whatever is at a point, or whatever has focus. */
+export type InspectTarget =
+  { type: 'ref'; ref: string } | { type: 'coordinate'; x: number; y: number } | { type: 'focused' };
 
 export type ReadResult = { ok: true; text: string; truncated: boolean } | PageError;
 export type ResolveResult = { ok: true; x: number; y: number; inViewport: boolean } | PageError;
 export type FormResult = { ok: true; description: string } | PageError;
 export type ViewportResult = { ok: true; width: number; height: number };
+/** `facts` is null when nothing is there (an empty point, nothing focused). */
+export type InspectResult = { ok: true; facts: ElementFacts | null } | PageError;
 export type PageError = { ok: false; error: string };
 
 /** Max characters `read_page` / `find` / `get_page_text` return (toolset limit). */
 export const MAX_PAGE_TEXT_CHARS = 50_000;
+
+// The safety guards' vocabulary, spliced in as JSON: constants of ours, never
+// anything a model supplied.
+const CARD_PATTERN_SOURCE = JSON.stringify(CARD_FIELD_PATTERN.source);
+const PAYMENT_DOMAINS_JSON = JSON.stringify(PAYMENT_PROVIDER_DOMAINS);
 
 const SCRIPT = String.raw`
 (function (args) {
@@ -305,6 +319,130 @@ const SCRIPT = String.raw`
     return { ok: false, error: ref + ' is not a form field.' };
   }
 
+  // --- inspect: the facts the safety guards decide on ----------------------
+
+  var CARD_RE = new RegExp(${CARD_PATTERN_SOURCE}, 'i');
+  var PAYMENT_DOMAINS = ${PAYMENT_DOMAINS_JSON};
+  var ACTIONABLE = 'a[href],button,input,select,textarea,summary,iframe,[role="button"],[role="link"],[role="checkbox"],[role="textbox"],[contenteditable="true"]';
+
+  function isPaymentFrame(src) {
+    var host = '';
+    try { host = new URL(src, location.href).hostname.toLowerCase(); } catch (e) { return false; }
+    for (var i = 0; i < PAYMENT_DOMAINS.length; i++) {
+      var d = PAYMENT_DOMAINS[i];
+      if (host === d || host.slice(-(d.length + 1)) === '.' + d) return true;
+    }
+    return false;
+  }
+
+  function isCardField(el) {
+    if (el.tagName === 'IFRAME') {
+      return isPaymentFrame(el.getAttribute('src') || '') || CARD_RE.test((el.getAttribute('title') || '') + ' ' + (el.getAttribute('name') || ''));
+    }
+    if (/(^|\s)cc-/.test((el.getAttribute('autocomplete') || '').toLowerCase())) return true;
+    var text = [el.getAttribute('name'), el.id, el.getAttribute('aria-label'), el.getAttribute('placeholder')].join(' ');
+    return CARD_RE.test(text);
+  }
+
+  // Across the whole page only visible fields count: a login modal parked
+  // in the DOM must not make every button on the page look like a submit.
+  function holdsSensitive(root, visibleOnly) {
+    if (!root) return false;
+    var fields = root.querySelectorAll('input, iframe');
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      var t = (f.getAttribute('type') || '').toLowerCase();
+      if (t === 'hidden' || t === 'submit' || t === 'button') continue;
+      if (t !== 'password' && !isCardField(f)) continue;
+      if (visibleOnly && isHidden(f)) continue;
+      return true;
+    }
+    return false;
+  }
+
+  function deepActive() {
+    var el = document.activeElement;
+    for (var i = 0; el && i < 10; i++) {
+      if (el.shadowRoot && el.shadowRoot.activeElement) { el = el.shadowRoot.activeElement; continue; }
+      if (el.tagName === 'IFRAME') {
+        var inner = null;
+        try { inner = el.contentDocument && el.contentDocument.activeElement; } catch (e) { inner = null; }
+        if (inner && inner !== el.contentDocument.body) { el = inner; continue; }
+      }
+      break;
+    }
+    return el && el !== document.body && el !== document.documentElement ? el : null;
+  }
+
+  function atPoint(x, y) {
+    var el = document.elementFromPoint(x, y);
+    for (var i = 0; el && el.shadowRoot && i < 10; i++) {
+      var inner = el.shadowRoot.elementFromPoint(x, y);
+      if (!inner || inner === el) break;
+      el = inner;
+    }
+    return el;
+  }
+
+  function submitLabel(form) {
+    var controls = form.querySelectorAll('button, input[type="submit" i], input[type="image" i]');
+    for (var i = 0; i < controls.length; i++) {
+      var c = controls[i];
+      var t = (c.getAttribute('type') || 'submit').toLowerCase();
+      if (t === 'submit' || t === 'image') return labelOf(c);
+    }
+    return '';
+  }
+
+  function labelOf(el) {
+    var name = nameOf(el, roleOf(el) || 'generic');
+    if (!name && el.tagName === 'INPUT') name = clean(el.value || '');
+    return name;
+  }
+
+  function factsOf(raw) {
+    if (!raw || raw.nodeType !== 1) return null;
+    var el = raw.closest ? raw.closest(ACTIONABLE) || raw : raw;
+    var tag = el.tagName.toLowerCase();
+    var type = (el.getAttribute('type') || '').toLowerCase();
+    if (tag === 'button' && !type) type = 'submit';
+    var role = roleOf(el) || '';
+    var form = el.form || (el.closest ? el.closest('form') : null);
+    var href = tag === 'a' ? el.getAttribute('href') || '' : '';
+    var navigating = tag === 'a' && !!href && href.charAt(0) !== '#' && href.toLowerCase().indexOf('javascript:') !== 0 && el.getAttribute('role') !== 'button';
+    var isSubmit = !!form && ((tag === 'button' && type === 'submit') || (tag === 'input' && (type === 'submit' || type === 'image')));
+    var isButton = tag === 'button' || role === 'button' || (tag === 'input' && (type === 'submit' || type === 'button' || type === 'image'));
+    return {
+      tag: tag,
+      type: type,
+      autocomplete: (el.getAttribute('autocomplete') || '').toLowerCase(),
+      name: el.getAttribute('name') || '',
+      id: el.id || '',
+      ariaLabel: el.getAttribute('aria-label') || '',
+      placeholder: el.getAttribute('placeholder') || '',
+      label: labelOf(el).slice(0, 200),
+      role: role,
+      isNavigatingLink: navigating,
+      isSubmit: isSubmit,
+      isButton: isButton,
+      iframeSrc: tag === 'iframe' ? (el.getAttribute('src') || '').slice(0, 500) : '',
+      iframeTitle: tag === 'iframe' ? el.getAttribute('title') || '' : '',
+      inForm: !!form,
+      // Without a form, the page stands in for one: a single-page sign-up
+      // with a password box and a "Create account" button is still a sign-up.
+      formSensitive: form ? holdsSensitive(form, false) : holdsSensitive(document, true),
+      formSubmitLabel: form ? submitLabel(form).slice(0, 200) : ''
+    };
+  }
+
+  function inspect(target) {
+    if (target.type === 'focused') return { ok: true, facts: factsOf(deepActive()) };
+    if (target.type === 'coordinate') return { ok: true, facts: factsOf(atPoint(target.x, target.y)) };
+    var el = findRef(target.ref);
+    if (!el) return { ok: false, error: target.ref + ' is stale or not found on the current page. Re-read the page to get fresh references.' };
+    return { ok: true, facts: factsOf(el) };
+  }
+
   switch (args.op) {
     case 'read': return read(args.filter, args.depth, args.ref);
     case 'find': return find(args.query);
@@ -312,6 +450,7 @@ const SCRIPT = String.raw`
     case 'resolve': return resolve(args.ref, args.scroll);
     case 'form': return form(args.ref, args.value);
     case 'viewport': return { ok: true, width: w.innerWidth, height: w.innerHeight };
+    case 'inspect': return inspect(args.target);
   }
   return { ok: false, error: 'unknown op' };
 })`;

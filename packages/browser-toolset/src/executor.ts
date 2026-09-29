@@ -20,10 +20,21 @@ import { toPlaywrightKeySequence } from './keys.ts';
 import {
   buildPageCall,
   type FormResult,
+  type InspectResult,
+  type InspectTarget,
   type PageOp,
   type ReadResult,
   type ResolveResult,
 } from './page-script.ts';
+import {
+  type BrowserSafetyOptions,
+  containsCardNumber,
+  type ElementFacts,
+  enterSubmitReason,
+  refusalText,
+  sensitiveFieldReason,
+  submitReason,
+} from './safety.ts';
 
 type ToolResult = Anthropic.Messages.ToolResultBlockParam;
 type ToolUse = Pick<Anthropic.Messages.ToolUseBlock, 'id' | 'name' | 'input' | 'toolset_name'>;
@@ -73,6 +84,13 @@ export type BrowserToolsetOptions = {
   allowPrivateHosts?: boolean;
   navigationTimeoutMs?: number;
   screenshotTimeoutMs?: number;
+  /**
+   * Guards that refuse paying, signing up and entering secrets (`safety.ts`).
+   * Off by default: actors and checklists fill forms with test data on purpose.
+   * A refusal is an ordinary result telling the model why, not an error, so
+   * the rest of its turn still runs.
+   */
+  safety?: BrowserSafetyOptions;
 };
 
 /** One executed call, for the caller's transcript and evidence. */
@@ -307,8 +325,15 @@ export class BrowserToolsetExecutor {
       case 'right_click':
       case 'middle_click':
       case 'double_click':
-      case 'triple_click':
+      case 'triple_click': {
+        if (this.options.safety?.blockSubmit && name !== 'right_click') {
+          const target = parseTarget(input.target, 'any');
+          const facts = await this.inspect(page, target);
+          const reason = facts && submitReason(facts);
+          if (reason) return [text(refusalText(reason))];
+        }
         return [text(await this.click(page, name, input))];
+      }
       case 'hover': {
         const { x, y } = await this.point(page, parseTarget(input.target, 'any'));
         await page.hover(x, y);
@@ -345,6 +370,8 @@ export class BrowserToolsetExecutor {
       }
       case 'type': {
         const value = String(input.text ?? '');
+        const refusal = await this.typeRefusal(page, value);
+        if (refusal) return [text(refusal)];
         await page.type(value);
         return [text(`Typed ${value.length} character${value.length === 1 ? '' : 's'}`)];
       }
@@ -352,6 +379,8 @@ export class BrowserToolsetExecutor {
         const keys = toPlaywrightKeySequence(String(input.text ?? ''));
         if (keys.length === 0) throw new ToolsetError('Error: key needs text.');
         const repeat = Math.round(clampNumber(input.repeat, 1, 100, 1));
+        const refusal = await this.keyRefusal(page, keys);
+        if (refusal) return [text(refusal)];
         for (let i = 0; i < repeat; i++) for (const k of keys) await page.keyPress(k);
         return [text(`Pressed ${keys.join(' ')}${repeat > 1 ? ` x${repeat}` : ''}`)];
       }
@@ -387,6 +416,12 @@ export class BrowserToolsetExecutor {
         const value = input.value;
         if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
           throw new ToolsetError('Error: form_input needs a string, number or boolean value.');
+        }
+        if (this.options.safety?.refuseSensitiveInput && typeof value !== 'boolean') {
+          const refusal =
+            (containsCardNumber(String(value)) && refusalText('That value is a card number.')) ||
+            (await this.fieldRefusal(page, target));
+          if (refusal) return [text(refusal)];
         }
         const r = await this.pageCall<FormResult>(page, { op: 'form', ref: target.ref, value });
         if (!r.ok) throw new ToolsetError(`Error: ${r.error}`);
@@ -594,6 +629,52 @@ export class BrowserToolsetExecutor {
       );
     }
     return { x: r.x, y: r.y };
+  }
+
+  // --- safety guards ------------------------------------------------------
+
+  /** What the guards need to know about an element; null when nothing is there. */
+  private async inspect(page: DriverPage, target: InspectTarget): Promise<ElementFacts | null> {
+    const r = await this.pageCall<InspectResult>(page, { op: 'inspect', target });
+    // A stale ref is refused by the action itself, with the usual message.
+    return r.ok ? r.facts : null;
+  }
+
+  private async fieldRefusal(page: DriverPage, target: InspectTarget): Promise<string | null> {
+    const facts = await this.inspect(page, target);
+    const reason = facts && sensitiveFieldReason(facts);
+    return reason ? refusalText(reason) : null;
+  }
+
+  /** Typing goes to whatever has focus, so that is what is checked. */
+  private async typeRefusal(page: DriverPage, value: string): Promise<string | null> {
+    const safety = this.options.safety;
+    if (!safety) return null;
+    if (safety.refuseSensitiveInput) {
+      if (containsCardNumber(value)) return refusalText('That value is a card number.');
+      const refusal = await this.fieldRefusal(page, { type: 'focused' });
+      if (refusal) return refusal;
+    }
+    // A newline types as Enter, which submits the field's form.
+    if (safety.blockSubmit && /[\r\n]/.test(value)) {
+      const facts = await this.inspect(page, { type: 'focused' });
+      const reason = facts && enterSubmitReason(facts);
+      if (reason) return refusalText(reason);
+    }
+    return null;
+  }
+
+  /** Enter submits the focused field's form; Enter or Space presses a focused button. */
+  private async keyRefusal(page: DriverPage, keys: readonly string[]): Promise<string | null> {
+    if (!this.options.safety?.blockSubmit) return null;
+    const pressesEnter = keys.some((k) => /(^|\+)(Enter|NumpadEnter)$/.test(k));
+    const pressesSpace = keys.some((k) => /(^|\+)(Space| )$/.test(k));
+    if (!pressesEnter && !pressesSpace) return null;
+    const facts = await this.inspect(page, { type: 'focused' });
+    if (!facts) return null;
+    const reason =
+      (facts.isButton && submitReason(facts)) || (pressesEnter && enterSubmitReason(facts));
+    return reason ? refusalText(reason) : null;
   }
 
   private pageCall<R>(page: DriverPage, op: PageOp): Promise<R> {

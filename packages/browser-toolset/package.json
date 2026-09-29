@@ -10,7 +10,8 @@
     "./executor": "./src/executor.ts",
     "./keys": "./src/keys.ts",
     "./page-script": "./src/page-script.ts",
-    "./direct-tools": "./src/direct-tools.ts"
+    "./direct-tools": "./src/direct-tools.ts",
+    "./safety": "./src/safety.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit",
