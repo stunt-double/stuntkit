@@ -416,3 +416,17 @@ export class DirectBrowserTools {
     return page;
   }
 }
+
+/**
+ * Said to an agent that has used every step it was given, on one extra model
+ * call offered only `done` (and made to call it). Without it a stepped-out run
+ * ended on the bare string "Max steps reached", and the grader scored that near
+ * zero even when the transcript held the answer. The step budget is unchanged:
+ * this call can only answer, never act. Shared by every Index arm so they stay
+ * comparable.
+ */
+export const STEP_BUDGET_FINAL_NOTE =
+  'You have used every step you were given. Do not call any other tool: call `done` now, and in its message give your answer from what you have already found. Say plainly which parts you could not find or finish.';
+
+/** The output of a run whose forced final answer could not be had either. */
+export const STEP_BUDGET_FALLBACK_OUTPUT = 'Max steps reached';
