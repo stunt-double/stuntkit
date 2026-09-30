@@ -1,6 +1,6 @@
 {
   "name": "@stuntdouble/browser-toolset",
-  "version": "1.24.0",
+  "version": "1.25.0",
   "private": true,
   "description": "The browser tools every actor and Index arm drives, over a provider-neutral browser driver",
   "type": "module",
