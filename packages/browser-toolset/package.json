@@ -11,7 +11,8 @@
     "./keys": "./src/keys.ts",
     "./page-script": "./src/page-script.ts",
     "./direct-tools": "./src/direct-tools.ts",
-    "./safety": "./src/safety.ts"
+    "./safety": "./src/safety.ts",
+    "./prune": "./src/prune.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
     "@types/node": "^26.6.2",
+    "ai": "^7.0.118",
     "@typescript/native": "npm:typescript@^7.0.2",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
