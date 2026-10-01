@@ -19,6 +19,8 @@ import type { ModelMessage } from 'ai';
  * messages they are given, so a caller can prune a copy it sends while keeping
  * the history it stores. Kept free of runtime imports so `node --test` loads it.
  */
+
+/** What an older screenshot is replaced with, so the transcript still reads as a sequence of observations. */
 export const PRUNED_SCREENSHOT = '[earlier screenshot removed to save tokens]';
 
 type Part = { type: string; mediaType?: string };
