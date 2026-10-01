@@ -49,7 +49,13 @@ test('AI SDK: keeps the newest N screenshots and replaces the rest', () => {
 
 test('AI SDK: user message images and tool images share one newest-first count', () => {
   const messages = [
-    { role: 'user', content: [{ type: 'text', text: 'task' }, { type: 'image', image: 'seed' }] },
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'task' },
+        { type: 'image', image: 'seed' },
+      ],
+    },
     toolMsg('c1', [png(1)]),
     toolMsg('c2', [png(2)]),
   ];
