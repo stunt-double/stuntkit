@@ -1,28 +1,111 @@
 {
-  "name": "@stuntdouble/browser-toolset",
-  "version": "1.25.1",
-  "private": true,
-  "description": "The browser tools every actor and Index arm drives, over a provider-neutral browser driver",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./driver": "./src/driver.ts",
-    "./executor": "./src/executor.ts",
-    "./keys": "./src/keys.ts",
-    "./page-script": "./src/page-script.ts",
-    "./direct-tools": "./src/direct-tools.ts",
-    "./safety": "./src/safety.ts",
-    "./prune": "./src/prune.ts"
+  "name": "@stdbl/browser-toolset",
+  "version": "0.1.0",
+  "description": "Browser tools for AI agents over a provider-neutral BrowserDriver: an executor for Anthropic's browser use toolset, provider-neutral function tools, and opt-in guards that refuse payments, sign-ups and secrets",
+  "keywords": [
+    "ai",
+    "agents",
+    "browser",
+    "browser-use",
+    "computer-use",
+    "anthropic",
+    "claude",
+    "playwright",
+    "tools",
+    "llm"
+  ],
+  "license": "Apache-2.0",
+  "author": "Turnout Labs Ltd",
+  "homepage": "https://github.com/stunt-double/toolkit/tree/main/packages/browser-toolset#readme",
+  "bugs": {
+    "url": "https://github.com/stunt-double/toolkit/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stunt-double/toolkit.git",
+    "directory": "packages/browser-toolset"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@stdbl/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./driver": {
+      "@stdbl/source": "./src/driver.ts",
+      "types": "./dist/driver.d.ts",
+      "default": "./dist/driver.js"
+    },
+    "./executor": {
+      "@stdbl/source": "./src/executor.ts",
+      "types": "./dist/executor.d.ts",
+      "default": "./dist/executor.js"
+    },
+    "./keys": {
+      "@stdbl/source": "./src/keys.ts",
+      "types": "./dist/keys.d.ts",
+      "default": "./dist/keys.js"
+    },
+    "./page-script": {
+      "@stdbl/source": "./src/page-script.ts",
+      "types": "./dist/page-script.d.ts",
+      "default": "./dist/page-script.js"
+    },
+    "./direct-tools": {
+      "@stdbl/source": "./src/direct-tools.ts",
+      "types": "./dist/direct-tools.d.ts",
+      "default": "./dist/direct-tools.js"
+    },
+    "./safety": {
+      "@stdbl/source": "./src/safety.ts",
+      "types": "./dist/safety.d.ts",
+      "default": "./dist/safety.js"
+    },
+    "./prune": {
+      "@stdbl/source": "./src/prune.ts",
+      "types": "./dist/prune.d.ts",
+      "default": "./dist/prune.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "type-check": "tsc --noEmit",
-    "test": "node --test 'src/**/*.test.ts'"
+    "build": "tsup",
+    "type-check": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.130.0",
+    "ai": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "0.130.0",
-    "@types/node": "^26.6.3",
-    "@typescript/native": "npm:typescript@^7.0.2",
-    "ai": "^7.0.124",
-    "typescript": "npm:@typescript/typescript6@^6.0.2"
+    "@anthropic-ai/sdk": "0.131.0",
+    "ai": "^7.0.124"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }
