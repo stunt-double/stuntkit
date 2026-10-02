@@ -1,5 +1,5 @@
 /**
- * The Index promises its sessions never pay or sign up for real. These pin the
+ * Benchmark sessions promise they never pay or sign up for real. These pin the
  * guards that keep that promise, and that they stay out of the way of every
  * run that does not ask for them.
  */
@@ -251,7 +251,7 @@ test('the guards are off by default: nothing is inspected and everything runs', 
   );
   assert.ok(ops.includes('form'));
 
-  // The executor on its own, as actors and checklists construct it.
+  // The executor on its own, with no safety options.
   const ex = new BrowserToolsetExecutor(fakeDriver(sensitive).driver);
   const out = await ex.execute('type', { text: TEST_CARD });
   assert.deepEqual(out, [{ type: 'text', text: 'Typed 19 characters' }]);
@@ -271,7 +271,7 @@ test('a refusal inside a browser toolset turn does not halt the calls after it',
   assert.equal(calls.filter((c) => c.method === 'type').length, 0);
 });
 
-test('the payment blocklist exempts the provider being scored', () => {
+test('the payment blocklist exempts the provider being visited', () => {
   const shop = paymentBlocklistFor('www.shop.example');
   assert.ok(shop.includes('js.stripe.com'));
   assert.ok(shop.includes('paypal.com'));

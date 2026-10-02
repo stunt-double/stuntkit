@@ -1,7 +1,7 @@
 /**
- * The direct tools are the index's measuring instrument: every published arm
- * is offered exactly these, and none of them may make a model call. These pin
- * what each tool does to the page and what it hands back to the arm.
+ * The direct tools are a shared vocabulary: any agent on any model can be
+ * offered exactly these, and none of them may make a model call. These pin
+ * what each tool does to the page and what it hands back to the agent.
  */
 
 import assert from 'node:assert/strict';

@@ -1,5 +1,5 @@
 // Client-side executor for Anthropic's browser use toolset
-// (`browser_toolset_20260801`, GA on Vertex): Claude emits `tool_use` blocks
+// (`browser_toolset_20260801`): Claude emits `tool_use` blocks
 // with `toolset_name: 'browser'` naming one of the toolset's members, and this
 // runs each against the `BrowserDriver` and builds the `tool_result` the API
 // expects back. Spec: https://platform.claude.com/docs/en/agents-and-tools/tool-use/browser-use-tool
@@ -12,7 +12,8 @@
 //   results may carry at most one, never on an error;
 // - navigation refuses anything but http(s), and the caller's network policy.
 //
-// No runtime imports beyond the driver's types, so it runs under `node --test`.
+// No runtime imports beyond this package, so it runs under `node --test`, and
+// `@anthropic-ai/sdk` is needed for its types only.
 
 import type Anthropic from '@anthropic-ai/sdk';
 import type { BrowserDriver, DriverPage } from './driver.ts';
@@ -42,7 +43,7 @@ type ResultContent = Exclude<ToolResult['content'], string | undefined>;
 type BrowserState = Anthropic.Messages.BrowserStateBlockParam;
 
 /** The tool entry for `tools`. Optional members (scripting, uploads, console,
- *  network) stay disabled: actors browse like people, not like developers. */
+ *  network) stay disabled: the agent browses like a person, not a developer. */
 export const BROWSER_TOOLSET: Anthropic.Messages.BrowserToolset20260801 = {
   type: 'browser_toolset_20260801',
 };
@@ -75,18 +76,19 @@ export type BrowserToolsetOptions = {
   checkNavigation?: (url: string) => string | null;
   /**
    * Allow loopback, private and link-local hosts. Off by default: a browser
-   * running inside our own infrastructure (a Trigger.dev task) can otherwise be
-   * steered at the container's own services or the cloud metadata endpoint by
-   * anything on a page that talks the model into navigating there. Internal-
-   * network runs on a customer's worker turn it on, since reaching their
-   * private hosts is the point, and their network policy still applies.
+   * running inside your own infrastructure (a job runner, a container) can
+   * otherwise be steered at the host's own services or the cloud metadata
+   * endpoint by anything on a page that talks the model into navigating there.
+   * Turn it on when reaching private hosts is the point (testing an intranet
+   * or a local dev server); `checkNavigation` still applies.
    */
   allowPrivateHosts?: boolean;
   navigationTimeoutMs?: number;
   screenshotTimeoutMs?: number;
   /**
    * Guards that refuse paying, signing up and entering secrets (`safety.ts`).
-   * Off by default: actors and checklists fill forms with test data on purpose.
+   * Off by default: agents testing their own product fill forms with test data
+   * on purpose.
    * A refusal is an ordinary result telling the model why, not an error, so
    * the rest of its turn still runs.
    */
@@ -215,7 +217,6 @@ export class BrowserToolsetExecutor {
     this.options = options;
   }
 
-  /** Run every browser call in a turn, in order, halting after the first failure. */
   /** Turns run one at a time: two batches interleaving on one page would be nonsense. */
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -506,8 +507,8 @@ export class BrowserToolsetExecutor {
     const width = Math.abs(x1 - x0);
     const height = Math.abs(y1 - y0);
     if (width < 1 || height < 1) throw new ToolsetError('Error: zoom region is empty.');
-    // Captured at the page's own resolution: without an image library in the
-    // task there is no upscale, so a small region reads as small as it is.
+    // Captured at the page's own resolution: without an image library in this
+    // package there is no upscale, so a small region reads as small as it is.
     const bytes = await page.screenshot({
       type: 'png',
       clip: { x: Math.min(x0, x1), y: Math.min(y0, y1), width, height },

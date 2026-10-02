@@ -1,18 +1,16 @@
-// The index harness's browser tools, run directly against the page with no
-// model call inside any of them.
+// Provider-neutral browser tools, run directly against the page with no model
+// call inside any of them.
 //
-// The shared `act` / `extract` tools each hand the instruction to Stagehand,
-// which asks a second model (Sonnet on Vertex) to resolve it, so every step
-// the arm under test took paid for a hidden Claude call as well: on a Gemini
-// session in prod, `extract` alone took 178s of a 6.4 minute run. These tools
-// read the page as an accessibility tree with `ref_N` handles and act on those
-// refs (or on screenshot coordinates), through the same executor the
-// `claude-native` arm and actor runs use (`lib/browser-toolset/`). The arm's
-// own model does all of the reasoning, which is what the index measures.
+// Instruction-style tools (`act("click the buy button")`, `extract(...)`) hand
+// each step to a second model to resolve, so every step the agent takes pays
+// for a hidden model call as well, and is slowed by it. These tools read the
+// page as an accessibility tree with `ref_N` handles and act on those refs (or
+// on screenshot coordinates), through the same executor that serves Anthropic's
+// browser use toolset. The agent's own model does all of the reasoning.
 //
-// They are provider-neutral function tools rather than Anthropic's toolset
-// type, because Gemini and ChatGPT have no equivalent: every published arm is
-// offered exactly these, so the arms stay comparable with each other.
+// They are plain function tools rather than Anthropic's toolset type, because
+// other providers have no equivalent: any model with function calling can be
+// offered exactly these, so agents on different models stay comparable.
 //
 // No runtime imports beyond the executor, so it runs under `node --test`.
 
@@ -52,8 +50,8 @@ export type DirectToolSpec = {
 };
 
 /**
- * Page reads are re-sent on every later turn, and Gemini's loop has no explicit
- * cache, so a full 50k-character tree would be paid for again on each step.
+ * Page reads are re-sent on every later turn, and not every provider caches
+ * prompts, so a full 50k-character tree would be paid for again on each step.
  * 20k is enough for most pages' interactive tree; the note tells the model how
  * to narrow a read when it is not.
  */
@@ -83,8 +81,8 @@ const TARGET_PROPERTIES = {
 };
 
 /**
- * The tools every published arm is offered, in a provider-neutral shape; each
- * harness adapts them into its SDK's format. Flat parameters rather than a
+ * The tools, in a provider-neutral shape; each agent loop adapts them into its
+ * SDK's format. Flat parameters rather than a
  * nested target object, because every provider's function calling handles
  * those reliably.
  */
@@ -153,8 +151,8 @@ export const DIRECT_TOOL_SPECS: DirectToolSpec[] = [
       type: 'object',
       properties: {
         ref: { type: 'string', description: 'The control ref from read_page or find.' },
-        // A string on every provider: a union type is not something Gemini's
-        // function declarations take reliably, and the page script reads
+        // A string on every provider: a union type is not something every
+        // provider's function declarations take reliably, and the page script reads
         // "true" / "false" as a checked state.
         value: { type: 'string', description: 'The option, "true" / "false", or the text.' },
       },
@@ -254,8 +252,9 @@ export type DirectBrowserToolsOptions = {
   settleMs?: number;
   toolTimeoutMs?: number;
   /**
-   * The executor's pay / sign-up / secrets guards. Every Index arm turns them
-   * on, since the Index promises its sessions never pay or register for real.
+   * The executor's pay / sign-up / secrets guards. Turn them on (for example
+   * with `INDEX_SESSION_SAFETY`) whenever the agent is browsing sites that are
+   * not yours and must never pay or register for real.
    */
   safety?: BrowserSafetyOptions;
 };
@@ -385,8 +384,8 @@ export class DirectBrowserTools {
 
   /**
    * After anything that can change the page: let it settle, then report where
-   * the browser is with a screenshot, which is what `act` used to return. The
-   * arm sees the effect of its action without spending a turn asking.
+   * the browser is with a screenshot. The agent sees the effect of its action
+   * without spending a turn asking.
    */
   private async afterInput(said: string): Promise<DirectToolResult> {
     const page = await this.activePage();
@@ -420,9 +419,9 @@ export class DirectBrowserTools {
 /**
  * Said to an agent that has used every step it was given, on one extra model
  * call offered only `done` (and made to call it). Without it a stepped-out run
- * ended on the bare string "Max steps reached", and the grader scored that near
- * zero even when the transcript held the answer. The step budget is unchanged:
- * this call can only answer, never act. Shared by every Index arm so they stay
+ * ends on a bare "Max steps reached", which a grader scores near zero even when
+ * the transcript holds the answer. The step budget is unchanged: this call can
+ * only answer, never act. Shared so that loops on different models stay
  * comparable.
  */
 export const STEP_BUDGET_FINAL_NOTE =

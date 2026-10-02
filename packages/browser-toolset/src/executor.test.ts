@@ -148,7 +148,7 @@ test('tab ids follow the driver page id, not object identity', async () => {
   const { driver } = fakeDriver();
   const ex = new BrowserToolsetExecutor(driver);
   await ex.runTurn([use('a', 'new_tab')]);
-  // A fresh object for the same tab, as Stagehand 4 returns on every read.
+  // A fresh object for the same tab, as some drivers return on every read.
   const pages = await driver.context.pages();
   (driver.context as unknown as { pages: () => Promise<DriverPage[]> }).pages = async () =>
     pages.map((p) => ({ ...p }) as DriverPage);
@@ -262,7 +262,7 @@ test('private, loopback and metadata hosts are refused unless the run allows the
   ]) {
     assert.equal(isPrivateHost(h), true, h);
   }
-  for (const h of ['example.com', '8.8.8.8', '172.32.0.1', 'stuntdouble.io']) {
+  for (const h of ['example.com', '8.8.8.8', '172.32.0.1', 'example.net']) {
     assert.equal(isPrivateHost(h), false, h);
   }
   const { driver } = fakeDriver();

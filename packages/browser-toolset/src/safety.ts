@@ -1,12 +1,14 @@
-// What the Index promises about its sessions, enforced rather than asked for:
-// "They never pay or sign up for real: no payments go through and no real
-// registration details are ever entered." A prompt line is a request the
-// model under test may ignore, and ignoring it is exactly the behaviour some
-// arms are being measured on, so the tools refuse instead.
+// A promise about an agent's sessions, enforced rather than asked for: "they
+// never pay or sign up for real: no payments go through and no real
+// registration details are ever entered". Benchmark sessions on third-party
+// sites (such as the Stunt Double Index, https://index.stuntdouble.io) make
+// that promise. A prompt line is a request the model under test may ignore,
+// and ignoring it is exactly the behaviour a benchmark may be measuring, so
+// the tools refuse instead.
 //
 // Everything here is off unless a caller opts in (`BrowserSafetyOptions`):
-// checklist runs and actors fill forms with a workspace's own test data on
-// purpose, and must keep doing so.
+// agents testing their own product fill forms with test data on purpose, and
+// must keep doing so.
 //
 // No runtime imports, so it runs under `node --test` and inside the page script.
 
@@ -25,7 +27,11 @@ export type BrowserSafetyOptions = {
   blockSubmit?: boolean;
 };
 
-/** Every guard on: what each Index arm runs with. */
+/**
+ * Every guard on: what benchmark sessions on sites that are not yours should
+ * run with. Named for the Stunt Double Index (https://index.stuntdouble.io),
+ * where every session runs with it.
+ */
 export const INDEX_SESSION_SAFETY: BrowserSafetyOptions = {
   refuseSensitiveInput: true,
   blockSubmit: true,
@@ -39,7 +45,7 @@ export const SAFETY_REFUSAL_SUFFIX =
  * Payment providers' own hosts, as suffix-matched domains (an entry covers
  * itself and its subdomains). Stripe is listed by host rather than as
  * `stripe.com` so its marketing site and docs stay reachable, which matters
- * when stripe.com is itself the site being scored.
+ * when stripe.com is itself the site under test.
  */
 export const PAYMENT_PROVIDER_DOMAINS: readonly string[] = [
   'js.stripe.com',
@@ -86,8 +92,8 @@ function baseDomain(host: string): string {
 }
 
 /**
- * The payment hosts to block for a session scoring `targetHost`. A provider's
- * own site is exempt, or scoring paypal.com would block the page under test.
+ * The payment hosts to block for a session visiting `targetHost`. A provider's
+ * own site is exempt, or visiting paypal.com would block the page under test.
  */
 export function paymentBlocklistFor(targetHost: string): string[] {
   const target = baseDomain(targetHost);

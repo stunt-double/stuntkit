@@ -1,11 +1,13 @@
-// The browser surface every task drives.
+// The browser surface the toolset drives, kept provider-neutral so the same
+// tools run over Playwright, Stagehand, a hosted browser or anything else that
+// can implement it (see the Playwright driver in `examples/`).
 //
-// Implemented by the Stagehand 4 facade in `stagehand-v4/driver.ts`. It was
-// introduced as the intersection of Stagehand 3 and 4 while both shipped, which
-// is why the accessors v4 made asynchronous (`context.activePage()`,
-// `context.pages()`, `page.url()`) are still declared `MaybePromise` and every
-// caller awaits them, and why `act` results keep v3's flat shape. See
-// docs/architecture/stagehand-v4.md.
+// It began as the intersection of Stagehand 3 and 4, which is why the accessors
+// Stagehand 4 made asynchronous (`context.activePage()`, `context.pages()`,
+// `page.url()`) are declared `MaybePromise` and every caller awaits them, and
+// why `act` results keep Stagehand 3's flat shape. The toolset itself only
+// uses `context` and the raw input methods on `DriverPage`; `act` and
+// `extract` are there for callers that also drive the page with a model.
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -13,7 +15,7 @@ export type DriverLoadState = 'load' | 'domcontentloaded' | 'networkidle';
 
 export type DriverNavigateOptions = {
   waitUntil?: DriverLoadState;
-  /** v3's spelling. The v4 facade maps it onto v4's `timeout`. */
+  /** Navigation timeout in milliseconds. */
   timeoutMs?: number;
 };
 
@@ -50,13 +52,13 @@ export interface DriverPage {
   goto(url: string, options?: DriverNavigateOptions): Promise<unknown>;
   goBack(): Promise<unknown>;
   goForward(): Promise<unknown>;
-  /** A `Buffer` on both engines: the v4 facade converts from `Uint8Array`. */
+  /** A Node `Buffer` (convert from `Uint8Array` if your engine returns one). */
   screenshot(options?: DriverScreenshotOptions): Promise<Buffer>;
   evaluate<R = unknown, Arg = unknown>(
     expression: string | ((arg: Arg) => R | Promise<R>),
     arg?: Arg
   ): Promise<R>;
-  /** Synchronous on v3, asynchronous on v4: always `await` it. */
+  /** May be synchronous or asynchronous: callers always `await` it. */
   url(): MaybePromise<string>;
   title(): Promise<string>;
   setViewportSize(width: number, height: number): Promise<void>;
@@ -79,16 +81,16 @@ export interface DriverPage {
   close(): Promise<void>;
 }
 
-/** The subset of Stagehand's domain policy both majors accept unchanged. */
+/** A navigation allow / block list, as host suffixes. */
 export type DriverDomainPolicy = {
   allowedDomains?: string[];
   blockedDomains?: string[];
 };
 
 export interface DriverContext {
-  /** Synchronous on v3, asynchronous on v4: always `await` it. */
+  /** May be synchronous or asynchronous: callers always `await` it. */
   activePage(): MaybePromise<DriverPage | undefined>;
-  /** Synchronous on v3, asynchronous on v4: always `await` it. */
+  /** May be synchronous or asynchronous: callers always `await` it. */
   pages(): MaybePromise<DriverPage[]>;
   setDomainPolicy(policy: DriverDomainPolicy): Promise<void>;
   /** Open a tab (optionally at `url`); it becomes the active page. */
@@ -100,8 +102,7 @@ export interface DriverContext {
 
 /**
  * A concrete browser action: what an `act` resolved an instruction to, and
- * what checklist script replay hands back to `act` to repeat it without a
- * model call. The same shape on both majors.
+ * what a caller can hand back to `act` to repeat it without a model call.
  */
 export type DriverAction = {
   selector: string;
@@ -110,7 +111,7 @@ export type DriverAction = {
   arguments?: string[];
 };
 
-/** What an `act` resolved to, in v3's flat shape (the v4 facade unwraps `data`). */
+/** What an `act` resolved to, in a flat shape. */
 export type DriverActResult = {
   success: boolean;
   message?: string;
@@ -129,7 +130,7 @@ export type DriverExtractOptions = {
 export interface BrowserDriver {
   readonly context: DriverContext;
   act(instruction: string | DriverAction, options?: DriverActOptions): Promise<DriverActResult>;
-  /** Schema-less extraction: `{ extraction: string }` on both engines. */
+  /** Schema-less extraction, conventionally `{ extraction: string }`. */
   extract(instruction: string, options?: DriverExtractOptions): Promise<unknown>;
   close(): Promise<void>;
 }

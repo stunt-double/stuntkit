@@ -1,5 +1,5 @@
 // Claude's browser toolset spells keys the xdotool way (`ctrl+a`, `Return`,
-// `Page_Down`, space-separated sequences); Stagehand's `keyPress` takes
+// `Page_Down`, space-separated sequences); `DriverPage.keyPress` takes
 // Playwright's (`Control+A`, `Enter`, `PageDown`). Pure, so it is unit tested.
 
 const ALIASES: Record<string, string> = {

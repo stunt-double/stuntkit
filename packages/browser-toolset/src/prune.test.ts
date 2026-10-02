@@ -1,5 +1,5 @@
 /**
- * The one screenshot pruner every browsing loop uses.
+ * The screenshot pruner for browsing loops.
  *
  * A pruning bug fails silently: keeping the first screenshots instead of the
  * last blinds the agent, and keeping them all is a token bill nobody notices.

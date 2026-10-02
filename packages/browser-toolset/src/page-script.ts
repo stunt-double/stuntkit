@@ -2,15 +2,15 @@
 // the page, that reads the accessibility-ish tree Claude's `read_page` and
 // `find` expect and resolves the `ref_N` handles those return.
 //
-// Stagehand 4 gives no raw CDP, so `Accessibility.getFullAXTree` is out of
-// reach; this walks the DOM (including open shadow roots) instead and tags each
-// element it reports with a `data-sd-ref` attribute. A ref therefore survives
+// A `BrowserDriver` need not expose raw CDP, so `Accessibility.getFullAXTree`
+// is out of reach; this walks the DOM (including open shadow roots) instead and
+// tags each element it reports with a `data-sd-ref` attribute. A ref therefore survives
 // until the element leaves the DOM, which is the lifetime the toolset docs
 // promise ("valid until the tab navigates or the DOM changes materially").
 //
-// It is a string expression, never a function, because Stagehand serialises
-// functions with `toString()` and the bundler's `__name` helper does not exist
-// in the page (see docs/architecture/ai-models.md). `buildPageCall` is the only
+// It is a string expression, never a function, because drivers serialise
+// functions with `toString()` and a bundler's helpers (esbuild's `__name`, for
+// one) do not exist in the page. `buildPageCall` is the only
 // way in, and it JSON-encodes its arguments, so nothing a model supplies is
 // ever spliced into the script as code.
 

@@ -2,8 +2,8 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { ModelMessage } from 'ai';
 
 /**
- * The one screenshot pruner every browsing loop uses: the actor loops and the
- * Index arms in Trigger.dev, and the Index agent Worker.
+ * A screenshot pruner for browsing loops, on either the Anthropic SDK's or the
+ * Vercel AI SDK's message shape.
  *
  * Screenshots dominate a browsing loop's input (each PNG is roughly 1,000 to
  * 2,000 tokens and the whole history is re-sent every turn), and the agent acts
@@ -17,7 +17,8 @@ import type { ModelMessage } from 'ai';
  *
  * Both functions are pure: they return a new array and never mutate the
  * messages they are given, so a caller can prune a copy it sends while keeping
- * the history it stores. Kept free of runtime imports so `node --test` loads it.
+ * the history it stores. Kept free of runtime imports so `node --test` loads it,
+ * and so `@anthropic-ai/sdk` and `ai` are needed for their types only.
  */
 
 /** What an older screenshot is replaced with, so the transcript still reads as a sequence of observations. */
