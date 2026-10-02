@@ -1,0 +1,41 @@
+name: Bug report
+description: Something in a package does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report this. Please search existing issues first.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - '@stdbl/browser-toolset'
+        - Repository (CI, tooling, docs)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: A code snippet or repository that shows the problem. Leave out API keys and other secrets.
+      render: ts
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node version, operating system, browser engine and driver (Playwright, Stagehand, ...), model and SDK versions.
