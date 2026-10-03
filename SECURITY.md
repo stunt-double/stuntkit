@@ -4,7 +4,7 @@
 
 Please do not open a public issue for a security problem. Report it privately, either:
 
-- through [GitHub's private vulnerability reporting](https://github.com/stunt-double/toolkit/security/advisories/new), or
+- through [GitHub's private vulnerability reporting](https://github.com/stunt-double/backlot/security/advisories/new), or
 - by email to security@stuntdouble.io.
 
 Include the package and version, what an attacker can do, and steps or code to reproduce it. We will acknowledge your report within three working days, keep you updated as we investigate, and credit you in the advisory unless you would rather we did not.

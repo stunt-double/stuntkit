@@ -67,7 +67,7 @@ The Stunt Double product consumes these packages from npm. To try a change here 
 
 ```
 ~/code/stuntdouble
-~/code/toolkit
+~/code/backlot
 ```
 
 Then, in the monorepo, override the package with a link to your checkout. pnpm 11 reads overrides from `pnpm-workspace.yaml` (with older pnpm, the same entry goes under `pnpm.overrides` in the root `package.json`):
@@ -75,7 +75,7 @@ Then, in the monorepo, override the package with a link to your checkout. pnpm 1
 ```yaml
 # stuntdouble/pnpm-workspace.yaml (do not commit)
 overrides:
-  '@stdbl/browser-toolset': link:../toolkit/packages/browser-toolset
+  '@stdbl/browser-toolset': link:../backlot/packages/browser-toolset
 ```
 
 Run `pnpm install` in the monorepo. The link resolves through the package's `exports`, so either build here once and keep it fresh with `pnpm --filter @stdbl/browser-toolset exec tsup --watch`, or, in a monorepo project whose TypeScript and runtime can read source, add the `@stdbl/source` condition (`customConditions` in its `tsconfig.json`, `--conditions=@stdbl/source` for Node) to use the TypeScript source directly.

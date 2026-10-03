@@ -1,12 +1,12 @@
 {
-  "name": "stdbl-toolkit",
+  "name": "stdbl-backlot",
   "private": true,
   "description": "Open source packages from Stunt Double",
   "license": "Apache-2.0",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stunt-double/toolkit.git"
+    "url": "git+https://github.com/stunt-double/backlot.git"
   },
   "scripts": {
     "build": "pnpm -r --filter \"./packages/*\" run build",
