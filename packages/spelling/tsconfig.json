@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // `node --test` runs the source directly with type stripping, so imports
+    // carry their `.ts` extension. tsup bundles the published `dist`.
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*.ts"]
+}
