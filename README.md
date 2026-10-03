@@ -1,9 +1,9 @@
-# Backlot
+# Stuntkit
 
-[![CI](https://github.com/stunt-double/backlot/actions/workflows/ci.yml/badge.svg)](https://github.com/stunt-double/backlot/actions/workflows/ci.yml)
+[![CI](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml/badge.svg)](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml)
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](./LICENSE)
 
-Open source packages from [Stunt Double](https://stuntdouble.io), extracted from the product that runs AI agents through real browsers. Published to npm under the `@stdbl` scope.
+Open source building blocks for AI agents that use the web. Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. Published to npm under the `@stdbl` scope.
 
 | Package                                                | Version                                                                                                                 | What                                                                                                                               |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |

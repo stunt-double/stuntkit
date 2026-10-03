@@ -16,13 +16,13 @@
   ],
   "license": "Apache-2.0",
   "author": "Turnout Labs Ltd",
-  "homepage": "https://github.com/stunt-double/backlot/tree/main/packages/browser-toolset#readme",
+  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/browser-toolset#readme",
   "bugs": {
-    "url": "https://github.com/stunt-double/backlot/issues"
+    "url": "https://github.com/stunt-double/stuntkit/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stunt-double/backlot.git",
+    "url": "git+https://github.com/stunt-double/stuntkit.git",
     "directory": "packages/browser-toolset"
   },
   "type": "module",
