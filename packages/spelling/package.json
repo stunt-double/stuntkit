@@ -1,0 +1,58 @@
+{
+  "name": "@stdbl/spelling",
+  "version": "0.0.0",
+  "description": "Whole-word English spelling localisation: American, British and Canadian, from either American or British source text",
+  "keywords": [
+    "spelling",
+    "localisation",
+    "localization",
+    "i18n",
+    "english",
+    "british",
+    "american",
+    "canadian"
+  ],
+  "license": "Apache-2.0",
+  "author": "Turnout Labs Ltd",
+  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/spelling#readme",
+  "bugs": {
+    "url": "https://github.com/stunt-double/stuntkit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stunt-double/stuntkit.git",
+    "directory": "packages/spelling"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@stdbl/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "prepack": "pnpm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

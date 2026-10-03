@@ -1,0 +1,65 @@
+{
+  "name": "@stdbl/wao",
+  "version": "1.0.1",
+  "description": "Web Agent Optimiser: a small drop-in script that repairs the semantics AI agents read a page through, so existing and legacy websites work for agents without a rebuild",
+  "keywords": [
+    "ai",
+    "agents",
+    "browser-use",
+    "computer-use",
+    "accessibility",
+    "aria",
+    "accessibility-tree",
+    "legacy",
+    "llm"
+  ],
+  "license": "Apache-2.0",
+  "author": "Turnout Labs Ltd",
+  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/wao#readme",
+  "bugs": {
+    "url": "https://github.com/stunt-double/stuntkit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stunt-double/stuntkit.git",
+    "directory": "packages/wao"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/wao.global.js",
+    "./src/script.ts"
+  ],
+  "exports": {
+    ".": {
+      "@stdbl/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./script": "./dist/wao.global.js",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/wao.global.js",
+  "jsdelivr": "./dist/wao.global.js",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "prepack": "pnpm run build"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

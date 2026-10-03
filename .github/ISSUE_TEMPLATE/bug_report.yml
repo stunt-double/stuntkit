@@ -11,6 +11,8 @@ body:
       label: Package
       options:
         - '@stdbl/browser-toolset'
+        - '@stdbl/spelling'
+        - '@stdbl/wao'
         - Repository (CI, tooling, docs)
     validations:
       required: true
