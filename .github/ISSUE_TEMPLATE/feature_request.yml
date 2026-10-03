@@ -8,6 +8,8 @@ body:
       label: Package
       options:
         - '@stdbl/browser-toolset'
+        - '@stdbl/spelling'
+        - '@stdbl/wao'
         - A new package
         - Repository (CI, tooling, docs)
     validations:

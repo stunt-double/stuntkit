@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // `node --test` runs the source directly with type stripping, so imports
+    // carry their `.ts` extension. tsup bundles the published `dist`.
+    "allowImportingTsExtensions": true,
+    // WAO runs in the page; the tests run under Node with happy-dom.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/**/*.ts"]
+}
