@@ -22,7 +22,9 @@ jobs:
   release:
     name: Version or publish
     runs-on: ubuntu-latest
-    if: github.repository == 'stunt-double/stuntkit'
+    # A manual run can target any branch, and the npm trusted publisher only
+    # checks the workflow file, so only `main` may publish.
+    if: github.repository == 'stunt-double/stuntkit' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
