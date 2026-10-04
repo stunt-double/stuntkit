@@ -16,6 +16,6 @@
     "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": true,
     "forceConsistentCasingInFileNames": true,
-    "customConditions": ["@stdbl/source"]
+    "customConditions": ["@stunt-double/source"]
   }
 }

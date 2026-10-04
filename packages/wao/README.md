@@ -1,8 +1,8 @@
-# @stdbl/wao
+# @stunt-double/wao
 
 **Web Agent Optimiser.** A small drop-in script that makes existing and legacy websites work for AI agents, without a rebuild.
 
-Agents read a page through its accessibility tree (Playwright's aria snapshot, CDP's Accessibility domain, `read_page` in [`@stdbl/browser-toolset`](../browser-toolset)) and through screenshots. Legacy pages fail the first. A `<div onclick>` is not a button, an icon link has no name, and a field's label is the table cell beside it. To an agent, those controls are missing or unnamed. WAO repairs them in place:
+Agents read a page through its accessibility tree (Playwright's aria snapshot, CDP's Accessibility domain, `read_page` in [`@stunt-double/browser-toolset`](../browser-toolset)) and through screenshots. Legacy pages fail the first. A `<div onclick>` is not a button, an icon link has no name, and a field's label is the table cell beside it. To an agent, those controls are missing or unnamed. WAO repairs them in place:
 
 Before (Chromium's aria snapshot of a legacy page):
 
@@ -51,18 +51,18 @@ Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test re
 As a script tag, on any site:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@stdbl/wao@2/dist/wao.global.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
 ```
 
 Or from npm, in a bundled app:
 
 ```sh
-pnpm add @stdbl/wao
-# or: npm install @stdbl/wao
+pnpm add @stunt-double/wao
+# or: npm install @stunt-double/wao
 ```
 
 ```ts
-import { optimise } from '@stdbl/wao';
+import { optimise } from '@stunt-double/wao';
 
 const wao = optimise();
 ```
@@ -105,7 +105,7 @@ With the script build, set the options before the script loads:
 <script>
   window.waoOptions = { rules: [{ selector: '.btn-go', label: 'Check out' }] };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@stdbl/wao@2/dist/wao.global.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
 ```
 
 `description` is written as `aria-description`, which Chromium exposes in the accessibility tree.
@@ -153,6 +153,13 @@ The two building blocks, exported for tooling. `accessibleName` is the subset of
 - It does not send anything anywhere, and makes no network requests.
 
 ## Upgrading from 1.x
+
+Version 1 was published as `@stdbl/wao`. Version 2 is `@stunt-double/wao`, so swap the package name (and the CDN URL) as well:
+
+```sh
+pnpm remove @stdbl/wao
+pnpm add @stunt-double/wao
+```
 
 Version 1 drew overlays on the page (borders, tags and panels) and waited for an agent to activate it through `window.WAO`. Version 2 is a rewrite. It changes the accessibility tree instead, because that is how agents read a page, and it runs on load. The overlays, the `window.WAO` methods, the `data-wao-*` attributes and the React components are gone:
 

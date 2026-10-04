@@ -1,4 +1,4 @@
-# @stdbl/browser-toolset
+# @stunt-double/browser-toolset
 
 Browser tools for AI agents, over a provider-neutral `BrowserDriver`.
 
@@ -14,17 +14,17 @@ Extracted from [Stunt Double](https://stuntdouble.io), where it drives every age
 ## Install
 
 ```sh
-pnpm add @stdbl/browser-toolset
-# or: npm install @stdbl/browser-toolset
+pnpm add @stunt-double/browser-toolset
+# or: npm install @stunt-double/browser-toolset
 ```
 
 `@anthropic-ai/sdk` and `ai` are optional peer dependencies, used for types only; nothing imports them at runtime. Their types are referenced by these declarations:
 
-| Import                                                              | Needs the types of           |
-| ------------------------------------------------------------------- | ---------------------------- |
-| `@stdbl/browser-toolset`, `@stdbl/browser-toolset/executor`         | `@anthropic-ai/sdk`          |
-| `@stdbl/browser-toolset/prune`                                      | `@anthropic-ai/sdk` and `ai` |
-| `./direct-tools`, `./safety`, `./driver`, `./keys`, `./page-script` | Neither                      |
+| Import                                                                    | Needs the types of           |
+| ------------------------------------------------------------------------- | ---------------------------- |
+| `@stunt-double/browser-toolset`, `@stunt-double/browser-toolset/executor` | `@anthropic-ai/sdk`          |
+| `@stunt-double/browser-toolset/prune`                                     | `@anthropic-ai/sdk` and `ai` |
+| `./direct-tools`, `./safety`, `./driver`, `./keys`, `./page-script`       | Neither                      |
 
 So a project on the direct tools alone, with no Anthropic SDK, imports from the subpaths (or sets `skipLibCheck`).
 
@@ -41,7 +41,7 @@ import {
   BrowserToolsetExecutor,
   INDEX_SESSION_SAFETY,
   isBrowserToolsetCall,
-} from '@stdbl/browser-toolset';
+} from '@stunt-double/browser-toolset';
 
 const client = new Anthropic();
 const executor = new BrowserToolsetExecutor(driver, { safety: INDEX_SESSION_SAFETY });
@@ -67,7 +67,7 @@ for (;;) {
 ### Any model, on the direct tools
 
 ```ts
-import { DIRECT_TOOL_SPECS, DirectBrowserTools } from '@stdbl/browser-toolset';
+import { DIRECT_TOOL_SPECS, DirectBrowserTools } from '@stunt-double/browser-toolset';
 
 const tools = new DirectBrowserTools(driver, { viewport: { width: 1280, height: 800 } });
 
@@ -87,7 +87,7 @@ Complete, type-checked loops are in [`examples/`](./examples): Playwright with t
 A line in a prompt saying "never pay or sign up" is a request the model may ignore, and an agent under test ignoring it is exactly the failure you cannot afford on a real site. So the guards live in the tools: when one refuses, the action never reaches the page, and the model gets an ordinary result (not an error) telling it what was refused and to report what it saw instead. The rest of its turn still runs.
 
 ```ts
-import { INDEX_SESSION_SAFETY } from '@stdbl/browser-toolset';
+import { INDEX_SESSION_SAFETY } from '@stunt-double/browser-toolset';
 
 new BrowserToolsetExecutor(driver, { safety: INDEX_SESSION_SAFETY });
 new DirectBrowserTools(driver, { viewport, safety: INDEX_SESSION_SAFETY });
@@ -162,15 +162,15 @@ Pages are read by a script evaluated in the page, which tags each element it rep
 
 Each subpath can be imported on its own; the root re-exports all of them except `./prune`.
 
-| Import                                | What                                                                                                                                                                                                                                   |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@stdbl/browser-toolset/executor`     | `BrowserToolsetExecutor` (`runTurn`, `execute`), `BROWSER_TOOLSET`, `BROWSER_TOOLSET_NAME`, `HALT_TEXT`, `isBrowserToolsetCall`, `isPrivateHost`, `redactInput`, `sanitiseStateField`, `ToolsetError`, and the option and record types |
-| `@stdbl/browser-toolset/direct-tools` | `DirectBrowserTools`, `DIRECT_TOOL_SPECS`, `DIRECT_TOOL_NAMES`, `clampRead`, `targetOf`, `MAX_READ_CHARS`, `TOOL_TIMEOUT_MS`, `STEP_BUDGET_FINAL_NOTE`, `STEP_BUDGET_FALLBACK_OUTPUT`                                                  |
-| `@stdbl/browser-toolset/safety`       | `BrowserSafetyOptions`, `INDEX_SESSION_SAFETY`, `paymentBlocklistFor`, `containsCardNumber`, `luhnValid`, the reason functions and patterns, `refusalText`                                                                             |
-| `@stdbl/browser-toolset/driver`       | The `BrowserDriver`, `DriverContext` and `DriverPage` interfaces, and `activePageOf`                                                                                                                                                   |
-| `@stdbl/browser-toolset/prune`        | `pruneAnthropicImages`, `pruneAiSdkImages`, `isAiSdkImagePart`, `PRUNED_SCREENSHOT`: keep the newest screenshots in a transcript, replacing older ones with a placeholder                                                              |
-| `@stdbl/browser-toolset/keys`         | `toPlaywrightChord`, `toPlaywrightKeySequence`: the toolset's xdotool key names to Playwright's                                                                                                                                        |
-| `@stdbl/browser-toolset/page-script`  | `buildPageCall` and the result types of the in-page script, for drivers or tools of your own                                                                                                                                           |
+| Import                                       | What                                                                                                                                                                                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@stunt-double/browser-toolset/executor`     | `BrowserToolsetExecutor` (`runTurn`, `execute`), `BROWSER_TOOLSET`, `BROWSER_TOOLSET_NAME`, `HALT_TEXT`, `isBrowserToolsetCall`, `isPrivateHost`, `redactInput`, `sanitiseStateField`, `ToolsetError`, and the option and record types |
+| `@stunt-double/browser-toolset/direct-tools` | `DirectBrowserTools`, `DIRECT_TOOL_SPECS`, `DIRECT_TOOL_NAMES`, `clampRead`, `targetOf`, `MAX_READ_CHARS`, `TOOL_TIMEOUT_MS`, `STEP_BUDGET_FINAL_NOTE`, `STEP_BUDGET_FALLBACK_OUTPUT`                                                  |
+| `@stunt-double/browser-toolset/safety`       | `BrowserSafetyOptions`, `INDEX_SESSION_SAFETY`, `paymentBlocklistFor`, `containsCardNumber`, `luhnValid`, the reason functions and patterns, `refusalText`                                                                             |
+| `@stunt-double/browser-toolset/driver`       | The `BrowserDriver`, `DriverContext` and `DriverPage` interfaces, and `activePageOf`                                                                                                                                                   |
+| `@stunt-double/browser-toolset/prune`        | `pruneAnthropicImages`, `pruneAiSdkImages`, `isAiSdkImagePart`, `PRUNED_SCREENSHOT`: keep the newest screenshots in a transcript, replacing older ones with a placeholder                                                              |
+| `@stunt-double/browser-toolset/keys`         | `toPlaywrightChord`, `toPlaywrightKeySequence`: the toolset's xdotool key names to Playwright's                                                                                                                                        |
+| `@stunt-double/browser-toolset/page-script`  | `buildPageCall` and the result types of the in-page script, for drivers or tools of your own                                                                                                                                           |
 
 The pruners are pure: they return a new array and never mutate the messages they are given, so you can prune what you send while keeping the full history you store.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@stdbl/spelling",
+  "name": "@stunt-double/spelling",
   "version": "0.1.0",
   "description": "Whole-word English spelling localisation: American, British and Canadian, from either American or British source text",
   "keywords": [
@@ -27,7 +27,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "@stdbl/source": "./src/index.ts",
+      "@stunt-double/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },

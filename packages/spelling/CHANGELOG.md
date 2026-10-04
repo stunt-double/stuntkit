@@ -1,4 +1,4 @@
-# @stdbl/spelling
+# @stunt-double/spelling
 
 ## 0.1.0
 

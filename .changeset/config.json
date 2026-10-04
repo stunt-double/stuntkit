@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@stdbl/browser-toolset-examples"]
+  "ignore": ["@stunt-double/browser-toolset-examples"]
 }

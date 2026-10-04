@@ -4,7 +4,7 @@
 
 ## Packages touched
 
-- [ ] `@stdbl/browser-toolset`
+- [ ] `@stunt-double/browser-toolset`
 - [ ] Repository only (CI, tooling, docs, examples)
 
 ## Checklist
