@@ -1,5 +1,5 @@
 {
-  "name": "@stdbl/browser-toolset",
+  "name": "@stunt-double/browser-toolset",
   "version": "0.1.0",
   "description": "Browser tools for AI agents over a provider-neutral BrowserDriver: an executor for Anthropic's browser use toolset, provider-neutral function tools, and opt-in guards that refuse payments, sign-ups and secrets",
   "keywords": [
@@ -29,42 +29,42 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "@stdbl/source": "./src/index.ts",
+      "@stunt-double/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./driver": {
-      "@stdbl/source": "./src/driver.ts",
+      "@stunt-double/source": "./src/driver.ts",
       "types": "./dist/driver.d.ts",
       "default": "./dist/driver.js"
     },
     "./executor": {
-      "@stdbl/source": "./src/executor.ts",
+      "@stunt-double/source": "./src/executor.ts",
       "types": "./dist/executor.d.ts",
       "default": "./dist/executor.js"
     },
     "./keys": {
-      "@stdbl/source": "./src/keys.ts",
+      "@stunt-double/source": "./src/keys.ts",
       "types": "./dist/keys.d.ts",
       "default": "./dist/keys.js"
     },
     "./page-script": {
-      "@stdbl/source": "./src/page-script.ts",
+      "@stunt-double/source": "./src/page-script.ts",
       "types": "./dist/page-script.d.ts",
       "default": "./dist/page-script.js"
     },
     "./direct-tools": {
-      "@stdbl/source": "./src/direct-tools.ts",
+      "@stunt-double/source": "./src/direct-tools.ts",
       "types": "./dist/direct-tools.d.ts",
       "default": "./dist/direct-tools.js"
     },
     "./safety": {
-      "@stdbl/source": "./src/safety.ts",
+      "@stunt-double/source": "./src/safety.ts",
       "types": "./dist/safety.d.ts",
       "default": "./dist/safety.js"
     },
     "./prune": {
-      "@stdbl/source": "./src/prune.ts",
+      "@stunt-double/source": "./src/prune.ts",
       "types": "./dist/prune.d.ts",
       "default": "./dist/prune.js"
     },

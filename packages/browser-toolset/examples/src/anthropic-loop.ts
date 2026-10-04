@@ -10,8 +10,8 @@ import {
   BrowserToolsetExecutor,
   INDEX_SESSION_SAFETY,
   isBrowserToolsetCall,
-} from '@stdbl/browser-toolset';
-import { pruneAnthropicImages } from '@stdbl/browser-toolset/prune';
+} from '@stunt-double/browser-toolset';
+import { pruneAnthropicImages } from '@stunt-double/browser-toolset/prune';
 import { chromium } from 'playwright';
 
 import { PlaywrightDriver } from './playwright-driver.ts';

@@ -1,18 +1,18 @@
 {
-  "name": "@stdbl/browser-toolset-examples",
+  "name": "@stunt-double/browser-toolset-examples",
   "version": "0.0.0",
   "private": true,
-  "description": "Runnable examples for @stdbl/browser-toolset",
+  "description": "Runnable examples for @stunt-double/browser-toolset",
   "type": "module",
   "scripts": {
     "type-check": "tsc -p tsconfig.json",
-    "anthropic": "node --conditions=@stdbl/source src/anthropic-loop.ts",
-    "ai-sdk": "node --conditions=@stdbl/source src/ai-sdk-loop.ts"
+    "anthropic": "node --conditions=@stunt-double/source src/anthropic-loop.ts",
+    "ai-sdk": "node --conditions=@stunt-double/source src/ai-sdk-loop.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.71",
     "@anthropic-ai/sdk": "0.131.0",
-    "@stdbl/browser-toolset": "workspace:*",
+    "@stunt-double/browser-toolset": "workspace:*",
     "ai": "^7.0.124",
     "playwright": "^1.63.0",
     "zod": "^4.6.5"

@@ -10,9 +10,9 @@ body:
     attributes:
       label: Package
       options:
-        - '@stdbl/browser-toolset'
-        - '@stdbl/spelling'
-        - '@stdbl/wao'
+        - '@stunt-double/browser-toolset'
+        - '@stunt-double/spelling'
+        - '@stunt-double/wao'
         - Repository (CI, tooling, docs)
     validations:
       required: true

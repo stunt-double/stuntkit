@@ -1,4 +1,4 @@
-# @stdbl/wao
+# @stunt-double/wao
 
 ## 2.0.0
 
