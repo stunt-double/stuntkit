@@ -46,7 +46,13 @@ pnpm changeset
 
 Pick the packages, the bump (patch for fixes, minor for features, and while a package is below 1.0, minor for breaking changes too), and write a sentence or two for the changelog. Commit the generated file in `.changeset/` with your change. Changes to CI, docs or examples need none.
 
-Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions to npm with provenance. Maintainers never publish from a laptop.
+Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions to npm with provenance, tags each one (`@stdbl/<name>@<version>`) and creates its GitHub release from the changelog entry. Maintainers never publish from a laptop.
+
+Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers): the workflow swaps a GitHub OIDC token for a short-lived publish token, so the repository holds no npm secret. Each package needs a trusted publisher on npmjs.com (package settings, Trusted publishing: GitHub Actions, organisation `stunt-double`, repository `stuntkit`, workflow `release.yml`, no environment). npm only lets you add one to a package that already exists, so a brand new package's first version is bootstrapped once:
+
+1. Create a granular access token on npmjs.com with read and write on the `@stdbl` scope, short expiry, and save it as the `NPM_TOKEN` Actions secret.
+2. Re-run the Release workflow (Actions, Release, Run workflow). It publishes every version npm does not have yet.
+3. Add the trusted publisher to the new package, set "Require two-factor authentication and disallow tokens" under its publishing access, then delete the `NPM_TOKEN` secret and revoke the token.
 
 ## Adding a package
 
@@ -57,7 +63,7 @@ Releases are automatic. On every push to `main`, `.github/workflows/release.yml`
    - `README.md` and a `LICENSE` file. A package may use a different licence from the rest of the repository; its own `LICENSE` and `license` field are what count.
 2. Add a row to the packages table in the root `README.md`, and the package to the issue forms in `.github/ISSUE_TEMPLATE/`.
 3. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
-4. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges.
+4. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and bootstrap its first publish as described under Changesets above.
 
 Examples that need extra dependencies live in `packages/<name>/examples/` as a private workspace package (see `packages/browser-toolset/examples`), and are listed under `ignore` in `.changeset/config.json`.
 
