@@ -1,6 +1,6 @@
 {
   "name": "@stdbl/spelling",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Whole-word English spelling localisation: American, British and Canadian, from either American or British source text",
   "keywords": [
     "spelling",

@@ -1,6 +1,6 @@
 {
   "name": "@stdbl/wao",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Web Agent Optimiser: a small drop-in script that repairs the semantics AI agents read a page through, so existing and legacy websites work for agents without a rebuild",
   "keywords": [
     "ai",
