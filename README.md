@@ -13,6 +13,17 @@ Open source building blocks for AI agents that use the web. Extracted from [Stun
 | [`@stunt-double/spelling`](./packages/spelling)               | [![npm](https://img.shields.io/npm/v/@stunt-double/spelling.svg)](https://www.npmjs.com/package/@stunt-double/spelling)               | Whole-word American, British and Canadian spelling localisation                                                                    |
 | [`@stunt-double/wao`](./packages/wao)                         | [![npm](https://img.shields.io/npm/v/@stunt-double/wao.svg)](https://www.npmjs.com/package/@stunt-double/wao)                         | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents             |
 
+## Agent skills
+
+Each package has an [Agent Skill](./skills) that teaches a coding agent when to reach for it, how to wire it up and the mistakes to avoid. In Claude Code, install them all as a plugin:
+
+```sh
+/plugin marketplace add stunt-double/stuntkit
+/plugin install stuntkit@stuntkit
+```
+
+Other agents that read `SKILL.md` folders can copy them from [`skills/`](./skills).
+
 ## Development
 
 Node 22.18 or later and pnpm 11 (Corepack picks up the pinned version: `corepack enable`).
@@ -25,7 +36,7 @@ pnpm test
 pnpm build
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev loop, adding a package and releasing.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev loop, adding a package and releasing. Coding agents working in this repository get the same guidance as skills in [`.claude/skills/`](./.claude/skills).
 
 ## Licence
 

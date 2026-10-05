@@ -1,0 +1,15 @@
+{
+  "name": "stuntkit",
+  "owner": {
+    "name": "Stunt Double",
+    "url": "https://stuntdouble.io"
+  },
+  "description": "Agent skills for StuntKit, the open source packages from Stunt Double for agents that use the web",
+  "plugins": [
+    {
+      "name": "stuntkit",
+      "source": "./",
+      "description": "Skills for @stunt-double/wao, browser-toolset, spelling and icons: when to reach for each package, how to wire it up, and the mistakes to avoid"
+    }
+  ]
+}

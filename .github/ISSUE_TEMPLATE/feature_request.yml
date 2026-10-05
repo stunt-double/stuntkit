@@ -11,6 +11,7 @@ body:
         - '@stunt-double/icons'
         - '@stunt-double/spelling'
         - '@stunt-double/wao'
+        - Skills
         - A new package
         - Repository (CI, tooling, docs)
     validations:
