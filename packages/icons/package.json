@@ -1,0 +1,75 @@
+{
+  "name": "@stunt-double/icons",
+  "version": "0.0.0",
+  "description": "The Continuity icon pack: 235 stroked icons on a 24 unit grid, as geometry, standalone SVG files and React components",
+  "keywords": [
+    "icons",
+    "svg",
+    "react",
+    "icon-pack",
+    "lucide"
+  ],
+  "license": "Apache-2.0",
+  "author": "Turnout Labs Ltd",
+  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/icons#readme",
+  "bugs": {
+    "url": "https://github.com/stunt-double/stuntkit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stunt-double/stuntkit.git",
+    "directory": "packages/icons"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@stunt-double/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "@stunt-double/source": "./src/react/index.ts",
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./icons.json": "./svg/icons.json",
+    "./svg/*": "./svg/*",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "generate": "node scripts/generate.ts",
+    "type-check": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
