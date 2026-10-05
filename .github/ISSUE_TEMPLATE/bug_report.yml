@@ -11,6 +11,7 @@ body:
       label: Package
       options:
         - '@stunt-double/browser-toolset'
+        - '@stunt-double/icons'
         - '@stunt-double/spelling'
         - '@stunt-double/wao'
         - Repository (CI, tooling, docs)

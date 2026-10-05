@@ -8,6 +8,7 @@ body:
       label: Package
       options:
         - '@stunt-double/browser-toolset'
+        - '@stunt-double/icons'
         - '@stunt-double/spelling'
         - '@stunt-double/wao'
         - A new package
