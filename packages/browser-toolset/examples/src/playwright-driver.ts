@@ -1,5 +1,5 @@
 // A `BrowserDriver` over Playwright, enough to run every tool in
-// `@stdbl/browser-toolset`. Copy it into your project and adapt it: the
+// `@stunt-double/browser-toolset`. Copy it into your project and adapt it: the
 // package deliberately does not depend on any browser library.
 
 import type {
@@ -13,8 +13,8 @@ import type {
   DriverPage,
   DriverScreenshotOptions,
   DriverWaitForSelectorOptions,
-} from '@stdbl/browser-toolset/driver';
-import { hostMatchesDomain } from '@stdbl/browser-toolset/safety';
+} from '@stunt-double/browser-toolset/driver';
+import { hostMatchesDomain } from '@stunt-double/browser-toolset/safety';
 import type { Browser, BrowserContext, Page } from 'playwright';
 
 /** Playwright's `Page` objects are stable, so a WeakMap gives each tab a lasting id. */
@@ -193,7 +193,7 @@ export class PlaywrightDriver implements BrowserDriver {
 
   /**
    * Instruction-style actions need a model of their own, which is what the
-   * toolset exists to avoid. Nothing in `@stdbl/browser-toolset` calls these.
+   * toolset exists to avoid. Nothing in `@stunt-double/browser-toolset` calls these.
    */
   async act(): Promise<DriverActResult> {
     throw new Error('act is not supported by this driver: use the browser toolset instead');

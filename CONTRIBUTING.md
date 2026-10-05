@@ -27,7 +27,7 @@ pnpm format        # Prettier
 pnpm build         # tsup: ESM plus .d.ts into each package's dist/
 ```
 
-Run one package with `pnpm --filter @stdbl/browser-toolset test`.
+Run one package with `pnpm --filter @stunt-double/browser-toolset test`.
 
 Conventions:
 
@@ -46,18 +46,26 @@ pnpm changeset
 
 Pick the packages, the bump (patch for fixes, minor for features, and while a package is below 1.0, minor for breaking changes too), and write a sentence or two for the changelog. Commit the generated file in `.changeset/` with your change. Changes to CI, docs or examples need none.
 
-Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions to npm with provenance. Until npm releases the `@stdbl` scope, the job publishes to GitHub Packages instead: `scripts/github-packages.ts` renames each package to `@stunt-double/*` (GitHub Packages accepts only the owner's scope) just before `changeset publish`. Maintainers never publish from a laptop.
+Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions, tags each one (`@stunt-double/<name>@<version>`) and creates its GitHub release from the changelog entry. Maintainers never publish from a laptop.
+
+Until the `@stunt-double` scope is available on npm, packages publish to GitHub Packages: each package's `publishConfig.registry` is `https://npm.pkg.github.com`, and the workflow authenticates with its own `GITHUB_TOKEN`, so no secret is needed. To move to npm, set `publishConfig` back to `{ "access": "public", "provenance": true }` and restore `id-token: write` and the npm settings in `release.yml`.
+
+On npm, publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers): the workflow swaps a GitHub OIDC token for a short-lived publish token, so the repository holds no npm secret. Each package needs a trusted publisher on npmjs.com (package settings, Trusted publishing: GitHub Actions, organisation `stunt-double`, repository `stuntkit`, workflow `release.yml`, no environment). npm only lets you add one to a package that already exists, so a brand new package's first version is bootstrapped once:
+
+1. Create a granular access token on npmjs.com with read and write on the `@stunt-double` scope, short expiry, and save it as the `NPM_TOKEN` Actions secret.
+2. Re-run the Release workflow (Actions, Release, Run workflow). It publishes every version npm does not have yet.
+3. Add the trusted publisher to the new package, set "Require two-factor authentication and disallow tokens" under its publishing access, then delete the `NPM_TOKEN` secret and revoke the token.
 
 ## Adding a package
 
 1. Create `packages/<name>/` with:
-   - `package.json`: name `@stdbl/<name>`, version `0.0.0` (the first changeset sets the first real version), `"type": "module"`, `"license"`, `"repository"` with `"directory": "packages/<name>"`, `"files": ["dist", "src", "!src/**/*.test.ts", "README.md", "LICENSE"]`, `"publishConfig": { "access": "public", "provenance": true }`, and the scripts `build` (`tsup`), `type-check` (`tsc -p tsconfig.json`) and `test` (`node --test "src/**/*.test.ts"`). Copy `packages/browser-toolset/package.json` as a starting point.
-   - `exports` with, for each entry point, an `@stdbl/source` condition pointing at the `.ts` source, then `types` and `default` pointing into `dist`. The source condition lets the examples and other workspace packages type-check and run against source without a build (`customConditions` in `tsconfig.base.json`, `node --conditions=@stdbl/source` at runtime).
+   - `package.json`: name `@stunt-double/<name>`, version `0.0.0` (the first changeset sets the first real version), `"type": "module"`, `"license"`, `"repository"` with `"directory": "packages/<name>"`, `"files": ["dist", "src", "!src/**/*.test.ts", "README.md", "LICENSE"]`, `"publishConfig": { "access": "public", "registry": "https://npm.pkg.github.com" }`, and the scripts `build` (`tsup`), `type-check` (`tsc -p tsconfig.json`) and `test` (`node --test "src/**/*.test.ts"`). Copy `packages/browser-toolset/package.json` as a starting point.
+   - `exports` with, for each entry point, an `@stunt-double/source` condition pointing at the `.ts` source, then `types` and `default` pointing into `dist`. The source condition lets the examples and other workspace packages type-check and run against source without a build (`customConditions` in `tsconfig.base.json`, `node --conditions=@stunt-double/source` at runtime).
    - `tsconfig.json` extending `../../tsconfig.base.json`, and `tsup.config.ts` listing the same entry points as `exports`.
    - `README.md` and a `LICENSE` file. A package may use a different licence from the rest of the repository; its own `LICENSE` and `license` field are what count.
 2. Add a row to the packages table in the root `README.md`, and the package to the issue forms in `.github/ISSUE_TEMPLATE/`.
 3. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
-4. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges.
+4. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and bootstrap its first publish as described under Changesets above.
 
 Examples that need extra dependencies live in `packages/<name>/examples/` as a private workspace package (see `packages/browser-toolset/examples`), and are listed under `ignore` in `.changeset/config.json`.
 
@@ -75,9 +83,9 @@ Then, in the monorepo, override the package with a link to your checkout. pnpm 1
 ```yaml
 # stuntdouble/pnpm-workspace.yaml (do not commit)
 overrides:
-  '@stdbl/browser-toolset': link:../stuntkit/packages/browser-toolset
+  '@stunt-double/browser-toolset': link:../stuntkit/packages/browser-toolset
 ```
 
-Run `pnpm install` in the monorepo. The link resolves through the package's `exports`, so either build here once and keep it fresh with `pnpm --filter @stdbl/browser-toolset exec tsup --watch`, or, in a monorepo project whose TypeScript and runtime can read source, add the `@stdbl/source` condition (`customConditions` in its `tsconfig.json`, `--conditions=@stdbl/source` for Node) to use the TypeScript source directly.
+Run `pnpm install` in the monorepo. The link resolves through the package's `exports`, so either build here once and keep it fresh with `pnpm --filter @stunt-double/browser-toolset exec tsup --watch`, or, in a monorepo project whose TypeScript and runtime can read source, add the `@stunt-double/source` condition (`customConditions` in its `tsconfig.json`, `--conditions=@stunt-double/source` for Node) to use the TypeScript source directly.
 
 Remove the override and run `pnpm install` again before committing in the monorepo; once the change is released, bump the version there instead.

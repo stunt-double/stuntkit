@@ -15,6 +15,6 @@ Fixes land in the latest published minor version of each package. Pre-1.0 packag
 
 ## Scope
 
-In scope: the published packages in this repository, including bypasses of `@stdbl/browser-toolset`'s safety guards (`BrowserSafetyOptions`) and navigation checks (`isPrivateHost`, `checkNavigation`) by content a page can control.
+In scope: the published packages in this repository, including bypasses of `@stunt-double/browser-toolset`'s safety guards (`BrowserSafetyOptions`) and navigation checks (`isPrivateHost`, `checkNavigation`) by content a page can control.
 
 The guards read the DOM the page shows, and are documented as a strong default rather than a sandbox, so a report is most useful when it shows a realistic page getting past them.

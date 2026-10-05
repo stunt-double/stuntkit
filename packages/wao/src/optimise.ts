@@ -2,7 +2,7 @@
 // accessibility tree), in place and reversibly.
 //
 // Agents see a page as its accessibility tree (Playwright's aria snapshot,
-// CDP's Accessibility domain, `read_page` in @stdbl/browser-toolset) and as
+// CDP's Accessibility domain, `read_page` in @stunt-double/browser-toolset) and as
 // screenshots. Legacy pages fail the first: a `<div onclick>` is not a button,
 // an icon link has no name, a field's label is a table cell beside it. WAO
 // fixes those with attributes alone. It never replaces, moves or restyles a

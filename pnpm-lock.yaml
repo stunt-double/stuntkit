@@ -59,7 +59,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 0.131.0
         version: 0.131.0(zod@4.6.5)
-      '@stdbl/browser-toolset':
+      '@stunt-double/browser-toolset':
         specifier: workspace:*
         version: link:..
       ai:
