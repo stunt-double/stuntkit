@@ -46,7 +46,7 @@ pnpm changeset
 
 Pick the packages, the bump (patch for fixes, minor for features, and while a package is below 1.0, minor for breaking changes too), and write a sentence or two for the changelog. Commit the generated file in `.changeset/` with your change. Changes to CI, docs or examples need none.
 
-Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions to npm with provenance. Maintainers never publish from a laptop.
+Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions to npm with provenance. Until npm releases the `@stdbl` scope, the job publishes to GitHub Packages instead: `scripts/github-packages.ts` renames each package to `@stunt-double/*` (GitHub Packages accepts only the owner's scope) just before `changeset publish`. Maintainers never publish from a laptop.
 
 ## Adding a package
 

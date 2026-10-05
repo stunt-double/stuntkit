@@ -11,8 +11,9 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  # npm provenance needs an OIDC token.
-  id-token: write
+  # Publishing to GitHub Packages. Swap back to `id-token: write` (npm
+  # provenance) when releases move to npm.
+  packages: write
 
 jobs:
   release:
@@ -26,7 +27,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+          # Until npm releases the @stdbl scope, packages go to GitHub Packages
+          # as @stunt-double/*; see scripts/github-packages.ts.
+          registry-url: https://npm.pkg.github.com
+          scope: '@stunt-double'
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm type-check
@@ -37,11 +41,9 @@ jobs:
       - uses: changesets/action@v1
         with:
           version: pnpm version-packages
-          publish: pnpm release
+          publish: pnpm release:github
           commit: 'chore: version packages'
           title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -17,7 +17,8 @@
     "format:check": "prettier --check .",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "release:github": "node scripts/github-packages.ts && pnpm release"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
