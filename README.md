@@ -15,7 +15,7 @@ Open source building blocks for AI agents that use the web. Extracted from [Stun
 
 ## Agent skills
 
-Each package has an [Agent Skill](./skills) that teaches a coding agent when to reach for it, how to wire it up and the mistakes to avoid. In Claude Code, install them all as a plugin:
+Each package has an [Agent Skill](./skills) that teaches a coding agent when to reach for it, how to wire it up and the mistakes to avoid. Install them all as a plugin from this repository's marketplace:
 
 ```sh
 /plugin marketplace add stunt-double/stuntkit
@@ -36,7 +36,7 @@ pnpm test
 pnpm build
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev loop, adding a package and releasing. Coding agents working in this repository get the same guidance as skills in [`.claude/skills/`](./.claude/skills).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the dev loop, adding a package and releasing. Coding agents working in this repository get the same guidance as [project skills](./.claude/skills).
 
 ## Licence
 

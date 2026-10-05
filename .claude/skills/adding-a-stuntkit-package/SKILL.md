@@ -25,7 +25,7 @@ Product glue, brand-only assets with no developer use, or code that changes week
    - Each `exports` entry: `"@stunt-double/source"` (the `.ts` source) first, then `types`, then `default`. List the same entries in `tsup.config.ts`.
 2. **Write it** to the conventions in the `contributing-to-stuntkit` skill, with tests beside the source.
 3. **README**: what it does and for whom in the first paragraph, a short example, install (with the GitHub Packages note the other READMEs carry), the API, what it does not do, licence.
-4. **Consumer skill**: `skills/stunt-double-<name>/SKILL.md`, following `skills/README.md`. Add its row to the table there, and bump `version` in `.claude-plugin/plugin.json`.
+4. **Consumer skill**: `skills/stunt-double-<name>/SKILL.md`, following `skills/README.md`. Add its row to the table there, and bump `version` in the plugin manifest.
 5. **Wire it in**:
    - A row in the packages table in the root `README.md`.
    - An option in the package dropdowns in `.github/ISSUE_TEMPLATE/bug_report.yml` and `feature_request.yml`.

@@ -66,7 +66,7 @@ On npm, publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-
    - `tsconfig.json` extending `../../tsconfig.base.json`, and `tsup.config.ts` listing the same entry points as `exports`.
    - `README.md` and a `LICENSE` file. A package may use a different licence from the rest of the repository; its own `LICENSE` and `license` field are what count.
 2. Add a row to the packages table in the root `README.md`, the package to the issue forms in `.github/ISSUE_TEMPLATE/` and to the checklist in `.github/pull_request_template.md`.
-3. Write its agent skill in `skills/stunt-double-<name>/SKILL.md` (see [`skills/README.md`](./skills/README.md)), add it to the table there, and bump `version` in `.claude-plugin/plugin.json`.
+3. Write its agent skill in `skills/stunt-double-<name>/SKILL.md` (see [`skills/README.md`](./skills/README.md)), add it to the table there, and bump `version` in the plugin manifest.
 4. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
 5. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and bootstrap its first publish as described under Changesets above.
 

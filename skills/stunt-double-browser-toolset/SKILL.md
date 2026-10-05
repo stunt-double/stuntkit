@@ -1,6 +1,6 @@
 ---
 name: stunt-double-browser-toolset
-description: Use when building an AI agent that drives a real browser with @stunt-double/browser-toolset, on Claude's browser use toolset (BrowserToolsetExecutor) or on any model's function calling (DirectBrowserTools), including implementing BrowserDriver over Playwright, Stagehand, a hosted browser or CDP, turning on the payment, sign-up and secret guards, and pruning screenshots from long agent transcripts.
+description: Use when building an AI agent that drives a real browser with @stunt-double/browser-toolset, on Anthropic's browser use toolset (BrowserToolsetExecutor) or on any model's function calling (DirectBrowserTools), including implementing BrowserDriver over Playwright, Stagehand, a hosted browser or CDP, turning on the payment, sign-up and secret guards, and pruning screenshots from long agent transcripts.
 ---
 
 # Browser toolset (`@stunt-double/browser-toolset`)
@@ -13,7 +13,7 @@ Install: `pnpm add @stunt-double/browser-toolset`. Until the scope is on npm it 
 
 | Model and SDK                                  | Use                                                                   |
 | ---------------------------------------------- | --------------------------------------------------------------------- |
-| Claude on the Anthropic SDK                    | `BROWSER_TOOLSET` in `tools`, `BrowserToolsetExecutor.runTurn(calls)` |
+| Anthropic's browser use toolset, Anthropic SDK | `BROWSER_TOOLSET` in `tools`, `BrowserToolsetExecutor.runTurn(calls)` |
 | Any model with function calling, or the AI SDK | `DIRECT_TOOL_SPECS` as tools, `DirectBrowserTools.run(name, input)`   |
 
 Without the Anthropic SDK installed, import from subpaths (`/direct-tools`, `/safety`, `/driver`) so its types are never needed.

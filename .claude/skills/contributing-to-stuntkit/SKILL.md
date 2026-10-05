@@ -43,7 +43,7 @@ pnpm changeset
 
 Patch for fixes, minor for features. Packages below 1.0 take minor for breaking changes. CI, docs, examples and skills need none. Merging to `main` opens or updates the "Version packages" PR; merging that publishes. Never publish by hand.
 
-When a package's behaviour changes, update its skill in `skills/stunt-double-<name>/SKILL.md` in the same PR, and bump `version` in `.claude-plugin/plugin.json`.
+When a package's behaviour changes, update its skill in `skills/stunt-double-<name>/SKILL.md` in the same PR, and bump `version` in the plugin manifest.
 
 ## Commits and pull requests
 

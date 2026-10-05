@@ -8,7 +8,7 @@
 - [ ] `@stunt-double/icons`
 - [ ] `@stunt-double/spelling`
 - [ ] `@stunt-double/wao`
-- [ ] Skills (`skills/`, `.claude/skills/`)
+- [ ] Skills (package and project skills)
 - [ ] Repository only (CI, tooling, docs, examples)
 
 ## Checklist
