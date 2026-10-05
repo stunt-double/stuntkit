@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml/badge.svg)](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml)
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](./LICENSE)
-<a href="https://index.stuntdouble.io/d/stuntdouble.io?ref=badge"><img src="https://index.stuntdouble.io/badge/stuntdouble.io.svg" alt="stuntdouble.io Stunt Double Index agent score" width="220" height="28"></a>
+<a href="https://index.stuntdouble.io/d/stuntdouble.io?ref=badge"><img src="https://index.stuntdouble.io/badge/stuntdouble.io.svg" alt="stuntdouble.io Stunt Double Index agent score" width="157" height="20"></a>
 
 Open source building blocks for AI agents that use the web. Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. Published under the `@stunt-double` scope. Until that scope is available on npm, releases go to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
 
