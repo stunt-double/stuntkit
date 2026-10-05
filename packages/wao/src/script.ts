@@ -7,14 +7,7 @@
 //   <script>window.waoOptions = { rules: [{ selector: '#cart', label: 'Basket' }] };</script>
 //   <script src=".../wao.global.js" defer></script>
 
-import { optimise, type Wao, type WaoOptions } from './optimise.ts';
-
-declare global {
-  interface Window {
-    wao?: Wao;
-    waoOptions?: WaoOptions;
-  }
-}
+import { optimise } from './optimise.ts';
 
 function start(): void {
   // A second copy of the script on the same page must not optimise twice.

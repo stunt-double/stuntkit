@@ -42,7 +42,8 @@ The search control was a `<div onclick>` holding a Glyphicon, and the cart link 
 - **Never overwrites the page.** The automatic repairs only fill in attributes the page has not set. Only rules you write can override.
 - **Reversible.** `restore()` puts every attribute back exactly as it was.
 - **Keeps up.** A `MutationObserver` optimises content that single-page apps add later.
-- **Small.** About 3.5 KB gzipped, with no dependencies.
+- **Reaches web components.** Controls inside open shadow roots are repaired and observed too.
+- **Small.** About 4 KB gzipped, with no dependencies.
 
 Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. This is version 2, a rewrite of [`stunt-double/wao`](https://github.com/stunt-double/wao). See [Upgrading from 1.x](#upgrading-from-1x).
 
@@ -68,6 +69,58 @@ const wao = optimise();
 ```
 
 The npm entry has no side effects: nothing runs until you call `optimise`. The script build runs `optimise` once the DOM is ready and exposes the handle as `window.wao`.
+
+In a React app, optimise once from an effect and restore on cleanup:
+
+```tsx
+import { optimise } from '@stunt-double/wao';
+import { useEffect } from 'react';
+
+export function AgentReady() {
+  useEffect(() => {
+    const controller = new AbortController();
+    optimise({ signal: controller.signal });
+    return () => controller.abort();
+  }, []);
+  return null;
+}
+```
+
+## In an agent's browser
+
+You do not need to own a site to use WAO on it. An agent harness can inject the script build into every page it opens, so the agent reads the repaired tree. With Playwright:
+
+```ts
+import type {} from '@stunt-double/wao'; // Types `window.wao` and `window.waoOptions`.
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const script = readFileSync(fileURLToPath(import.meta.resolve('@stunt-double/wao/script')), 'utf8');
+const options = { rules: [{ selector: '#hdr .links', role: 'navigation', label: 'Primary' }] };
+
+// One init script, options first: Playwright does not define the order of
+// separate init scripts. It runs before the page's own scripts.
+await context.addInitScript({
+  content: `window.waoOptions = ${JSON.stringify(options)};\n${script}`,
+});
+
+const page = await context.newPage();
+await page.goto('https://legacy.example.com');
+console.log(await page.locator('body').ariaSnapshot()); // The repaired tree.
+
+// What WAO changed and what it could not fix, for logs or for the agent itself.
+const { changes, issues } = await page.evaluate(() => {
+  const { changes, issues } = window.wao!.report();
+  return {
+    changes: changes.map(({ kind, target, value, source }) => ({ kind, target, value, source })),
+    issues: issues.map(({ kind, target }) => ({ kind, target })),
+  };
+});
+```
+
+Reports hold live elements, so map them to plain data before they leave the page. With Puppeteer, pass the same combined content to `page.evaluateOnNewDocument`. Over raw CDP, pass it as the `source` of `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stunt-double/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
+
+The script only runs once per page, so a second injection (or a site that already ships WAO) is harmless.
 
 ## What it repairs
 
@@ -133,14 +186,19 @@ Runs one pass now and returns a handle. Options:
 | `root`     | `document.documentElement` | The subtree to optimise.                                                       |
 | `observe`  | `true`                     | Optimise content added later.                                                  |
 | `keyboard` | `true`                     | Activate repaired clickables with Enter and Space.                             |
+| `shadow`   | `true`                     | Optimise and observe inside open shadow roots.                                 |
 | `repairs`  | all `true`                 | `{ clickables, names, landmarks }`.                                            |
 | `rules`    | `[]`                       | `{ selector, role?, label?, description? }[]`. An invalid selector is skipped. |
+| `signal`   |                            | An `AbortSignal`. Aborting it restores the page, as `restore()` does.          |
+| `onReport` |                            | Called with the report after every pass, including passes over later content.  |
 
 ### The handle
 
 - `report()`: changes and issues as of the last pass.
 - `refresh()`: run a full pass now, for a change the observer cannot see (a `cursor` set by a class toggle, for example).
-- `restore()`: undo every change, stop observing and remove the keyboard handler.
+- `restore()`: undo every change, stop observing and remove the keyboard handler. Calling it twice is harmless.
+
+The handle is also `Disposable`, so `using wao = optimise()` restores the page when the block ends (TypeScript 5.2 or later, or a runtime with explicit resource management).
 
 ### `accessibleName(element)` and `inferName(element)`
 
@@ -151,6 +209,7 @@ The two building blocks, exported for tooling. `accessibleName` is the subset of
 - It does not make a page accessible. Inferred names are a best guess for agents. A site that people use with assistive technology needs real labels.
 - It does not change what a page looks like or how it behaves, except that Enter and Space click a repaired clickable.
 - It does not send anything anywhere, and makes no network requests.
+- It cannot reach inside closed shadow roots or cross-origin iframes, as no script outside them can.
 
 ## Upgrading from 1.x
 

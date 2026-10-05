@@ -44,7 +44,9 @@ Every pull request that changes what a published package does includes a changes
 pnpm changeset
 ```
 
-Pick the packages, the bump (patch for fixes, minor for features, and while a package is below 1.0, minor for breaking changes too), and write a sentence or two for the changelog. Commit the generated file in `.changeset/` with your change. Changes to CI, docs or examples need none.
+When a change alters how a package is used, update its skill in `skills/` in the same pull request.
+
+Pick the packages, the bump (patch for fixes, minor for features, and while a package is below 1.0, minor for breaking changes too), and write a sentence or two for the changelog. Commit the generated file in `.changeset/` with your change. Changes to CI, docs, examples or skills need none.
 
 Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions, tags each one (`@stunt-double/<name>@<version>`) and creates its GitHub release from the changelog entry. Maintainers never publish from a laptop.
 
@@ -63,9 +65,10 @@ On npm, publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-
    - `exports` with, for each entry point, an `@stunt-double/source` condition pointing at the `.ts` source, then `types` and `default` pointing into `dist`. The source condition lets the examples and other workspace packages type-check and run against source without a build (`customConditions` in `tsconfig.base.json`, `node --conditions=@stunt-double/source` at runtime).
    - `tsconfig.json` extending `../../tsconfig.base.json`, and `tsup.config.ts` listing the same entry points as `exports`.
    - `README.md` and a `LICENSE` file. A package may use a different licence from the rest of the repository; its own `LICENSE` and `license` field are what count.
-2. Add a row to the packages table in the root `README.md`, and the package to the issue forms in `.github/ISSUE_TEMPLATE/`.
-3. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
-4. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and bootstrap its first publish as described under Changesets above.
+2. Add a row to the packages table in the root `README.md`, the package to the issue forms in `.github/ISSUE_TEMPLATE/` and to the checklist in `.github/pull_request_template.md`.
+3. Write its agent skill in `skills/stunt-double-<name>/SKILL.md` (see [`skills/README.md`](./skills/README.md)), add it to the table there, and bump `version` in the plugin manifest.
+4. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
+5. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and bootstrap its first publish as described under Changesets above.
 
 Examples that need extra dependencies live in `packages/<name>/examples/` as a private workspace package (see `packages/browser-toolset/examples`), and are listed under `ignore` in `.changeset/config.json`.
 

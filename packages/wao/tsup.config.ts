@@ -7,7 +7,12 @@ export default defineConfig([
     target: 'es2020',
     platform: 'browser',
     // tsup's declaration build sets `baseUrl`, which TypeScript 6 deprecates.
-    dts: { compilerOptions: { ignoreDeprecations: '6.0' } },
+    dts: {
+      compilerOptions: { ignoreDeprecations: '6.0' },
+      // The handle is `Disposable`. The bundler drops the source's lib
+      // reference, so restore it for consumers whose `lib` predates it.
+      banner: '/// <reference lib="esnext.disposable" />',
+    },
     sourcemap: true,
     clean: true,
     treeshake: true,

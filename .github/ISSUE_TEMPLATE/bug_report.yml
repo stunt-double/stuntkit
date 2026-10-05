@@ -14,6 +14,7 @@ body:
         - '@stunt-double/icons'
         - '@stunt-double/spelling'
         - '@stunt-double/wao'
+        - Skills
         - Repository (CI, tooling, docs)
     validations:
       required: true

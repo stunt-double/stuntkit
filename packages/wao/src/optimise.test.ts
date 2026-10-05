@@ -218,3 +218,91 @@ test('accessible names follow the parts of accname WAO relies on', () => {
   assert.equal(accessibleName($('#e')), '');
   assert.equal(accessibleName($('#f')), '');
 });
+
+test('controls inside open shadow roots are repaired, and keep up with later content', async () => {
+  const { window, document, $ } = page(`<main><div id="host"></div></main>`);
+  const shadow = $('#host').attachShadow({ mode: 'open' });
+  shadow.innerHTML = `
+    <span id="l">Quantity</span><input id="qty" aria-labelledby="l">
+    <div id="buy" onclick="buy()"><i class="fa-cart-plus"></i></div>
+  `;
+  const wao = optimise({ root: document.documentElement });
+  const inside = (selector: string) => shadow.querySelector(selector)!;
+  assert.equal(inside('#buy').getAttribute('role'), 'button');
+  assert.equal(inside('#buy').getAttribute('aria-label'), 'Cart plus');
+  // `aria-labelledby` resolves inside the shadow root, so the field is already named.
+  assert.equal(inside('#qty').hasAttribute('aria-label'), false);
+
+  // happy-dom hangs on `insertAdjacentHTML` inside a shadow root, so build the node.
+  const late = document.createElement('span');
+  late.id = 'late';
+  late.setAttribute('onclick', 'go()');
+  late.setAttribute('data-tooltip', 'Wishlist');
+  shadow.append(late);
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+  assert.equal(inside('#late').getAttribute('aria-label'), 'Wishlist');
+
+  wao.restore();
+  assert.equal(inside('#buy').hasAttribute('role'), false);
+  assert.equal(inside('#late').hasAttribute('aria-label'), false);
+});
+
+test('shadow: false leaves shadow roots alone', () => {
+  const { $, run } = page(`<main><div id="host"></div></main>`);
+  const shadow = $('#host').attachShadow({ mode: 'open' });
+  shadow.innerHTML = `<div id="buy" onclick="buy()">Buy</div>`;
+  run({ shadow: false });
+  assert.equal(shadow.querySelector('#buy')!.hasAttribute('role'), false);
+});
+
+test('an abort signal restores the page, and an aborted one never starts', () => {
+  const { window, document, $, run } = page(`<main><div id="x" onclick="go()">Go</div></main>`);
+  const before = document.body.innerHTML;
+  const controller = new window.AbortController() as unknown as AbortController;
+  run({ signal: controller.signal });
+  assert.equal($('#x').getAttribute('role'), 'button');
+  controller.abort();
+  assert.equal(document.body.innerHTML, before);
+
+  const late = run({ signal: controller.signal });
+  assert.equal($('#x').hasAttribute('role'), false);
+  assert.deepEqual(late.report(), { changes: [], issues: [] });
+});
+
+test('the handle is disposable, for `using wao = optimise()`', () => {
+  // Node 22 cannot parse `using` yet, so this calls what it would.
+  const { document, run } = page(`<main><div id="x" onclick="go()">Go</div></main>`);
+  const before = document.body.innerHTML;
+  const wao = run();
+  assert.notEqual(document.body.innerHTML, before);
+  wao[Symbol.dispose]();
+  assert.equal(document.body.innerHTML, before);
+  wao.restore(); // A second restore is a no-op.
+  assert.equal(document.body.innerHTML, before);
+});
+
+test('onReport hears every pass, including content added later', async () => {
+  const { window, document, $ } = page(`<main id="app"></main>`);
+  const reports: number[] = [];
+  const wao = optimise({
+    root: document.documentElement,
+    onReport: (report) => reports.push(report.changes.length),
+  });
+  $('#app').innerHTML = `<div onclick="go()">Go</div>`;
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+  assert.deepEqual(reports, [0, 2]);
+  wao.restore();
+});
+
+test('a node moved outside root before the batch runs is left alone', async () => {
+  const { window, document, $ } = page(`<main><div id="app"></div></main><div id="outside"></div>`);
+  const wao = optimise({ root: $('#app') });
+  const moved = document.createElement('div');
+  moved.id = 'moved';
+  moved.setAttribute('onclick', 'go()');
+  $('#app').append(moved);
+  $('#outside').append(moved);
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+  assert.equal(moved.hasAttribute('role'), false);
+  wao.restore();
+});
