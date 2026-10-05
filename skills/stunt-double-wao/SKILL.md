@@ -43,17 +43,17 @@ useEffect(() => {
 
 ```ts
 import type {} from '@stunt-double/wao'; // Types window.wao and window.waoOptions.
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const script = fileURLToPath(import.meta.resolve('@stunt-double/wao/script'));
-await context.addInitScript(() => {
-  window.waoOptions = { observe: true };
+const script = readFileSync(fileURLToPath(import.meta.resolve('@stunt-double/wao/script')), 'utf8');
+await context.addInitScript({
+  content: `window.waoOptions = ${JSON.stringify(options)};\n${script}`,
 });
-await context.addInitScript({ path: script });
 ```
 
-- Register both init scripts on the context **before** navigating. `page.setContent` reuses the `about:blank` document WAO already ran on, so test with `page.route` plus `goto` instead.
-- Puppeteer: `page.evaluateOnNewDocument(fs.readFileSync(script, 'utf8'))`. Raw CDP: `Page.addScriptToEvaluateOnNewDocument`.
+- Use **one** init script with the options prepended: Playwright does not define the order of separate init scripts, so options in their own script can land after WAO has started. Register it on the context **before** navigating. `page.setContent` reuses the `about:blank` document WAO already ran on, so test with `page.route` plus `goto` instead.
+- Puppeteer: pass the same combined content to `page.evaluateOnNewDocument`. Raw CDP: `Page.addScriptToEvaluateOnNewDocument` with that content as `source`.
 - `report()` holds live elements. Map to plain data inside `page.evaluate` before returning it: `changes.map(({ kind, target, value, source }) => ...)`.
 - The script build only starts once per window, so injecting into a site that already ships WAO is harmless.
 

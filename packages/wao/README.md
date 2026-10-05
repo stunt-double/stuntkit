@@ -92,15 +92,17 @@ You do not need to own a site to use WAO on it. An agent harness can inject the 
 
 ```ts
 import type {} from '@stunt-double/wao'; // Types `window.wao` and `window.waoOptions`.
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const wao = fileURLToPath(import.meta.resolve('@stunt-double/wao/script'));
+const script = readFileSync(fileURLToPath(import.meta.resolve('@stunt-double/wao/script')), 'utf8');
+const options = { rules: [{ selector: '#hdr .links', role: 'navigation', label: 'Primary' }] };
 
-// Options first (optional), then the script. Both run before the page's own scripts.
-await context.addInitScript(() => {
-  window.waoOptions = { observe: true };
+// One init script, options first: Playwright does not define the order of
+// separate init scripts. It runs before the page's own scripts.
+await context.addInitScript({
+  content: `window.waoOptions = ${JSON.stringify(options)};\n${script}`,
 });
-await context.addInitScript({ path: wao });
 
 const page = await context.newPage();
 await page.goto('https://legacy.example.com');
@@ -116,7 +118,7 @@ const { changes, issues } = await page.evaluate(() => {
 });
 ```
 
-Reports hold live elements, so map them to plain data before they leave the page. With Puppeteer, pass the file's contents to `page.evaluateOnNewDocument`. Over raw CDP, use `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stunt-double/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
+Reports hold live elements, so map them to plain data before they leave the page. With Puppeteer, pass the same combined content to `page.evaluateOnNewDocument`. Over raw CDP, pass it as the `source` of `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stunt-double/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
 
 The script only runs once per page, so a second injection (or a site that already ships WAO) is harmless.
 

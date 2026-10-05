@@ -362,10 +362,23 @@ export function optimise(options: WaoOptions = {}): Wao {
   let pending = new Set<Element>();
   let scheduled = false;
   let stopped = false;
+  // Still under `root`, through any shadow hosts: a node can be added and
+  // then moved elsewhere before the batch runs.
+  function inRoot(element: Element): boolean {
+    let node: Element | null = element;
+    while (node) {
+      if (!node.isConnected) return false;
+      if (root.contains(node)) return true;
+      const tree = node.getRootNode();
+      node = tree.nodeType === 11 ? (tree as ShadowRoot).host : null;
+    }
+    return false;
+  }
+
   function flush(): void {
     scheduled = false;
     if (stopped) return;
-    const scopes = [...pending].filter((el) => el.isConnected);
+    const scopes = [...pending].filter(inRoot);
     pending = new Set();
     for (const scope of scopes) {
       pass(scope);

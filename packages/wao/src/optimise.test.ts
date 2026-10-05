@@ -293,3 +293,16 @@ test('onReport hears every pass, including content added later', async () => {
   assert.deepEqual(reports, [0, 2]);
   wao.restore();
 });
+
+test('a node moved outside root before the batch runs is left alone', async () => {
+  const { window, document, $ } = page(`<main><div id="app"></div></main><div id="outside"></div>`);
+  const wao = optimise({ root: $('#app') });
+  const moved = document.createElement('div');
+  moved.id = 'moved';
+  moved.setAttribute('onclick', 'go()');
+  $('#app').append(moved);
+  $('#outside').append(moved);
+  await new Promise((resolve) => window.setTimeout(resolve, 100));
+  assert.equal(moved.hasAttribute('role'), false);
+  wao.restore();
+});
