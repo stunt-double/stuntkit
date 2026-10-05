@@ -1,3 +1,5 @@
+/// <reference lib="esnext.disposable" />
+
 // The optimiser: repairs the semantics an agent reads a page through (the
 // accessibility tree), in place and reversibly.
 //
@@ -41,8 +43,14 @@ export interface WaoOptions {
   observe?: boolean;
   /** Activate repaired clickables with Enter and Space, as a native button is. Default true. */
   keyboard?: boolean;
+  /** Also optimise inside open shadow roots (web components). Default true. */
+  shadow?: boolean;
   repairs?: WaoRepairs;
   rules?: readonly WaoRule[];
+  /** Restore the page when this signal aborts, as `restore()` does. */
+  signal?: AbortSignal;
+  /** Called with the report after every pass, including passes over content added later. */
+  onReport?: (report: WaoReport) => void;
 }
 
 export type WaoChangeKind = 'rule' | 'role' | 'focus' | 'name' | 'landmark';
@@ -73,13 +81,31 @@ export interface WaoReport {
   issues: WaoIssue[];
 }
 
-export interface Wao {
+export interface Wao extends Disposable {
   /** Every change in effect and every open issue, as of the last pass. */
   report(): WaoReport;
   /** Run a full pass now, for example after the page changed in a way the observer cannot see. */
   refresh(): WaoReport;
-  /** Undo every change, stop observing and remove the keyboard handler. */
+  /** Undo every change, stop observing and remove the keyboard handler. Safe to call twice. */
   restore(): void;
+  /** `restore()`, so `using wao = optimise()` restores the page at the end of the block. */
+  [Symbol.dispose](): void;
+}
+
+// `Symbol.dispose` is missing from older browsers; fall back to the symbol
+// TypeScript's `using` helper looks for there.
+const DISPOSE: typeof Symbol.dispose =
+  typeof Symbol.dispose === 'symbol'
+    ? Symbol.dispose
+    : (Symbol.for('Symbol.dispose') as typeof Symbol.dispose);
+
+declare global {
+  interface Window {
+    /** The handle the script build creates once the DOM is ready. */
+    wao?: Wao;
+    /** Options for the script build, set before it loads. */
+    waoOptions?: WaoOptions;
+  }
 }
 
 /** Marks every element WAO changed: `data-wao="role focus name"`. */
@@ -153,6 +179,7 @@ export function optimise(options: WaoOptions = {}): Wao {
   const view = doc.defaultView;
   const repairs = { clickables: true, names: true, landmarks: true, ...options.repairs };
   const rules = options.rules ?? [];
+  const shadow = options.shadow !== false;
 
   // Every attribute WAO touched, with the value it had before (null: absent).
   const originals = new Map<Element, Map<string, string | null>>();
@@ -196,9 +223,29 @@ export function optimise(options: WaoOptions = {}): Wao {
     if (!element.hasAttribute(attribute)) set(element, attribute, value, kind, source);
   }
 
+  // Open shadow roots under a scope, nested ones included. Closed roots are
+  // out of reach, for WAO as for any script outside the component.
+  function shadowRootsUnder(scope: Element): ShadowRoot[] {
+    if (!shadow) return [];
+    const found: ShadowRoot[] = [];
+    const visit = (host: Element) => {
+      const shadowRoot = host.shadowRoot;
+      if (!shadowRoot) return;
+      found.push(shadowRoot);
+      for (const el of Array.from(shadowRoot.querySelectorAll('*'))) visit(el);
+    };
+    visit(scope);
+    for (const el of Array.from(scope.querySelectorAll('*'))) visit(el);
+    return found;
+  }
+
   function within(scope: Element, selector: string): Element[] {
     const found = Array.from(scope.querySelectorAll(selector));
-    return scope.matches(selector) ? [scope, ...found] : found;
+    if (scope.matches(selector)) found.unshift(scope);
+    for (const shadowRoot of shadowRootsUnder(scope)) {
+      found.push(...Array.from(shadowRoot.querySelectorAll(selector)));
+    }
+    return found;
   }
 
   function applyRules(scope: Element): void {
@@ -280,10 +327,18 @@ export function optimise(options: WaoOptions = {}): Wao {
   }
 
   function fullPass(): WaoReport {
+    if (stopped) return report();
     pass(root);
     if (repairs.landmarks) repairLandmarks();
     issues = collectIssues();
-    return report();
+    observeShadowRoots(root);
+    return notify();
+  }
+
+  function notify(): WaoReport {
+    const current = report();
+    options.onReport?.(current);
+    return current;
   }
 
   function report(): WaoReport {
@@ -293,7 +348,8 @@ export function optimise(options: WaoOptions = {}): Wao {
   // Enter and Space activate a repaired clickable, as they would a button.
   function onKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Enter' && event.key !== ' ') return;
-    const target = event.target as Element | null;
+    // Inside a shadow root, `target` is retargeted to the host at the document.
+    const target = (event.composedPath()[0] ?? event.target) as Element | null;
     if (!target || target.nodeType !== 1) return;
     const marks = target.getAttribute(WAO_ATTRIBUTE) ?? '';
     if (!marks.split(' ').includes('role') || target.getAttribute('role') !== 'button') return;
@@ -309,11 +365,15 @@ export function optimise(options: WaoOptions = {}): Wao {
   function flush(): void {
     scheduled = false;
     if (stopped) return;
-    const scopes = [...pending].filter((el) => el.isConnected && root.contains(el));
+    const scopes = [...pending].filter((el) => el.isConnected);
     pending = new Set();
-    for (const scope of scopes) pass(scope);
+    for (const scope of scopes) {
+      pass(scope);
+      observeShadowRoots(scope);
+    }
     if (repairs.landmarks) repairLandmarks();
     issues = collectIssues();
+    notify();
   }
   const observer =
     options.observe !== false && view?.MutationObserver
@@ -330,27 +390,50 @@ export function optimise(options: WaoOptions = {}): Wao {
         })
       : null;
 
-  fullPass();
-  observer?.observe(root, { childList: true, subtree: true });
-  if (options.keyboard !== false) doc.addEventListener('keydown', onKeydown);
+  // A MutationObserver does not see into shadow roots, so each one is observed
+  // on its own. A root attached after its host was optimised is picked up by
+  // the next pass that reaches the host (or by `refresh()`).
+  const observedShadowRoots = new WeakSet<ShadowRoot>();
+  function observeShadowRoots(scope: Element): void {
+    if (!observer) return;
+    for (const shadowRoot of shadowRootsUnder(scope)) {
+      if (observedShadowRoots.has(shadowRoot)) continue;
+      observedShadowRoots.add(shadowRoot);
+      observer.observe(shadowRoot, { childList: true, subtree: true });
+    }
+  }
+
+  function restore(): void {
+    if (stopped) return;
+    stopped = true;
+    observer?.disconnect();
+    pending = new Set();
+    doc.removeEventListener('keydown', onKeydown);
+    options.signal?.removeEventListener('abort', restore);
+    for (const [element, saved] of originals) {
+      for (const [attribute, value] of saved) {
+        if (value === null) element.removeAttribute(attribute);
+        else element.setAttribute(attribute, value);
+      }
+    }
+    originals.clear();
+    changes.length = 0;
+    issues = [];
+  }
+
+  if (options.signal?.aborted) {
+    stopped = true;
+  } else {
+    observer?.observe(root, { childList: true, subtree: true });
+    if (options.keyboard !== false) doc.addEventListener('keydown', onKeydown);
+    options.signal?.addEventListener('abort', restore, { once: true });
+    fullPass();
+  }
 
   return {
     report,
     refresh: fullPass,
-    restore(): void {
-      stopped = true;
-      observer?.disconnect();
-      pending = new Set();
-      doc.removeEventListener('keydown', onKeydown);
-      for (const [element, saved] of originals) {
-        for (const [attribute, value] of saved) {
-          if (value === null) element.removeAttribute(attribute);
-          else element.setAttribute(attribute, value);
-        }
-      }
-      originals.clear();
-      changes.length = 0;
-      issues = [];
-    },
+    restore,
+    [DISPOSE]: restore,
   };
 }

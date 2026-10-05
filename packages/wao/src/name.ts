@@ -82,15 +82,24 @@ export function contentText(element: Element): string {
   return collapse(parts.join(''));
 }
 
+/** The document or shadow root an element lives in. */
+function treeOf(element: Element): Document | ShadowRoot {
+  const node = element.getRootNode();
+  return node.nodeType === 9 || node.nodeType === 11
+    ? (node as Document | ShadowRoot)
+    : element.ownerDocument;
+}
+
 function labelledByText(element: Element): string {
   const ids = collapse(element.getAttribute('aria-labelledby'));
   if (!ids) return '';
-  const doc = element.ownerDocument;
+  // Inside a shadow root, ids resolve within that root, as browsers do.
+  const scope = treeOf(element);
   return collapse(
     ids
       .split(' ')
       .map((id) => {
-        const target = doc.getElementById(id);
+        const target = scope.getElementById(id);
         return target ? contentText(target) : '';
       })
       .join(' ')
@@ -108,9 +117,8 @@ function labelsText(element: Element): string {
   }
   // Some DOMs do not implement `labels`; fall back to the two ways a label binds.
   const id = element.getAttribute('id');
-  const doc = element.ownerDocument;
   if (id) {
-    for (const label of Array.from(doc.querySelectorAll('label[for]'))) {
+    for (const label of Array.from(treeOf(element).querySelectorAll('label[for]'))) {
       if (label.getAttribute('for') === id) return contentText(label);
     }
   }
