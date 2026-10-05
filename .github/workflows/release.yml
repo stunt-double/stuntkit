@@ -3,8 +3,8 @@ name: Release
 on:
   push:
     branches: [main]
-  # Re-runs the publish step by hand, for example after configuring a trusted
-  # publisher on npm. It only publishes versions npm does not already have.
+  # Re-runs the publish step by hand. It only publishes versions the registry
+  # does not already have.
   workflow_dispatch:
 
 concurrency:
@@ -14,26 +14,29 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  # npm trusted publishing (and provenance) exchanges a GitHub OIDC token for
-  # a short-lived publish token, so the repository holds no npm secret.
-  id-token: write
+  # Until the @stunt-double scope is available on npm, packages publish to
+  # GitHub Packages with GITHUB_TOKEN. Swap back to `id-token: write` (npm
+  # trusted publishing and provenance) when releases move to npm.
+  packages: write
 
 jobs:
   release:
     name: Version or publish
     runs-on: ubuntu-latest
-    # A manual run can target any branch, and the npm trusted publisher only
-    # checks the workflow file, so only `main` may publish.
+    # A manual run can target any branch, so only `main` may publish.
     if: github.repository == 'stunt-double/stuntkit' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-      # No `registry-url`: it writes an .npmrc holding `${NODE_AUTH_TOKEN}`,
-      # and an empty token there stops the OIDC exchange from being tried.
+      # Writes an .npmrc that sends @stunt-double to GitHub Packages with
+      # NODE_AUTH_TOKEN. Drop `registry-url` and `scope` when moving to npm:
+      # an empty token there stops the OIDC exchange from being tried.
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
+          registry-url: https://npm.pkg.github.com
+          scope: '@stunt-double'
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm type-check
@@ -50,8 +53,4 @@ jobs:
           title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Unset normally: publishing uses npm trusted publishing. Set it only
-          # to bootstrap a package npm has never seen (a trusted publisher can
-          # only be added to an existing package), then delete the secret.
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
