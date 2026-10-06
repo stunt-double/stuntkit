@@ -13,6 +13,15 @@ Extracted from [Stunt Double](https://stuntdouble.io), where it is the icon set 
 
 ## Install
 
+Releases are on [GitHub Packages](https://github.com/orgs/stunt-double/packages) until the `@stunt-double` scope is available on npm. Point the scope at it in your project's `.npmrc`, with a GitHub token that has `read:packages`:
+
+```ini
+@stunt-double:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Then install:
+
 ```sh
 pnpm add @stunt-double/icons
 # or: npm install @stunt-double/icons

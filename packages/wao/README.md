@@ -49,18 +49,21 @@ Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test re
 
 ## Install
 
-As a script tag, on any site:
+Releases are on [GitHub Packages](https://github.com/orgs/stunt-double/packages) until the `@stunt-double` scope is available on npm. Point the scope at it in your project's `.npmrc`, with a GitHub token that has `read:packages`:
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
+```ini
+@stunt-double:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-Or from npm, in a bundled app:
+Then install:
 
 ```sh
 pnpm add @stunt-double/wao
 # or: npm install @stunt-double/wao
 ```
+
+In a bundled app:
 
 ```ts
 import { optimise } from '@stunt-double/wao';
@@ -68,7 +71,7 @@ import { optimise } from '@stunt-double/wao';
 const wao = optimise();
 ```
 
-The npm entry has no side effects: nothing runs until you call `optimise`. The script build runs `optimise` once the DOM is ready and exposes the handle as `window.wao`.
+The package entry has no side effects: nothing runs until you call `optimise`.
 
 In a React app, optimise once from an effect and restore on cleanup:
 
@@ -85,6 +88,14 @@ export function AgentReady() {
   return null;
 }
 ```
+
+As a script tag, on any site, serve the script build from the installed package (`node_modules/@stunt-double/wao/dist/wao.global.js`) with your other static files:
+
+```html
+<script src="/wao.global.js" defer></script>
+```
+
+The script build runs `optimise` once the DOM is ready and exposes the handle as `window.wao`. Public CDNs such as jsDelivr and unpkg mirror npm only, so they cannot serve WAO until it is published there.
 
 ## In an agent's browser
 
@@ -158,7 +169,7 @@ With the script build, set the options before the script loads:
 <script>
   window.waoOptions = { rules: [{ selector: '.btn-go', label: 'Check out' }] };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
+<script src="/wao.global.js" defer></script>
 ```
 
 `description` is written as `aria-description`, which Chromium exposes in the accessibility tree.
@@ -213,7 +224,7 @@ The two building blocks, exported for tooling. `accessibleName` is the subset of
 
 ## Upgrading from 1.x
 
-Version 1 was published as `@stdbl/wao`. Version 2 is `@stunt-double/wao`, so swap the package name (and the CDN URL) as well:
+Version 1 was published as `@stdbl/wao`. Version 2 is `@stunt-double/wao`, so swap the package name (and serve the script build yourself rather than from a CDN) as well:
 
 ```sh
 pnpm remove @stdbl/wao
