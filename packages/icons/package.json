@@ -64,7 +64,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

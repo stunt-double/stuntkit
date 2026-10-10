@@ -32,4 +32,4 @@ Product glue, brand-only assets with no developer use, or code that changes week
    - A checkbox in `.github/pull_request_template.md`.
    - Private example packages go in `packages/<name>/examples/` and under `ignore` in `.changeset/config.json`.
 6. **Verify**: `pnpm install`, then the full dev loop, then `pnpm -r --filter "./packages/*" exec npm pack --dry-run --ignore-scripts` to see exactly what ships.
-7. **Release**: `pnpm changeset`, minor, so the first version goes out on merge. The first publish of a brand new package on npm needs the one-time bootstrap in `CONTRIBUTING.md`.
+7. **Release**: `pnpm changeset`, minor, so the first version goes out on merge. The first publish of a brand new package on npm needs the one-time bootstrap in `CONTRIBUTING.md` (not needed while releases go to GitHub Packages).

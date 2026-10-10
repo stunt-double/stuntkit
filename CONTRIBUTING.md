@@ -68,13 +68,13 @@ On npm, publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-
 2. Add a row to the packages table in the root `README.md`, the package to the issue forms in `.github/ISSUE_TEMPLATE/` and to the checklist in `.github/pull_request_template.md`.
 3. Write its agent skill in `skills/stunt-double-<name>/SKILL.md` (see [`skills/README.md`](./skills/README.md)), add it to the table there, and bump `version` in the plugin manifest.
 4. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
-5. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and bootstrap its first publish as described under Changesets above.
+5. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and, once releases move to npm, bootstrap its first publish as described under Changesets above. On GitHub Packages no bootstrap is needed.
 
 Examples that need extra dependencies live in `packages/<name>/examples/` as a private workspace package (see `packages/browser-toolset/examples`), and are listed under `ignore` in `.changeset/config.json`.
 
 ## Developing against unpublished changes from the Stunt Double monorepo
 
-The Stunt Double product consumes these packages from npm. To try a change here in the product before it is released, check this repository out beside the monorepo:
+The Stunt Double product consumes the published packages, currently from GitHub Packages. To try a change here in the product before it is released, check this repository out beside the monorepo:
 
 ```
 ~/code/stuntdouble

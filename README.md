@@ -6,12 +6,12 @@
 
 Open source building blocks for AI agents that use the web. Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. Published under the `@stunt-double` scope. Until that scope is available on npm, releases go to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
 
-| Package                                                       | Version                                                                                                                               | What                                                                                                                               |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| [`@stunt-double/browser-toolset`](./packages/browser-toolset) | [![npm](https://img.shields.io/npm/v/@stunt-double/browser-toolset.svg)](https://www.npmjs.com/package/@stunt-double/browser-toolset) | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets |
-| [`@stunt-double/icons`](./packages/icons)                     | [![npm](https://img.shields.io/npm/v/@stunt-double/icons.svg)](https://www.npmjs.com/package/@stunt-double/icons)                     | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                    |
-| [`@stunt-double/spelling`](./packages/spelling)               | [![npm](https://img.shields.io/npm/v/@stunt-double/spelling.svg)](https://www.npmjs.com/package/@stunt-double/spelling)               | Whole-word American, British and Canadian spelling localisation                                                                    |
-| [`@stunt-double/wao`](./packages/wao)                         | [![npm](https://img.shields.io/npm/v/@stunt-double/wao.svg)](https://www.npmjs.com/package/@stunt-double/wao)                         | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents             |
+| Package                                                       | What                                                                                                                               |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [`@stunt-double/browser-toolset`](./packages/browser-toolset) | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets |
+| [`@stunt-double/icons`](./packages/icons)                     | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                    |
+| [`@stunt-double/spelling`](./packages/spelling)               | Whole-word American, British and Canadian spelling localisation                                                                    |
+| [`@stunt-double/wao`](./packages/wao)                         | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents             |
 
 ## Agent skills
 

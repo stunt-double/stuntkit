@@ -18,6 +18,8 @@ pnpm add @stunt-double/browser-toolset
 # or: npm install @stunt-double/browser-toolset
 ```
 
+Until the `@stunt-double` scope is available on npm, packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
+
 `@anthropic-ai/sdk` and `ai` are optional peer dependencies, used for types only; nothing imports them at runtime. Their types are referenced by these declarations:
 
 | Import                                                                    | Needs the types of           |

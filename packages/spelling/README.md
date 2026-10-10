@@ -24,6 +24,8 @@ pnpm add @stunt-double/spelling
 # or: npm install @stunt-double/spelling
 ```
 
+Until the `@stunt-double` scope is available on npm, packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
+
 No dependencies. Runs anywhere JavaScript does (browsers, Node 20 or later, workers).
 
 ## How it works
