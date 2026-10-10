@@ -46,6 +46,22 @@ import arrowRight from '@stunt-double/icons/svg/arrow-right.svg';
 
 `@stunt-double/icons/icons.json` lists every icon with its category, search tags, the lucide-react names it replaces and its file name.
 
+## AI provider marks
+
+Filled logos for AI providers and coding agents, each in a `color` and a `mono` variant at `sm` (16px), `md` (24px) and `lg` (32px): Claude, Claude Code, Anthropic, OpenAI, Codex, Cursor, Cline, Windsurf, Perplexity, GitHub Copilot, Gemini, Mistral, DeepSeek, Grok, v0, Lovable, Replit, Ollama, Kiro, Roo Code, Kilo Code, opencode, Amp, Devin, TRAE, Junie, Hugging Face, OpenRouter and Qwen.
+
+```tsx
+import { ClaudeLogo, CursorLogo } from '@stunt-double/icons/react';
+
+<ClaudeLogo />                          // colour, md
+<CursorLogo variant="mono" size="sm" /> // currentColor, 16px
+<ClaudeLogo size={48} title="Claude" />
+```
+
+Components are named in PascalCase with a `Logo` suffix and take `variant` (default `color`), `size` (`sm`, `md`, `lg` or any length; default `md`), `color` (the `mono` paint, default `currentColor`) and `title`. `brandComponents` maps each kebab-case name to its component. The files are `@stunt-double/icons/svg/brands/<name>-<variant>-<size>.svg`, the geometry is `BRAND_MARKS` with `brandToSvg` from the root entry, and `icons.json` lists them under `brands`. Brands whose colour is a gradient are flattened to one colour.
+
+The marks are from [LobeHub Icons](https://github.com/lobehub/lobe-icons) (MIT) and are trademarks of their owners: use them to refer to those products, not to suggest endorsement.
+
 ## Geometry
 
 The root entry has no framework code: each icon's elements as data, the manifest, and a serialiser to SVG markup.

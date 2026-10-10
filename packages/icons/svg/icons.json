@@ -1906,5 +1906,504 @@
       "lucide": ["Truck"],
       "file": "truck.svg"
     }
-  ]
+  ],
+  "brands": {
+    "sizes": { "sm": 16, "md": 24, "lg": 32 },
+    "variants": ["color", "mono"],
+    "marks": [
+      {
+        "name": "claude",
+        "title": "Claude",
+        "component": "ClaudeLogo",
+        "files": {
+          "color": {
+            "sm": "brands/claude-color-sm.svg",
+            "md": "brands/claude-color-md.svg",
+            "lg": "brands/claude-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/claude-mono-sm.svg",
+            "md": "brands/claude-mono-md.svg",
+            "lg": "brands/claude-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "claude-code",
+        "title": "Claude Code",
+        "component": "ClaudeCodeLogo",
+        "files": {
+          "color": {
+            "sm": "brands/claude-code-color-sm.svg",
+            "md": "brands/claude-code-color-md.svg",
+            "lg": "brands/claude-code-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/claude-code-mono-sm.svg",
+            "md": "brands/claude-code-mono-md.svg",
+            "lg": "brands/claude-code-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "anthropic",
+        "title": "Anthropic",
+        "component": "AnthropicLogo",
+        "files": {
+          "color": {
+            "sm": "brands/anthropic-color-sm.svg",
+            "md": "brands/anthropic-color-md.svg",
+            "lg": "brands/anthropic-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/anthropic-mono-sm.svg",
+            "md": "brands/anthropic-mono-md.svg",
+            "lg": "brands/anthropic-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "openai",
+        "title": "OpenAI",
+        "component": "OpenaiLogo",
+        "files": {
+          "color": {
+            "sm": "brands/openai-color-sm.svg",
+            "md": "brands/openai-color-md.svg",
+            "lg": "brands/openai-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/openai-mono-sm.svg",
+            "md": "brands/openai-mono-md.svg",
+            "lg": "brands/openai-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "codex",
+        "title": "Codex",
+        "component": "CodexLogo",
+        "files": {
+          "color": {
+            "sm": "brands/codex-color-sm.svg",
+            "md": "brands/codex-color-md.svg",
+            "lg": "brands/codex-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/codex-mono-sm.svg",
+            "md": "brands/codex-mono-md.svg",
+            "lg": "brands/codex-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "cursor",
+        "title": "Cursor",
+        "component": "CursorLogo",
+        "files": {
+          "color": {
+            "sm": "brands/cursor-color-sm.svg",
+            "md": "brands/cursor-color-md.svg",
+            "lg": "brands/cursor-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/cursor-mono-sm.svg",
+            "md": "brands/cursor-mono-md.svg",
+            "lg": "brands/cursor-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "cline",
+        "title": "Cline",
+        "component": "ClineLogo",
+        "files": {
+          "color": {
+            "sm": "brands/cline-color-sm.svg",
+            "md": "brands/cline-color-md.svg",
+            "lg": "brands/cline-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/cline-mono-sm.svg",
+            "md": "brands/cline-mono-md.svg",
+            "lg": "brands/cline-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "windsurf",
+        "title": "Windsurf",
+        "component": "WindsurfLogo",
+        "files": {
+          "color": {
+            "sm": "brands/windsurf-color-sm.svg",
+            "md": "brands/windsurf-color-md.svg",
+            "lg": "brands/windsurf-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/windsurf-mono-sm.svg",
+            "md": "brands/windsurf-mono-md.svg",
+            "lg": "brands/windsurf-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "perplexity",
+        "title": "Perplexity",
+        "component": "PerplexityLogo",
+        "files": {
+          "color": {
+            "sm": "brands/perplexity-color-sm.svg",
+            "md": "brands/perplexity-color-md.svg",
+            "lg": "brands/perplexity-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/perplexity-mono-sm.svg",
+            "md": "brands/perplexity-mono-md.svg",
+            "lg": "brands/perplexity-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "github-copilot",
+        "title": "GitHub Copilot",
+        "component": "GithubCopilotLogo",
+        "files": {
+          "color": {
+            "sm": "brands/github-copilot-color-sm.svg",
+            "md": "brands/github-copilot-color-md.svg",
+            "lg": "brands/github-copilot-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/github-copilot-mono-sm.svg",
+            "md": "brands/github-copilot-mono-md.svg",
+            "lg": "brands/github-copilot-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "gemini",
+        "title": "Gemini",
+        "component": "GeminiLogo",
+        "files": {
+          "color": {
+            "sm": "brands/gemini-color-sm.svg",
+            "md": "brands/gemini-color-md.svg",
+            "lg": "brands/gemini-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/gemini-mono-sm.svg",
+            "md": "brands/gemini-mono-md.svg",
+            "lg": "brands/gemini-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "mistral",
+        "title": "Mistral",
+        "component": "MistralLogo",
+        "files": {
+          "color": {
+            "sm": "brands/mistral-color-sm.svg",
+            "md": "brands/mistral-color-md.svg",
+            "lg": "brands/mistral-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/mistral-mono-sm.svg",
+            "md": "brands/mistral-mono-md.svg",
+            "lg": "brands/mistral-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "deepseek",
+        "title": "DeepSeek",
+        "component": "DeepseekLogo",
+        "files": {
+          "color": {
+            "sm": "brands/deepseek-color-sm.svg",
+            "md": "brands/deepseek-color-md.svg",
+            "lg": "brands/deepseek-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/deepseek-mono-sm.svg",
+            "md": "brands/deepseek-mono-md.svg",
+            "lg": "brands/deepseek-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "grok",
+        "title": "Grok",
+        "component": "GrokLogo",
+        "files": {
+          "color": {
+            "sm": "brands/grok-color-sm.svg",
+            "md": "brands/grok-color-md.svg",
+            "lg": "brands/grok-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/grok-mono-sm.svg",
+            "md": "brands/grok-mono-md.svg",
+            "lg": "brands/grok-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "v0",
+        "title": "v0",
+        "component": "V0Logo",
+        "files": {
+          "color": {
+            "sm": "brands/v0-color-sm.svg",
+            "md": "brands/v0-color-md.svg",
+            "lg": "brands/v0-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/v0-mono-sm.svg",
+            "md": "brands/v0-mono-md.svg",
+            "lg": "brands/v0-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "lovable",
+        "title": "Lovable",
+        "component": "LovableLogo",
+        "files": {
+          "color": {
+            "sm": "brands/lovable-color-sm.svg",
+            "md": "brands/lovable-color-md.svg",
+            "lg": "brands/lovable-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/lovable-mono-sm.svg",
+            "md": "brands/lovable-mono-md.svg",
+            "lg": "brands/lovable-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "replit",
+        "title": "Replit",
+        "component": "ReplitLogo",
+        "files": {
+          "color": {
+            "sm": "brands/replit-color-sm.svg",
+            "md": "brands/replit-color-md.svg",
+            "lg": "brands/replit-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/replit-mono-sm.svg",
+            "md": "brands/replit-mono-md.svg",
+            "lg": "brands/replit-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "ollama",
+        "title": "Ollama",
+        "component": "OllamaLogo",
+        "files": {
+          "color": {
+            "sm": "brands/ollama-color-sm.svg",
+            "md": "brands/ollama-color-md.svg",
+            "lg": "brands/ollama-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/ollama-mono-sm.svg",
+            "md": "brands/ollama-mono-md.svg",
+            "lg": "brands/ollama-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "kiro",
+        "title": "Kiro",
+        "component": "KiroLogo",
+        "files": {
+          "color": {
+            "sm": "brands/kiro-color-sm.svg",
+            "md": "brands/kiro-color-md.svg",
+            "lg": "brands/kiro-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/kiro-mono-sm.svg",
+            "md": "brands/kiro-mono-md.svg",
+            "lg": "brands/kiro-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "roo-code",
+        "title": "Roo Code",
+        "component": "RooCodeLogo",
+        "files": {
+          "color": {
+            "sm": "brands/roo-code-color-sm.svg",
+            "md": "brands/roo-code-color-md.svg",
+            "lg": "brands/roo-code-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/roo-code-mono-sm.svg",
+            "md": "brands/roo-code-mono-md.svg",
+            "lg": "brands/roo-code-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "kilo-code",
+        "title": "Kilo Code",
+        "component": "KiloCodeLogo",
+        "files": {
+          "color": {
+            "sm": "brands/kilo-code-color-sm.svg",
+            "md": "brands/kilo-code-color-md.svg",
+            "lg": "brands/kilo-code-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/kilo-code-mono-sm.svg",
+            "md": "brands/kilo-code-mono-md.svg",
+            "lg": "brands/kilo-code-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "opencode",
+        "title": "opencode",
+        "component": "OpencodeLogo",
+        "files": {
+          "color": {
+            "sm": "brands/opencode-color-sm.svg",
+            "md": "brands/opencode-color-md.svg",
+            "lg": "brands/opencode-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/opencode-mono-sm.svg",
+            "md": "brands/opencode-mono-md.svg",
+            "lg": "brands/opencode-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "amp",
+        "title": "Amp",
+        "component": "AmpLogo",
+        "files": {
+          "color": {
+            "sm": "brands/amp-color-sm.svg",
+            "md": "brands/amp-color-md.svg",
+            "lg": "brands/amp-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/amp-mono-sm.svg",
+            "md": "brands/amp-mono-md.svg",
+            "lg": "brands/amp-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "devin",
+        "title": "Devin",
+        "component": "DevinLogo",
+        "files": {
+          "color": {
+            "sm": "brands/devin-color-sm.svg",
+            "md": "brands/devin-color-md.svg",
+            "lg": "brands/devin-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/devin-mono-sm.svg",
+            "md": "brands/devin-mono-md.svg",
+            "lg": "brands/devin-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "trae",
+        "title": "TRAE",
+        "component": "TraeLogo",
+        "files": {
+          "color": {
+            "sm": "brands/trae-color-sm.svg",
+            "md": "brands/trae-color-md.svg",
+            "lg": "brands/trae-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/trae-mono-sm.svg",
+            "md": "brands/trae-mono-md.svg",
+            "lg": "brands/trae-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "junie",
+        "title": "Junie",
+        "component": "JunieLogo",
+        "files": {
+          "color": {
+            "sm": "brands/junie-color-sm.svg",
+            "md": "brands/junie-color-md.svg",
+            "lg": "brands/junie-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/junie-mono-sm.svg",
+            "md": "brands/junie-mono-md.svg",
+            "lg": "brands/junie-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "hugging-face",
+        "title": "Hugging Face",
+        "component": "HuggingFaceLogo",
+        "files": {
+          "color": {
+            "sm": "brands/hugging-face-color-sm.svg",
+            "md": "brands/hugging-face-color-md.svg",
+            "lg": "brands/hugging-face-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/hugging-face-mono-sm.svg",
+            "md": "brands/hugging-face-mono-md.svg",
+            "lg": "brands/hugging-face-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "openrouter",
+        "title": "OpenRouter",
+        "component": "OpenrouterLogo",
+        "files": {
+          "color": {
+            "sm": "brands/openrouter-color-sm.svg",
+            "md": "brands/openrouter-color-md.svg",
+            "lg": "brands/openrouter-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/openrouter-mono-sm.svg",
+            "md": "brands/openrouter-mono-md.svg",
+            "lg": "brands/openrouter-mono-lg.svg"
+          }
+        }
+      },
+      {
+        "name": "qwen",
+        "title": "Qwen",
+        "component": "QwenLogo",
+        "files": {
+          "color": {
+            "sm": "brands/qwen-color-sm.svg",
+            "md": "brands/qwen-color-md.svg",
+            "lg": "brands/qwen-color-lg.svg"
+          },
+          "mono": {
+            "sm": "brands/qwen-mono-sm.svg",
+            "md": "brands/qwen-mono-md.svg",
+            "lg": "brands/qwen-mono-lg.svg"
+          }
+        }
+      }
+    ]
+  }
 }

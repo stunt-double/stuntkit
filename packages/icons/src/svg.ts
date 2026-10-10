@@ -1,3 +1,4 @@
+import type { BrandMark, BrandSize, BrandVariant } from './brands.ts';
 import type { IconNode } from './nodes.ts';
 
 /**
@@ -27,13 +28,9 @@ export interface IconSvgOptions {
   color?: string;
 }
 
-export function iconToSvg(node: IconNode, options: IconSvgOptions = {}): string {
-  const {
-    size = ICON_DEFAULTS.size,
-    strokeWidth = ICON_DEFAULTS.strokeWidth,
-    color = 'currentColor',
-  } = options;
-  const body = node
+/** Each element as an indented SVG tag, with `currentColor` paint swapped for `color`. */
+function elements(node: IconNode, color: string): string {
+  return node
     .map(([tag, attrs]) => {
       const list = Object.entries(attrs)
         .map(([key, value]) => {
@@ -47,6 +44,15 @@ export function iconToSvg(node: IconNode, options: IconSvgOptions = {}): string 
       return `  <${tag}${list}/>`;
     })
     .join('\n');
+}
+
+export function iconToSvg(node: IconNode, options: IconSvgOptions = {}): string {
+  const {
+    size = ICON_DEFAULTS.size,
+    strokeWidth = ICON_DEFAULTS.strokeWidth,
+    color = 'currentColor',
+  } = options;
+  const body = elements(node, color);
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${escape(color)}" stroke-width="${strokeWidth}" stroke-linecap="${ICON_DEFAULTS.strokeLinecap}" stroke-linejoin="${ICON_DEFAULTS.strokeLinejoin}">`,
     body,
@@ -64,3 +70,30 @@ export const toComponent = (name: string) => {
   const camel = toCamel(name);
   return `${camel[0]!.toUpperCase()}${camel.slice(1)}Icon`;
 };
+
+/** Named brand mark sizes in px. Kept here, not in `./brands.ts`, so the serialiser stays import-free. */
+export const BRAND_SIZES: Record<BrandSize, number> = { sm: 16, md: 24, lg: 32 };
+
+export interface BrandSvgOptions {
+  /** `color` keeps the brand's fills; `mono` paints the mark in `color`. Default `color`. */
+  variant?: BrandVariant;
+  /** A named size or px. Default `md`. */
+  size?: BrandSize | number;
+  /** Paint for the `mono` variant. Default `currentColor`. */
+  color?: string;
+}
+
+/** Serialises a brand mark to standalone SVG markup, as in the package's `svg/brands/` files. */
+export function brandToSvg(mark: BrandMark, options: BrandSvgOptions = {}): string {
+  const { variant = 'color', size = 'md', color = 'currentColor' } = options;
+  const px = typeof size === 'number' ? size : BRAND_SIZES[size];
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 24 24" fill="${variant === 'mono' ? escape(color) : 'none'}">`,
+    elements(mark[variant], color),
+    '</svg>',
+    '',
+  ].join('\n');
+}
+
+/** `claude-code` to `ClaudeCodeLogo`, the brand component name. */
+export const toBrandComponent = (name: string) => toComponent(name).replace(/Icon$/, 'Logo');
