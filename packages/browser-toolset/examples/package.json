@@ -10,11 +10,11 @@
     "ai-sdk": "node --conditions=@stunt-double/source src/ai-sdk-loop.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.71",
+    "@ai-sdk/anthropic": "^4.0.78",
     "@anthropic-ai/sdk": "0.131.0",
     "@stunt-double/browser-toolset": "workspace:*",
-    "ai": "^7.0.124",
-    "playwright": "^1.63.0",
+    "ai": "^7.0.135",
+    "playwright": "^1.64.0",
     "zod": "^4.6.5"
   }
 }
