@@ -1,6 +1,6 @@
 {
   "name": "@stunt-double/icons",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The Continuity icon pack: 235 stroked icons on a 24 unit grid, as geometry, standalone SVG files and React components",
   "keywords": [
     "icons",
