@@ -213,6 +213,16 @@ The two building blocks, exported for tooling. `accessibleName` is the subset of
 - It does not send anything anywhere, and makes no network requests.
 - It cannot reach inside closed shadow roots or cross-origin iframes, as no script outside them can.
 
+## What's new in 2.1
+
+- **Shadow roots.** Controls inside open shadow roots (web components) are repaired and observed for later content. Opt out with `shadow: false`.
+- **Cancelling.** `optimise()` takes an `AbortSignal` (`signal`). Aborting it restores the page.
+- **Reports.** `onReport` is called with the report after every pass.
+- **Disposable handle.** `using wao = optimise()` restores the page at the end of the block. `restore()` is now safe to call twice.
+- **Changed:** after `restore()`, `refresh()` no longer re-optimises the page. Create a new handle with `optimise()` instead.
+- **Typed globals.** `window.wao` and `window.waoOptions` are typed by the package.
+- **Fix.** `aria-labelledby` and `label[for]` resolve within the element's own shadow root.
+
 ## Upgrading from 1.x
 
 Version 1 was published as `@stdbl/wao`. Version 2 is `@stunt-double/wao`, so swap the package name (and the script URL) as well:
