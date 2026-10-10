@@ -1,6 +1,6 @@
 ---
 name: stunt-double-icons
-description: Use when adding or replacing icons with @stunt-double/icons (the Continuity icon pack), including migrating from lucide-react, rendering icons as React components, SVG files or raw markup (emails, OG images, canvas), picking an icon by meaning with icons.json, and making icons accessible.
+description: Use when adding or replacing icons with @stunt-double/icons (the Continuity icon pack), or showing an AI provider or coding agent logo (Claude, Cursor, OpenAI and others), including migrating from lucide-react, rendering icons as React components, SVG files or raw markup (emails, OG images, canvas), picking an icon by meaning with icons.json, and making icons accessible.
 ---
 
 # Continuity icons (`@stunt-double/icons`)
@@ -20,6 +20,10 @@ Install: `pnpm add @stunt-double/icons`. Until the scope is on npm it is on GitH
 | Search by meaning, or a lucide name                  | `@stunt-double/icons/icons.json` (category, tags, lucide names) |
 
 Names are kebab-case for files and maps (`arrow-right`), PascalCase plus `Icon` for components (`ArrowRightIcon`), camelCase in `iconNodes` (`arrowRight`).
+
+## AI provider marks
+
+Filled brand logos for AI providers and coding agents, kept apart from the stroked icons: `ClaudeLogo`, `CursorLogo`, `OpenaiLogo` and the rest from `/react` (PascalCase plus `Logo`), or `brandComponents['claude-code']` from data. Props are `variant` (`color`, the default, or `mono` in `currentColor`), `size` (`sm` 16, `md` 24 by default, `lg` 32, or any length), `color` (the mono paint) and `title`. Files are `@stunt-double/icons/svg/brands/<name>-<variant>-<size>.svg`; without React, `brandToSvg(mark, { variant, size })` with a mark from `BRAND_MARKS`. `icons.json` lists them under `brands`. Use `mono` on dark backgrounds, since black brand marks stay black in `color`. They are trademarks: use one to refer to its product, not to suggest endorsement.
 
 ## Migrating from lucide-react
 
