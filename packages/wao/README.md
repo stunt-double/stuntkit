@@ -49,18 +49,20 @@ Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test re
 
 ## Install
 
-As a script tag, on any site:
+As a script tag, on any site. Serve `dist/wao.global.js` from the package (also exported as `@stunt-double/wao/script`) alongside your pages. Once the scope is on npm, jsDelivr will serve it at `https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js`.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
+<script src="/wao.global.js" defer></script>
 ```
 
-Or from npm, in a bundled app:
+Or as a package, in a bundled app:
 
 ```sh
 pnpm add @stunt-double/wao
 # or: npm install @stunt-double/wao
 ```
+
+Until the `@stunt-double` scope is available on npm, packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
 
 ```ts
 import { optimise } from '@stunt-double/wao';
@@ -158,7 +160,7 @@ With the script build, set the options before the script loads:
 <script>
   window.waoOptions = { rules: [{ selector: '.btn-go', label: 'Check out' }] };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
+<script src="/wao.global.js" defer></script>
 ```
 
 `description` is written as `aria-description`, which Chromium exposes in the accessibility tree.
@@ -213,7 +215,7 @@ The two building blocks, exported for tooling. `accessibleName` is the subset of
 
 ## Upgrading from 1.x
 
-Version 1 was published as `@stdbl/wao`. Version 2 is `@stunt-double/wao`, so swap the package name (and the CDN URL) as well:
+Version 1 was published as `@stdbl/wao`. Version 2 is `@stunt-double/wao`, so swap the package name (and the script URL) as well:
 
 ```sh
 pnpm remove @stdbl/wao

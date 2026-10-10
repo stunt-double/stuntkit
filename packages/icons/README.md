@@ -18,6 +18,8 @@ pnpm add @stunt-double/icons
 # or: npm install @stunt-double/icons
 ```
 
+Until the `@stunt-double` scope is available on npm, packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
+
 No dependencies. React 18 or later is an optional peer, needed only for `@stunt-double/icons/react`.
 
 ## React

@@ -20,11 +20,13 @@ Install: `pnpm add @stunt-double/wao`. Until the scope is on npm, it is on GitHu
 
 ### Script tag
 
+Serve `dist/wao.global.js` from the package (exported as `@stunt-double/wao/script`) yourself. The jsDelivr URL (`https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js`) only works once the scope is on npm.
+
 ```html
 <script>
   window.waoOptions = { rules: [{ selector: '.btn-go', label: 'Check out' }] };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js" defer></script>
+<script src="/wao.global.js" defer></script>
 ```
 
 ### Bundled app (React shown)
