@@ -32,3 +32,23 @@ test('the registry covers every component by name', () => {
   assert.equal(iconComponents['arrow-right'], ArrowRightIcon);
   assert.equal(ArrowRightIcon.displayName, 'ArrowRightIcon');
 });
+
+test('a brand mark renders in colour at md by default, and mono in currentColor', async () => {
+  const { ClaudeLogo, brandComponents } = await import('./index.ts');
+  const colour = renderToStaticMarkup(createElement(ClaudeLogo));
+  assert.match(colour, /width="24"/);
+  assert.match(colour, /fill="#D97757"/);
+  assert.match(colour, /class="continuity-brand continuity-brand-claude"/);
+  assert.match(colour, /aria-hidden="true"/);
+
+  const mono = renderToStaticMarkup(
+    createElement(ClaudeLogo, { variant: 'mono', size: 'sm', title: 'Claude' })
+  );
+  assert.match(mono, /width="16"/);
+  assert.match(mono, /^<svg[^>]*fill="currentColor"/);
+  assert.doesNotMatch(mono, /#D97757/);
+  assert.match(mono, /role="img"/);
+
+  assert.match(renderToStaticMarkup(createElement(ClaudeLogo, { size: 'lg' })), /width="32"/);
+  assert.equal(brandComponents.cursor, (await import('./index.ts')).CursorLogo);
+});
