@@ -1,6 +1,6 @@
 # StuntKit
 
-[![CI](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml/badge.svg)](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml)
+[![CI](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/stunt-double/stuntkit/actions/workflows/ci.yml?query=branch%3Amain)
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](./LICENSE)
 <a href="https://index.stuntdouble.io/d/stuntdouble.io?ref=badge"><img src="https://index.stuntdouble.io/badge/stuntdouble.io.svg?style=flat" alt="stuntdouble.io Stunt Double Index agent score" width="184" height="20"></a>
 
