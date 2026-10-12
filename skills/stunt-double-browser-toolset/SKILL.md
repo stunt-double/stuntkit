@@ -7,7 +7,7 @@ description: Use when building an AI agent that drives a real browser with @stun
 
 Browser tools for agents over a provider-neutral `BrowserDriver`. No tool calls a model; the agent's own model does the reasoning. No runtime dependencies. `@anthropic-ai/sdk` and `ai` are optional peers used for types only.
 
-Install: `pnpm add @stunt-double/browser-toolset`. Until the scope is on npm it is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
+Install: `pnpm add @stunt-double/browser-toolset`. It is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
 
 ## Choose the surface
 

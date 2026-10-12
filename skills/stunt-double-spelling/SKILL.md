@@ -7,7 +7,7 @@ description: Use when localising English spelling between American, British and 
 
 Whole-word, dictionary-based rewriting between `'american'`, `'british'` and `'canadian'`, from source in either American or British. No dependencies; runs in browsers, Node 20+ and workers.
 
-Install: `pnpm add @stunt-double/spelling`. Until the scope is on npm it is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
+Install: `pnpm add @stunt-double/spelling`. It is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
 
 ```ts
 import { localiseSpelling } from '@stunt-double/spelling';

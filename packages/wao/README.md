@@ -49,7 +49,7 @@ Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test re
 
 ## Install
 
-As a script tag, on any site. Serve `dist/wao.global.js` from the package (also exported as `@stunt-double/wao/script`) alongside your pages. Once the scope is on npm, jsDelivr will serve it at `https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js`.
+As a script tag, on any site. Serve `dist/wao.global.js` from the package (also exported as `@stunt-double/wao/script`) alongside your pages.
 
 ```html
 <script src="/wao.global.js" defer></script>
@@ -62,7 +62,7 @@ pnpm add @stunt-double/wao
 # or: npm install @stunt-double/wao
 ```
 
-Until the `@stunt-double` scope is available on npm, packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
+Packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
 
 ```ts
 import { optimise } from '@stunt-double/wao';
