@@ -7,7 +7,7 @@ description: Use when adding or replacing icons with @stunt-double/icons (the Co
 
 235 stroked icons on a 24 unit grid (stroke 1.5, square caps, mitred joins). Framework-free geometry at the root, standalone SVG files, and React components at `/react`. React 18+ is an optional peer.
 
-Install: `pnpm add @stunt-double/icons`. Until the scope is on npm it is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
+Install: `pnpm add @stunt-double/icons`. It is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
 
 ## Pick the entry
 

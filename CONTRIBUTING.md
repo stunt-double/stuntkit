@@ -50,13 +50,7 @@ Pick the packages, the bump (patch for fixes, minor for features, and while a pa
 
 Releases are automatic. On every push to `main`, `.github/workflows/release.yml` runs [changesets/action](https://github.com/changesets/action): while changesets are pending it keeps a "Version packages" pull request open that bumps versions and writes changelogs, and merging that pull request publishes the new versions, tags each one (`@stunt-double/<name>@<version>`) and creates its GitHub release from the changelog entry. Maintainers never publish from a laptop.
 
-Until the `@stunt-double` scope is available on npm, packages publish to GitHub Packages: each package's `publishConfig.registry` is `https://npm.pkg.github.com`, and the workflow authenticates with its own `GITHUB_TOKEN`, so no secret is needed. To move to npm, set `publishConfig` back to `{ "access": "public", "provenance": true }` and restore `id-token: write` and the npm settings in `release.yml`.
-
-On npm, publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers): the workflow swaps a GitHub OIDC token for a short-lived publish token, so the repository holds no npm secret. Each package needs a trusted publisher on npmjs.com (package settings, Trusted publishing: GitHub Actions, organisation `stunt-double`, repository `stuntkit`, workflow `release.yml`, no environment). npm only lets you add one to a package that already exists, so a brand new package's first version is bootstrapped once:
-
-1. Create a granular access token on npmjs.com with read and write on the `@stunt-double` scope, short expiry, and save it as the `NPM_TOKEN` Actions secret.
-2. Re-run the Release workflow (Actions, Release, Run workflow). It publishes every version npm does not have yet.
-3. Add the trusted publisher to the new package, set "Require two-factor authentication and disallow tokens" under its publishing access, then delete the `NPM_TOKEN` secret and revoke the token.
+Packages publish to GitHub Packages: each package's `publishConfig.registry` is `https://npm.pkg.github.com`, and the workflow authenticates with its own `GITHUB_TOKEN`, so no secret is needed.
 
 ## Adding a package
 
@@ -68,7 +62,7 @@ On npm, publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-
 2. Add a row to the packages table in the root `README.md`, the package to the issue forms in `.github/ISSUE_TEMPLATE/` and to the checklist in `.github/pull_request_template.md`.
 3. Write its agent skill in `skills/stunt-double-<name>/SKILL.md` (see [`skills/README.md`](./skills/README.md)), add it to the table there, and bump `version` in the plugin manifest.
 4. Run `pnpm install`, then the dev loop above. CI and the release workflow pick the package up from `packages/*` with no further changes.
-5. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges, and, once releases move to npm, bootstrap its first publish as described under Changesets above. On GitHub Packages no bootstrap is needed.
+5. Add a changeset (`pnpm changeset`, minor) so the first release goes out when it merges. No bootstrap is needed.
 
 Examples that need extra dependencies live in `packages/<name>/examples/` as a private workspace package (see `packages/browser-toolset/examples`), and are listed under `ignore` in `.changeset/config.json`.
 

@@ -16,11 +16,11 @@ WAO repairs the accessibility tree agents read (Playwright's aria snapshot, CDP'
 | You build the agent, not the site         | Inject `@stunt-double/wao/script` with an init script in every context |
 | You want to know what an agent cannot see | Run it and read `report().issues`                                      |
 
-Install: `pnpm add @stunt-double/wao`. Until the scope is on npm, it is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
+Install: `pnpm add @stunt-double/wao`. It is on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
 
 ### Script tag
 
-Serve `dist/wao.global.js` from the package (exported as `@stunt-double/wao/script`) yourself. The jsDelivr URL (`https://cdn.jsdelivr.net/npm/@stunt-double/wao@2/dist/wao.global.js`) only works once the scope is on npm.
+Serve `dist/wao.global.js` from the package (exported as `@stunt-double/wao/script`) yourself.
 
 ```html
 <script>
