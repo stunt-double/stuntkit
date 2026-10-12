@@ -98,8 +98,8 @@
     }
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "0.132.1",
-    "ai": "^7.0.135"
+    "@anthropic-ai/sdk": "0.133.0",
+    "ai": "^7.0.137"
   },
   "engines": {
     "node": ">=20"
