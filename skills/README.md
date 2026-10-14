@@ -27,4 +27,4 @@ A skill belongs here when it helps someone use a published package. Skills for w
 - One folder per package, named `stunt-double-<package>`, holding a `SKILL.md` with `name` (matching the folder) and `description` frontmatter.
 - The description says when to use the skill, in the words a developer would use for the task, not just the package name.
 - Lead with the decision (which entry point or surface), then the code, then the mistakes. Keep it under about 150 lines; link to the package README for the full API.
-- Update the skill in the same pull request as the package change it describes, and bump `version` in the plugin manifest.
+- Update the skill in the same pull request as the package change it describes, and bump `version` in [the plugin manifest](./.claude-plugin/plugin.json). This folder is the plugin root, so keep anything that is not a skill out of it.
