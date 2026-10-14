@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "StuntKit",
-      "source": "./",
+      "source": "./skills",
       "description": "Skills for @stunt-double/wao, browser-toolset, spelling and icons: when to reach for each package, how to wire it up, and the mistakes to avoid"
     }
   ]
