@@ -1,7 +1,7 @@
 {
   "name": "stuntkit",
-  "version": "1.1.0",
-  "description": "Skills for @stunt-double/wao, browser-toolset, spelling and icons: when to reach for each package, how to wire it up, and the mistakes to avoid",
+  "version": "1.2.0",
+  "description": "Skills and agents for @stunt-double/browser-toolset, wao, spelling and icons: when to reach for each package, how to wire it up, the mistakes to avoid, and agents that build and review browser agents",
   "author": {
     "name": "Stunt Double",
     "url": "https://stuntdouble.io"
@@ -9,7 +9,15 @@
   "homepage": "https://github.com/stunt-double/stuntkit/tree/main/skills#readme",
   "repository": "https://github.com/stunt-double/stuntkit",
   "license": "Apache-2.0",
-  "keywords": ["ai-agents", "browser-use", "accessibility", "localisation", "icons"],
+  "keywords": [
+    "ai-agents",
+    "browser-use",
+    "browser-agents",
+    "accessibility",
+    "localisation",
+    "icons"
+  ],
   "skills": "./",
+  "agents": ["./agents/browser-agent-builder.md", "./agents/browser-agent-reviewer.md"],
   "icon": "./.claude-plugin/icon.png"
 }

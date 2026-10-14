@@ -1,0 +1,18 @@
+# Troubleshooting
+
+| Symptom                                                          | Cause and fix                                                                                                                                                     |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API error about missing or mismatched `tool_result`s             | Results were sent per call, or before the assistant message. Push the assistant message, then one user message with every result from one `runTurn`.              |
+| Every call after the first answers "Not executed: an earlier..." | Working as designed (`HALT_TEXT`): the first call failed. Read that record's `text`.                                                                              |
+| `navigate` refuses `localhost` or `10.x`                         | Private hosts are refused by default. Executor: `allowPrivateHosts: true`. Direct tools have no switch: use the executor, or a public tunnel.                     |
+| `navigate` refuses "Pricing"                                     | Not a URL. The model should `find` the link and click it.                                                                                                         |
+| Model loops on a ref that "does not exist"                       | The page re-rendered or navigated. Refs last as long as their element; the model should `read_page` or `find` again.                                              |
+| Controls missing from `read_page`, links with no name            | A legacy page: `div` buttons, icon-only links. Inject `@stunt-double/wao` into the context before navigating.                                                     |
+| Clicks land in the wrong place                                   | Screenshot scale differs from the viewport. Capture at device scale factor 1 and pass the same `viewport` to `DirectBrowserTools` as the browser.                 |
+| Tab tools lose track, `switch_tab` fails                         | `DriverPage.id` is not stable. Key it on the engine's page object (a `WeakMap`) or target id.                                                                     |
+| `evaluate` errors with "not a function"                          | The driver only handles functions. The tools pass a string expression: evaluate it as-is.                                                                         |
+| A tool times out at 45 s                                         | The page is stuck (a modal, an infinite load). The result says which tool; the model can `key Escape` or navigate. Raise `toolTimeoutMs` only for slow sandboxes. |
+| Costs climb every step                                           | Screenshots are re-sent. Prune to the newest three; `read_page` with `filter: 'interactive'` or a `ref` for narrower reads.                                       |
+| The model says it was "not allowed" to submit                    | `blockSubmit` refused a pay or sign-up action. Expected with `INDEX_SESSION_SAFETY`; turn it off only for your own product with test data.                        |
+| Run ends with "Max steps reached" and no answer                  | Add the `STEP_BUDGET_FINAL_NOTE` call offering only `done`.                                                                                                       |
+| Type errors about `@anthropic-ai/sdk` in a project without it    | Import from `/direct-tools`, `/safety`, `/driver` and `/keys` instead of the root, or set `skipLibCheck`.                                                         |
