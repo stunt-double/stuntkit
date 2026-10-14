@@ -19,7 +19,7 @@ Each package has an [Agent Skill](./skills) that teaches a coding agent when to 
 
 ```sh
 /plugin marketplace add stunt-double/stuntkit
-/plugin install StuntKit@stuntkit
+/plugin install stuntkit@stuntkit
 ```
 
 Other agents that read `SKILL.md` folders can copy them from [`skills/`](./skills).

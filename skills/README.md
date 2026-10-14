@@ -15,7 +15,7 @@ As a plugin from this repository's marketplace:
 
 ```sh
 /plugin marketplace add stunt-double/stuntkit
-/plugin install StuntKit@stuntkit
+/plugin install stuntkit@stuntkit
 ```
 
 Any agent that reads Agent Skills (a `SKILL.md` per folder): copy the folders you want into your project's skills directory, or install them with a skills installer that reads GitHub repositories.

@@ -1,5 +1,6 @@
 {
-  "name": "StuntKit",
+  "name": "stuntkit",
+  "displayName": "StuntKit",
   "version": "1.1.0",
   "description": "Skills for @stunt-double/wao, browser-toolset, spelling and icons: when to reach for each package, how to wire it up, and the mistakes to avoid",
   "author": {
