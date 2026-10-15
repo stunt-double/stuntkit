@@ -7,7 +7,7 @@
   "description": "Agent skills for StuntKit, the open source packages from Stunt Double for agents that use the web",
   "plugins": [
     {
-      "name": "stuntkit",
+      "name": "StuntKit",
       "source": "./skills",
       "description": "Skills and agents for @stunt-double/browser-toolset, wao, spelling and icons: when to reach for each package, how to wire it up, the mistakes to avoid, and agents that build and review browser agents"
     }
