@@ -15,7 +15,7 @@ Open source building blocks for AI agents that use the web. Extracted from [Stun
 
 ## Agent skills
 
-Each package has an [Agent Skill](./skills) that teaches a coding agent when to reach for it, how to wire it up and the mistakes to avoid. Install them all as a plugin from this repository's marketplace:
+Each package has an [Agent Skill](./skills) that teaches a coding agent when to reach for it, how to wire it up and the mistakes to avoid, with cross-package skills for choosing a package and making a site agent-ready, and agents that build and review browser agents. Install them all as a plugin from this repository's marketplace:
 
 ```sh
 /plugin marketplace add stunt-double/stuntkit
