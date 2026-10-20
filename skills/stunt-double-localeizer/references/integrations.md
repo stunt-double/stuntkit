@@ -3,7 +3,7 @@
 ## Picking the system
 
 ```ts
-import type { SpellingSystem } from '@stunt-double/spelling';
+import type { SpellingSystem } from '@stunt-double/localeizer';
 
 const BRITISH_REGIONS = new Set([
   'GB',
@@ -56,7 +56,7 @@ Localise strings before they are rendered, so the HTML is already right.
 **Message catalogues.** Write one English catalogue in your source spelling and derive the others at build time:
 
 ```ts
-import { localiseSpelling, type SpellingSystem } from '@stunt-double/spelling';
+import { localiseSpelling, type SpellingSystem } from '@stunt-double/localeizer';
 
 export function localiseMessages<T extends Record<string, string>>(
   messages: T,
@@ -79,7 +79,7 @@ Placeholders such as `{count}` and ICU syntax are untouched, since only dictiona
 For a client-only app or a page you do not render:
 
 ```ts
-import { localiseSpelling, type SpellingSystem } from '@stunt-double/spelling';
+import { localiseSpelling, type SpellingSystem } from '@stunt-double/localeizer';
 
 const SKIP = 'code, pre, kbd, samp, script, style, textarea, [contenteditable], [data-no-localise]';
 
@@ -119,7 +119,7 @@ useEffect(() => localisePage(document.body, system), [system]);
 If React re-renders a localised node it writes its own string back, and the observer localises it again. For components you own, prefer a hook over the DOM pass:
 
 ```ts
-import { localiseSpelling, type SpellingSystem } from '@stunt-double/spelling';
+import { localiseSpelling, type SpellingSystem } from '@stunt-double/localeizer';
 import { createContext, useCallback, useContext } from 'react';
 
 export const SpellingContext = createContext<SpellingSystem>('american');
@@ -144,7 +144,7 @@ For streaming, localise per completed word or sentence, not per token: a token b
 
 ```ts
 import { readFileSync } from 'node:fs';
-import { spellingDictionary, type SpellingSystem } from '@stunt-double/spelling';
+import { spellingDictionary, type SpellingSystem } from '@stunt-double/localeizer';
 
 export function offStyle(text: string, system: SpellingSystem): string[] {
   const dictionary = spellingDictionary(system);

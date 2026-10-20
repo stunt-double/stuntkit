@@ -6,7 +6,7 @@
 
 - [ ] `@stunt-double/browser-toolset`
 - [ ] `@stunt-double/icons`
-- [ ] `@stunt-double/spelling`
+- [ ] `@stunt-double/localeizer`
 - [ ] `@stunt-double/wao`
 - [ ] Skills (package and project skills)
 - [ ] Repository only (CI, tooling, docs, examples)

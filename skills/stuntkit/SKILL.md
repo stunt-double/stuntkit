@@ -1,6 +1,6 @@
 ---
 name: stuntkit
-description: Use when deciding which StuntKit package (@stunt-double/browser-toolset, wao, spelling, icons) fits a task, when installing any @stunt-double package from GitHub Packages (.npmrc, tokens, CI), or when combining them, for example a browser agent that also repairs legacy pages, or a site made ready for AI agents and checked by one. Routes to the per-package skills.
+description: Use when deciding which StuntKit package (@stunt-double/browser-toolset, wao, localeizer, icons) fits a task, when installing any @stunt-double package from GitHub Packages (.npmrc, tokens, CI), or when combining them, for example a browser agent that also repairs legacy pages, or a site made ready for AI agents and checked by one. Routes to the per-package skills.
 ---
 
 # StuntKit
@@ -11,7 +11,7 @@ Open source building blocks for AI agents that use the web, extracted from [Stun
 | ------------------------------------------------------------------ | ------------------------------- | ------------------------------ |
 | An agent that drives a real browser (any model)                    | `@stunt-double/browser-toolset` | `stunt-double-browser-toolset` |
 | A site, legacy page or web app that agents struggle to read or use | `@stunt-double/wao`             | `stunt-double-wao`             |
-| American, British and Canadian spelling from one source            | `@stunt-double/spelling`        | `stunt-double-spelling`        |
+| American, British and Canadian spelling from one source            | `@stunt-double/localeizer`      | `stunt-double-localeizer`      |
 | Icons (lucide-compatible) or AI provider and coding agent logos    | `@stunt-double/icons`           | `stunt-double-icons`           |
 | Make a site agent-ready and prove it with an agent                 | wao + browser-toolset           | `stuntkit-agent-ready-site`    |
 
@@ -41,7 +41,7 @@ Then install with the project's package manager: `pnpm add @stunt-double/<packag
 | --------------- | --------------------------------------------------------------------------------------------------- |
 | browser-toolset | Node 20+, or any runtime with `Buffer` (Workers with `nodejs_compat`, Bun, Deno), next to a browser |
 | wao             | Browsers (npm entry or the `script` build); injected by Node harnesses                              |
-| spelling        | Anywhere: browsers, Node 20+, workers, edge                                                         |
+| localeizer      | Anywhere: browsers, Node 20+, workers, edge                                                         |
 | icons           | Anywhere; `/react` needs React 18+                                                                  |
 
 All are ESM with TypeScript types, `sideEffects: false` except WAO's script build, and Apache-2.0.
@@ -50,7 +50,7 @@ All are ESM with TypeScript types, `sideEffects: false` except WAO's script buil
 
 - **browser-toolset + wao.** The toolset's `read_page` reads the accessibility tree; WAO repairs it. Inject WAO into the browser context before navigating and agents see named buttons where there were clickable `div`s.
 - **wao on your own site.** Ship it so third-party agents (and your own) can use the site today, then fix the markup it reports.
-- **spelling + icons.** Product polish for agent-facing and human-facing UI alike: one copy source in many spellings, one icon language including the logos of the agents you support.
+- **localeizer + icons.** Product polish for agent-facing and human-facing UI alike: one copy source in many spellings, one icon language including the logos of the agents you support.
 
 ## Agents in this plugin
 
