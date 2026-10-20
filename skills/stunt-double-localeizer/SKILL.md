@@ -1,6 +1,6 @@
 ---
 name: stunt-double-localeizer
-description: Use when localising English spelling between American, British and Canadian with @stunt-double/localeizer, for example serving one site in en-US and en-GB, picking the spelling from Accept-Language or a locale route, normalising user-facing copy, emails or LLM output to a house spelling, rewriting a page in the browser without hydration mismatches, or flagging off-style spellings in CI. Also use when a word is not being converted and needs adding to the dictionary.
+description: Use when localising English spelling between American, British and Canadian with @stunt-double/localeizer, for example serving one site in en-US and en-GB, picking the spelling from Accept-Language or a locale route, normalising user-facing copy, emails or LLM output to a house spelling, rewriting a page in the browser without hydration mismatches, or flagging off-style spellings in CI. Also use when a word is not being converted and needs adding to the dictionary, or when a project still depends on the old name, @stunt-double/spelling.
 ---
 
 # Spelling localisation (`@stunt-double/localeizer`)
@@ -11,7 +11,7 @@ Whole-word, dictionary-based rewriting into `'american'`, `'british'` or `'canad
 pnpm add @stunt-double/localeizer
 ```
 
-Releases are on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
+Releases are on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`. Formerly `@stunt-double/spelling` (up to 0.1.0), with the same API: if a project still imports that, swap the dependency and the import path.
 
 ```ts
 import {

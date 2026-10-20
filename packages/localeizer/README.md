@@ -28,6 +28,20 @@ Packages are published to [GitHub Packages](https://github.com/orgs/stunt-double
 
 No dependencies. Runs anywhere JavaScript does (browsers, Node 20 or later, workers).
 
+### Migrating from `@stunt-double/spelling`
+
+This package was published as `@stunt-double/spelling` up to 0.1.0. The API is the same, so swap the dependency and the import path:
+
+```sh
+pnpm remove @stunt-double/spelling
+pnpm add @stunt-double/localeizer
+```
+
+```diff
+-import { localiseSpelling } from '@stunt-double/spelling';
++import { localiseSpelling } from '@stunt-double/localeizer';
+```
+
 ## How it works
 
 Every rewrite is a whole word, looked up exactly in a dictionary generated from stems and the suffixes they take (`organ` + `ise`, `ised`, `isation`, ... and the prefixed forms `re`, `un`, `dis`, ...). Nothing is rewritten by pattern alone, because no pattern is safe: "promise", "enterprise", "expertise" and "otherwise" keep their "-ise" in American English, and "four", "hour" and "tour" keep their "-our". A word that is not in the dictionary stays as written.
