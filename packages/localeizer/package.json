@@ -1,5 +1,5 @@
 {
-  "name": "@stunt-double/spelling",
+  "name": "@stunt-double/localeizer",
   "version": "0.1.0",
   "description": "Whole-word English spelling localisation: American, British and Canadian, from either American or British source text",
   "keywords": [
@@ -14,14 +14,14 @@
   ],
   "license": "Apache-2.0",
   "author": "Turnout Labs Ltd",
-  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/spelling#readme",
+  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/localeizer#readme",
   "bugs": {
     "url": "https://github.com/stunt-double/stuntkit/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/stunt-double/stuntkit.git",
-    "directory": "packages/spelling"
+    "directory": "packages/localeizer"
   },
   "type": "module",
   "sideEffects": false,

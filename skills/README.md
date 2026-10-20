@@ -8,7 +8,7 @@
 | [`stuntkit-agent-ready-site`](./stuntkit-agent-ready-site/SKILL.md)       | Auditing a site for agents, repairing it with WAO and proving it with an agent    |
 | [`stunt-double-wao`](./stunt-double-wao/SKILL.md)                         | Making sites work for agents, and injecting WAO into an agent's browser           |
 | [`stunt-double-browser-toolset`](./stunt-double-browser-toolset/SKILL.md) | Browser agents on Anthropic's browser use toolset or any model's function calling |
-| [`stunt-double-spelling`](./stunt-double-spelling/SKILL.md)               | American, British and Canadian spelling localisation                              |
+| [`stunt-double-localeizer`](./stunt-double-localeizer/SKILL.md)           | American, British and Canadian spelling localisation                              |
 | [`stunt-double-icons`](./stunt-double-icons/SKILL.md)                     | The Continuity icon pack in React, SVG and raw markup, and migrating from lucide  |
 
 ## Agents

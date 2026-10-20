@@ -90,7 +90,7 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
 
-  packages/spelling: {}
+  packages/localeizer: {}
 
   packages/wao:
     devDependencies:

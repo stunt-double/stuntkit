@@ -10,7 +10,7 @@ Open source building blocks for AI agents that use the web. Extracted from [Stun
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | [`@stunt-double/browser-toolset`](./packages/browser-toolset) | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets |
 | [`@stunt-double/icons`](./packages/icons)                     | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                    |
-| [`@stunt-double/spelling`](./packages/spelling)               | Whole-word American, British and Canadian spelling localisation                                                                    |
+| [`@stunt-double/localeizer`](./packages/localeizer)           | Whole-word American, British and Canadian spelling localisation                                                                    |
 | [`@stunt-double/wao`](./packages/wao)                         | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents             |
 
 ## Agent skills

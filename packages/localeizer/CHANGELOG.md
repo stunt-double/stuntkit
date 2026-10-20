@@ -1,4 +1,4 @@
-# @stunt-double/spelling
+# @stunt-double/localeizer
 
 ## 0.1.0
 

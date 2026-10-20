@@ -1,20 +1,24 @@
 ---
-name: stunt-double-spelling
-description: Use when localising English spelling between American, British and Canadian with @stunt-double/spelling, for example serving one site in en-US and en-GB, picking the spelling from Accept-Language or a locale route, normalising user-facing copy, emails or LLM output to a house spelling, rewriting a page in the browser without hydration mismatches, or flagging off-style spellings in CI. Also use when a word is not being converted and needs adding to the dictionary.
+name: stunt-double-localeizer
+description: Use when localising English spelling between American, British and Canadian with @stunt-double/localeizer, for example serving one site in en-US and en-GB, picking the spelling from Accept-Language or a locale route, normalising user-facing copy, emails or LLM output to a house spelling, rewriting a page in the browser without hydration mismatches, or flagging off-style spellings in CI. Also use when a word is not being converted and needs adding to the dictionary.
 ---
 
-# Spelling localisation (`@stunt-double/spelling`)
+# Spelling localisation (`@stunt-double/localeizer`)
 
 Whole-word, dictionary-based rewriting into `'american'`, `'british'` or `'canadian'`, from source in either American or British. No dependencies; browsers, Node 20+, workers and edge runtimes.
 
 ```sh
-pnpm add @stunt-double/spelling
+pnpm add @stunt-double/localeizer
 ```
 
 Releases are on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`.
 
 ```ts
-import { localiseSpelling, spellingDictionary, type SpellingSystem } from '@stunt-double/spelling';
+import {
+  localiseSpelling,
+  spellingDictionary,
+  type SpellingSystem,
+} from '@stunt-double/localeizer';
 
 localiseSpelling('Organize the color of the center.', 'british'); // 'Organise the colour of the centre.'
 localiseSpelling('Analyse the cancelled catalogue.', 'american'); // 'Analyze the canceled catalog.'
@@ -50,4 +54,4 @@ Canadian takes "-our", "-re" and the doubled "l" from British, and "-ize", "-yze
 
 ## A word is not converted
 
-By design: nothing is rewritten by pattern, because "promise", "expertise", "four" and "tour" would break. The dictionary is stem lists in `packages/spelling/src/spelling.ts` of the stuntkit repository: "-ise"/"-ize" (`IZE_STEMS`), "-yse"/"-yze" (`YZE_STEMS`), "-our"/"-or" (`OUR_STEMS`), "-re"/"-er" (`RE_STEMS`), doubled "l" (`DOUBLE_L_STEMS`), each combined with its suffixes and the prefixes `un`, `re`, `de`, `dis`, `mis`, `non`, `pre`, `over`, `under`, `auto`; plus one-off pairs in `AMERICAN_WORDS` (British to American) and Canadian exceptions in `CANADIAN_AMERICAN_WORDS`. Add the stem to the list it belongs to, with a test in `spelling.test.ts`, and open a pull request. Until it lands, post-process only that exact word, never a pattern.
+By design: nothing is rewritten by pattern, because "promise", "expertise", "four" and "tour" would break. The dictionary is stem lists in `packages/localeizer/src/spelling.ts` of the stuntkit repository: "-ise"/"-ize" (`IZE_STEMS`), "-yse"/"-yze" (`YZE_STEMS`), "-our"/"-or" (`OUR_STEMS`), "-re"/"-er" (`RE_STEMS`), doubled "l" (`DOUBLE_L_STEMS`), each combined with its suffixes and the prefixes `un`, `re`, `de`, `dis`, `mis`, `non`, `pre`, `over`, `under`, `auto`; plus one-off pairs in `AMERICAN_WORDS` (British to American) and Canadian exceptions in `CANADIAN_AMERICAN_WORDS`. Add the stem to the list it belongs to, with a test in `spelling.test.ts`, and open a pull request. Until it lands, post-process only that exact word, never a pattern.

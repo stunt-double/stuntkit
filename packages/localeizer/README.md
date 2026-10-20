@@ -1,9 +1,9 @@
-# @stunt-double/spelling
+# @stunt-double/localeizer
 
 Whole-word English spelling localisation. Rewrites text into British, American or Canadian spelling, from source written in either American or British English.
 
 ```ts
-import { localiseSpelling } from '@stunt-double/spelling';
+import { localiseSpelling } from '@stunt-double/localeizer';
 
 localiseSpelling('Organize the color of the center.', 'british');
 // 'Organise the colour of the centre.'
@@ -20,8 +20,8 @@ Extracted from [Stunt Double](https://stuntdouble.io), whose public sites are wr
 ## Install
 
 ```sh
-pnpm add @stunt-double/spelling
-# or: npm install @stunt-double/spelling
+pnpm add @stunt-double/localeizer
+# or: npm install @stunt-double/localeizer
 ```
 
 Packages are published to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
@@ -59,7 +59,7 @@ The lowercase word map for a system, source spelling to target, built on first u
 The package works on strings, so it fits any rendering approach. A minimal pass over a page's text nodes:
 
 ```ts
-import { localiseSpelling, type SpellingSystem } from '@stunt-double/spelling';
+import { localiseSpelling, type SpellingSystem } from '@stunt-double/localeizer';
 
 function localisePage(root: Node, system: SpellingSystem): void {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
