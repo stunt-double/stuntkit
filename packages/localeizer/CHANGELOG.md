@@ -1,5 +1,11 @@
 # @stunt-double/localeizer
 
+## 0.2.0
+
+### Minor Changes
+
+- [#27](https://github.com/stunt-double/stuntkit/pull/27) [`aa7dd4b`](https://github.com/stunt-double/stuntkit/commit/aa7dd4bc31a93f11f841a8e8204bfb9cdd55dee6) Thanks [@mrprkr](https://github.com/mrprkr)! - Renamed from `@stunt-double/spelling` to `@stunt-double/localeizer`. The API is unchanged: install the new name and update your imports.
+
 ## 0.1.0
 
 ### Minor Changes
