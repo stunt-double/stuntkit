@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": { "types": ["@figma/code-connect/figma-types"] },
+  "include": ["**/*.figma.ts"]
+}

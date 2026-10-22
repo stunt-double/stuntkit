@@ -78,13 +78,21 @@ iconToSvg(iconNodes.arrowRight, { size: 32, color: '#111' });
 
 ## Adding or changing an icon
 
-Edit the geometry in `src/nodes.ts` and its entry in `src/manifest.ts`, then regenerate the components, SVG files and `icons.json`:
+Edit the geometry in `src/nodes.ts` and its entry in `src/manifest.ts`, add the icon's Figma node id to `figma/nodes.ts`, then regenerate the components, SVG files, `icons.json` and Code Connect templates:
 
 ```sh
 pnpm --filter @stunt-double/icons generate
 ```
 
 The tests fail while any generated file is stale, or while any icon reaches outside the 2 to 22 unit area.
+
+## Figma Code Connect
+
+Every icon and AI mark in the Continuity Design System Figma library is mapped to its React component, so Dev Mode shows `<ArrowRightIcon />` or `<ClaudeLogo variant="mono" />` with the import. `figma/nodes.ts` holds each component's Figma node id, and `generate` writes one template per icon and mark under `figma/`. The library must be published for the mappings to appear. To publish them, with a Figma access token that has Code Connect write scope:
+
+```sh
+FIGMA_ACCESS_TOKEN=... pnpm --filter @stunt-double/icons figma:publish
+```
 
 ## Licence
 
