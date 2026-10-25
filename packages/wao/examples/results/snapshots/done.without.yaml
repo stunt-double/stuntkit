@@ -1,0 +1,5 @@
+- text: Kettle & Co.
+- link:
+  - /url: shop.html
+- heading "Order confirmed" [level=1]
+- paragraph: Thanks, your order is on its way.

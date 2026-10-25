@@ -45,6 +45,12 @@ The search control was a `<div onclick>` holding a Glyphicon, and the cart link 
 - **Reaches web components.** Controls inside open shadow roots are repaired and observed too.
 - **Small.** About 4 KB gzipped, with no dependencies.
 
+## Which agents it helps
+
+Most browser agents that act through text read a page as its accessibility tree, with a reference for each element: Playwright MCP, Chrome DevTools MCP, Vercel's agent-browser, Stagehand, Browser Use, and the `read_page`-style tools in Anthropic's and OpenAI's browser toolsets. Google's Lighthouse now audits the same tree in its experimental Agentic Browsing category. These agents see what WAO repairs.
+
+Agents that work from screenshots alone (computer-use models clicking on coordinates) never read the tree, so WAO neither helps nor hinders them. Its repairs never change what a page looks like.
+
 Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. This is version 2, a rewrite of [`stunt-double/wao`](https://github.com/stunt-double/wao). See [Upgrading from 1.x](#upgrading-from-1x).
 
 ## Install
@@ -111,18 +117,35 @@ await page.goto('https://legacy.example.com');
 console.log(await page.locator('body').ariaSnapshot()); // The repaired tree.
 
 // What WAO changed and what it could not fix, for logs or for the agent itself.
-const { changes, issues } = await page.evaluate(() => {
-  const { changes, issues } = window.wao!.report();
-  return {
-    changes: changes.map(({ kind, target, value, source }) => ({ kind, target, value, source })),
-    issues: issues.map(({ kind, target }) => ({ kind, target })),
-  };
-});
+const { changes, issues } = await page.evaluate(() => window.wao!.report());
 ```
 
-Reports hold live elements, so map them to plain data before they leave the page. With Puppeteer, pass the same combined content to `page.evaluateOnNewDocument`. Over raw CDP, pass it as the `source` of `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stunt-double/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
+A report is plain data: each entry's `element` is a non-enumerable property, so it stays in the page and the rest serialises. With Puppeteer, pass the same combined content to `page.evaluateOnNewDocument`. Over raw CDP, pass it as the `source` of `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stunt-double/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
+
+With Playwright MCP, write the options and the script into one file and pass it as an init script:
+
+```sh
+{ echo 'window.waoOptions = {};'; cat node_modules/@stunt-double/wao/dist/wao.global.js; } > wao-init.js
+npx @playwright/mcp --init-script ./wao-init.js
+```
 
 The script only runs once per page, so a second injection (or a site that already ships WAO) is harmless.
+
+### Audit without changing the page
+
+A harness that must see a page exactly as its users do (a test run, a scorecard) can ask what WAO would change without keeping any of it. Set `auto: false` so the script build does not optimise on load, then call `window.waoAudit()` whenever the page settles:
+
+```ts
+await context.addInitScript({
+  content: `window.waoOptions = { auto: false };\n${script}`,
+});
+// ...
+const { changes, issues } = await page.evaluate(() => window.waoAudit!());
+```
+
+`changes` are the defects WAO knows how to repair (a clickable `div` with no role, an icon button with no name), and `issues` the ones it cannot. `audit()` is also exported from the npm entry. It sets and removes attributes in one synchronous pass, so nothing renders in between, though the page's own attribute observers can see them.
+
+You can also turn WAO on only when an agent gets stuck: audit by default, then `optimise()` when a control cannot be found, and record that the run had help.
 
 ## What it repairs
 
@@ -131,6 +154,9 @@ The script only runs once per page, so a second injection (or a site that alread
 | `clickables` | A non-semantic element with an `onclick` handler (attribute or property), or the outermost element with `cursor: pointer`, gets `role="button"` and `tabindex="0"`. Enter and Space then click it, as they would a button. Elements inside a link or button, or wrapping one, are left alone.                              |
 | `names`      | A control with no accessible name gets an `aria-label`, inferred from a tooltip attribute (`data-tooltip`, `data-bs-original-title`, ...), an icon font class (`fa-trash`, `bi-x`, `glyphicon-search`, `icon-cart`), the short text beside a field (`<td>Email:</td><td><input></td>`), a field's `name`, or a link's URL. |
 | `landmarks`  | A page with no `<main>` gets `role="main"` on its one obvious candidate (`#main`, `#content`, `.main-content`, ...). When there are several candidates, WAO does nothing.                                                                                                                                                  |
+| `dialogs`    | The outermost modal container (class `modal`, `dialog`, `popup` or `lightbox`) with no role gets `role="dialog"`, named by its first heading, so an agent can tell a modal is open and what it is about.                                                                                                                   |
+
+Icon names follow the action, not the picture: `fa-times`, `bi-x` and `glyphicon-remove` are "Close", `fa-bars` is "Menu", `fa-cog` is "Settings" and `fa-ellipsis-v` is "More", because an agent told to close a dialog looks for "Close".
 
 Each repaired element is marked with `data-wao`, listing what changed (`data-wao="role focus name"`). An agent can then tell which roles and names were inferred and which ones the page wrote.
 
@@ -150,9 +176,12 @@ optimise({
     { selector: '#hdr .links', role: 'navigation', label: 'Primary' },
     { selector: '.btn-go', label: 'Check out', description: 'Pays for everything in the basket' },
     { selector: '#q', role: 'searchbox', label: 'Search products' },
+    { selector: '.ad-slot', hidden: true },
   ],
 });
 ```
+
+`hidden: true` sets `aria-hidden`, taking noise (ads, a duplicated mobile menu, decoration) out of the tree an agent reads. Never hide a control a person can use.
 
 With the script build, set the options before the script loads:
 
@@ -183,16 +212,16 @@ Issue kinds are `unnamed-control`, `image-without-alt` and `no-main`. Each one i
 
 Runs one pass now and returns a handle. Options:
 
-| Option     | Default                    | What                                                                           |
-| ---------- | -------------------------- | ------------------------------------------------------------------------------ |
-| `root`     | `document.documentElement` | The subtree to optimise.                                                       |
-| `observe`  | `true`                     | Optimise content added later.                                                  |
-| `keyboard` | `true`                     | Activate repaired clickables with Enter and Space.                             |
-| `shadow`   | `true`                     | Optimise and observe inside open shadow roots.                                 |
-| `repairs`  | all `true`                 | `{ clickables, names, landmarks }`.                                            |
-| `rules`    | `[]`                       | `{ selector, role?, label?, description? }[]`. An invalid selector is skipped. |
-| `signal`   |                            | An `AbortSignal`. Aborting it restores the page, as `restore()` does.          |
-| `onReport` |                            | Called with the report after every pass, including passes over later content.  |
+| Option     | Default                    | What                                                                                   |
+| ---------- | -------------------------- | -------------------------------------------------------------------------------------- |
+| `root`     | `document.documentElement` | The subtree to optimise.                                                               |
+| `observe`  | `true`                     | Optimise content added later.                                                          |
+| `keyboard` | `true`                     | Activate repaired clickables with Enter and Space.                                     |
+| `shadow`   | `true`                     | Optimise and observe inside open shadow roots.                                         |
+| `repairs`  | all `true`                 | `{ clickables, names, landmarks, dialogs }`.                                           |
+| `rules`    | `[]`                       | `{ selector, role?, label?, description?, hidden? }[]`. Invalid selectors are skipped. |
+| `signal`   |                            | An `AbortSignal`. Aborting it restores the page, as `restore()` does.                  |
+| `onReport` |                            | Called with the report after every pass, including passes over later content.          |
 
 ### The handle
 
@@ -202,16 +231,32 @@ Runs one pass now and returns a handle. Options:
 
 The handle is also `Disposable`, so `using wao = optimise()` restores the page when the block ends (TypeScript 5.2 or later, or a runtime with explicit resource management).
 
+### `audit(options?)`
+
+Takes the same options (except `observe`, `keyboard`, `signal` and `onReport`), runs one pass, restores the page and returns the report. The script build exposes it as `window.waoAudit`, with `window.waoOptions` as defaults.
+
 ### `accessibleName(element)` and `inferName(element)`
 
 The two building blocks, exported for tooling. `accessibleName` is the subset of the accname computation WAO uses to decide whether a control already has a name. `inferName` is the name WAO would give an unnamed control, and where it came from.
 
 ## What it does not do
 
-- It does not make a page accessible. Inferred names are a best guess for agents. A site that people use with assistive technology needs real labels.
+- It is not an accessibility overlay, and makes no compliance claim. Inferred names are a best guess for agents. A site that people use with assistive technology needs real labels in its source, and `report()` lists where.
+- It does not detect assistive technology or treat anyone differently. Every visitor gets the same page.
+- It does not guess where a wrong guess is costly. A wrong name is worse for an agent than none, because agents believe labels. So WAO only fills in names that are missing, says where each came from (`source`), and leaves the rest as issues. Name a payment or destructive control with a rule, or in the markup.
 - It does not change what a page looks like or how it behaves, except that Enter and Space click a repaired clickable.
 - It does not send anything anywhere, and makes no network requests.
 - It cannot reach inside closed shadow roots or cross-origin iframes, as no script outside them can.
+
+## What's new in 2.2
+
+- **Audit.** `audit()` (and `window.waoAudit()` in the script build) reports what WAO would change and leaves the page as it was. `waoOptions.auto = false` stops the script build optimising on load.
+- **Plain-data reports.** `element` is non-enumerable, so a report crosses `page.evaluate` and `JSON.stringify` without mapping.
+- **Dialogs.** A new `dialogs` repair gives modal containers a dialog role and a name.
+- **Action names for icons.** `fa-times` is "Close", not "Times"; `fa-bars` is "Menu".
+- **Hiding noise.** Rules take `hidden: true`.
+- **Faster passes.** Shadow roots are found once per pass rather than once per rule, and `inert` content is left alone.
+- **Measured.** [`examples/`](./examples) compares a legacy shop with and without WAO: an agent that addresses controls by role and name completes the task only with WAO, and screenshots are pixel-identical.
 
 ## What's new in 2.1
 

@@ -65,13 +65,22 @@ const ARRAY_FIELDS = ['findings', 'frictions'] as const;
  * one parameter and the start of the next (`]</findings>\n<parameter
  * name="frictions">[`), which splices a later array into an earlier string.
  */
-const LEAKED_PARAMETER = /<\/[\w-]+>\s*<parameter name="([\w-]+)">/g;
+// Quantifiers are bounded so the pattern stays linear on hostile input.
+const LEAKED_PARAMETER = /<\/[\w-]{1,64}>\s{0,32}<parameter name="([\w-]{1,64})">/g;
+
+/** Drop closing tags (`</findings>`) left after the array, without a backtracking regex. */
+function stripTrailingClosingTags(text: string): string {
+  let out = text.trimEnd();
+  while (out.endsWith('>')) {
+    const open = out.lastIndexOf('</');
+    if (open < 0 || !/^[\w-]+$/.test(out.slice(open + 2, -1))) break;
+    out = out.slice(0, open).trimEnd();
+  }
+  return out;
+}
 
 function parseArray(text: string): unknown[] | null {
-  const trimmed = text
-    .trim()
-    .replace(/(?:<\/[\w-]+>\s*)+$/, '')
-    .trim();
+  const trimmed = stripTrailingClosingTags(text.trim()).trim();
   try {
     const parsed: unknown = JSON.parse(trimmed);
     return Array.isArray(parsed) ? parsed : null;

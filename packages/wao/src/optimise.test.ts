@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import { Window } from 'happy-dom';
 
-import { WAO_ATTRIBUTE, accessibleName, optimise, type WaoOptions } from './index.ts';
+import { WAO_ATTRIBUTE, accessibleName, audit, optimise, type WaoOptions } from './index.ts';
 
 function page(body: string, head = '') {
   const window = new Window();
@@ -305,4 +305,76 @@ test('a node moved outside root before the batch runs is left alone', async () =
   await new Promise((resolve) => window.setTimeout(resolve, 100));
   assert.equal(moved.hasAttribute('role'), false);
   wao.restore();
+});
+
+test('a report is plain data: elements stay reachable but do not serialise', () => {
+  const { $, run } = page(
+    `<main><div id="x" onclick="go()"><i class="fa-search"></i></div></main>`
+  );
+  const report = run().report();
+  assert.equal(report.changes[0].element, $('#x'));
+  const plain = JSON.parse(JSON.stringify(report));
+  assert.deepEqual(plain.changes[0], {
+    kind: 'role',
+    target: 'div#x',
+    attribute: 'role',
+    value: 'button',
+  });
+});
+
+test('audit reports what optimise would do and leaves the page as it was', () => {
+  const { document } = page(`<div id="x" onclick="go()"><i class="fa-search"></i></div>`);
+  const before = document.body.innerHTML;
+  const report = audit({ root: document.documentElement });
+  assert.equal(document.body.innerHTML, before);
+  assert.deepEqual(
+    report.changes.map((c) => [c.kind, c.value]),
+    [
+      ['role', 'button'],
+      ['focus', '0'],
+      ['name', 'Search'],
+    ]
+  );
+  assert.ok(report.issues.some((i) => i.kind === 'no-main'));
+});
+
+test('a rule can hide noise from agents, and inert content is left alone', () => {
+  const { $, run } = page(`
+    <main><div id="ad">Sponsored</div><div inert><div id="x" onclick="go()">Go</div></div></main>
+  `);
+  run({ rules: [{ selector: '#ad', hidden: true }] });
+  assert.equal($('#ad').getAttribute('aria-hidden'), 'true');
+  assert.equal($('#x').hasAttribute('role'), false);
+});
+
+test('icons are named for the action, not the picture', () => {
+  const { $, run } = page(`
+    <main>
+      <div id="close" onclick="hide()"><i class="fa fa-times"></i></div>
+      <button id="menu"><i class="fa fa-bars"></i></button>
+      <a id="more" href="#"><span class="bi-three-dots"></span></a>
+    </main>
+  `);
+  run();
+  assert.equal($('#close').getAttribute('aria-label'), 'Close');
+  assert.equal($('#menu').getAttribute('aria-label'), 'Menu');
+  assert.equal($('#more').getAttribute('aria-label'), 'More');
+});
+
+test('the outermost modal container becomes a dialog named by its heading', () => {
+  const { $, run } = page(`
+    <main>
+      <div class="modal" id="m"><div class="modal-dialog"><h4>Added to basket</h4></div></div>
+      <div class="popup" id="named" aria-label="Newsletter"><h2>Sign up</h2></div>
+      <div class="modal" role="region" id="own"></div>
+      <a class="popup-link" id="link" href="#m">Open</a>
+    </main>
+  `);
+  run();
+  assert.equal($('#m').getAttribute('role'), 'dialog');
+  assert.equal($('#m').getAttribute('aria-label'), 'Added to basket');
+  assert.equal($('.modal-dialog').hasAttribute('role'), false);
+  assert.equal($('#named').getAttribute('aria-label'), 'Newsletter');
+  assert.equal($('#own').getAttribute('role'), 'region');
+  assert.equal($('#link').hasAttribute('role'), false);
 });

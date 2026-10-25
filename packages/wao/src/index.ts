@@ -1,6 +1,7 @@
 export { accessibleName, inferName, type InferredName } from './name.ts';
 export {
   WAO_ATTRIBUTE,
+  audit,
   optimise,
   type Wao,
   type WaoChange,
