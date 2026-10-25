@@ -1,0 +1,16 @@
+{
+  "name": "@stunt-double/wao-examples",
+  "version": "0.0.0",
+  "private": true,
+  "description": "With/without comparison for @stunt-double/wao on a legacy fixture site",
+  "type": "module",
+  "scripts": {
+    "type-check": "tsc -p tsconfig.json",
+    "compare": "node --conditions=@stunt-double/source src/compare.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "@stunt-double/wao": "workspace:*",
+    "playwright": "^1.64.0"
+  }
+}

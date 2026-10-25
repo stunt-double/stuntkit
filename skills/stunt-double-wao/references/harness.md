@@ -57,25 +57,15 @@ Inject on the Playwright context inside your driver's `launch`, before `newPage`
 
 ## Reading the report
 
-`report()` holds live elements, which cannot leave the page. Map to plain data inside `evaluate`:
+A report is plain data (each entry's `element` is non-enumerable and stays in the page), so return it directly:
 
 ```ts
-const report = await page.evaluate(() => {
-  const { changes, issues } = window.wao!.report();
-  return {
-    changes: changes.map(({ kind, target, attribute, value, source }) => ({
-      kind,
-      target,
-      attribute,
-      value,
-      source,
-    })),
-    issues: issues.map(({ kind, target }) => ({ kind, target })),
-  };
-});
+const report = await page.evaluate(() => window.wao!.report());
 ```
 
-Change kinds: `rule`, `role`, `focus`, `name`, `landmark`. Issue kinds: `unnamed-control`, `image-without-alt`, `no-main`. Give issues to the agent as context ("these controls have no name") or to a person as a to-do list.
+To see a page exactly as its users do (a test run, a scorecard), audit instead of repairing: inject with `auto: false` and call `window.waoAudit()` when the page settles. It returns the same report and leaves the page unchanged. Switch to `window.wao = ...optimise` only as an assist when the agent is stuck, and record that it had help.
+
+Change kinds: `rule`, `role`, `focus`, `name`, `landmark`, `dialog`. Issue kinds: `unnamed-control`, `image-without-alt`, `no-main`. Give issues to the agent as context ("these controls have no name") or to a person as a to-do list.
 
 After a client-side change the observer cannot see (a class toggled to `cursor: pointer`), call `window.wao.refresh()`, which returns the new report.
 
@@ -93,9 +83,7 @@ let failed = false;
 for (const url of PAGES) {
   const page = await context.newPage();
   await page.goto(url, { waitUntil: 'networkidle' });
-  const issues = await page.evaluate(() =>
-    window.wao!.report().issues.map(({ kind, target }) => ({ kind, target }))
-  );
+  const { issues } = await page.evaluate(() => window.wao!.report());
   if (issues.length) {
     failed = true;
     console.error(url, issues);

@@ -12,7 +12,7 @@
 // it never overwrites an attribute the page set, except where a rule written
 // for the page says to.
 
-import { accessibleName, inferName, roleOf, type InferredName } from './name.ts';
+import { accessibleName, contentText, inferName, roleOf, type InferredName } from './name.ts';
 
 /** A rule for one page or site: what a selector's elements are, for agents. */
 export interface WaoRule {
@@ -24,6 +24,8 @@ export interface WaoRule {
   description?: string;
   /** ARIA role, for example `button`, `navigation`, `main`, `search`. */
   role?: string;
+  /** Hide the elements from agents (`aria-hidden`): ads, decoration, a duplicate menu. */
+  hidden?: boolean;
 }
 
 /** Which automatic repairs run. All default to on. */
@@ -34,6 +36,8 @@ export interface WaoRepairs {
   names?: boolean;
   /** Mark the page's main region when it has no `<main>` and one obvious candidate. */
   landmarks?: boolean;
+  /** Give modal containers (`.modal`, `.dialog`, `.popup`, `.lightbox`) a dialog role, named by their heading. */
+  dialogs?: boolean;
 }
 
 export interface WaoOptions {
@@ -53,7 +57,7 @@ export interface WaoOptions {
   onReport?: (report: WaoReport) => void;
 }
 
-export type WaoChangeKind = 'rule' | 'role' | 'focus' | 'name' | 'landmark';
+export type WaoChangeKind = 'rule' | 'role' | 'focus' | 'name' | 'landmark' | 'dialog';
 
 /** One attribute WAO set. */
 export interface WaoChange {
@@ -103,8 +107,14 @@ declare global {
   interface Window {
     /** The handle the script build creates once the DOM is ready. */
     wao?: Wao;
-    /** Options for the script build, set before it loads. */
-    waoOptions?: WaoOptions;
+    /**
+     * Options for the script build, set before it loads. `auto: false` stops
+     * it optimising on load, for a harness that only audits (`waoAudit`) or
+     * calls `optimise` itself later.
+     */
+    waoOptions?: WaoOptions & { auto?: boolean };
+    /** The script build's `audit`, with `waoOptions` as defaults. */
+    waoAudit?: (options?: Parameters<typeof audit>[0]) => WaoReport;
   }
 }
 
@@ -138,6 +148,12 @@ const INTERACTIVE = `${NATIVE_INTERACTIVE}, ${INTERACTIVE_ROLES.map((r) => `[rol
 // Elements a site makes clickable with a script handler instead of a button.
 const CLICKABLE_CANDIDATES = 'div, span, li, td, th, tr, img, i, svg, p, section, article';
 
+// The class names modal and lightbox libraries (Bootstrap, jQuery UI,
+// Fancybox, hand-rolled) put on the outermost container. Exact tokens only:
+// `.modal-body` and `.popup-link` are parts or triggers, not the dialog.
+const DIALOG_CANDIDATES = '.modal, .dialog, .popup, .lightbox';
+const DIALOG = `dialog, [role="dialog"], [role="alertdialog"], ${DIALOG_CANDIDATES}`;
+
 const MAIN_CANDIDATES = [
   '#main',
   '#main-content',
@@ -165,7 +181,14 @@ function describe(element: Element): string {
 }
 
 function isHidden(element: Element): boolean {
-  return element.closest('[hidden], [aria-hidden="true"], template') !== null;
+  return element.closest('[hidden], [inert], [aria-hidden="true"], template') !== null;
+}
+
+// `element` is a live node: keep it off the enumerable keys, so a report
+// survives `JSON.stringify` and `page.evaluate` as plain data.
+function withElement<T extends object>(entry: T, element: Element | undefined): T {
+  if (element) Object.defineProperty(entry, 'element', { value: element, enumerable: false });
+  return entry;
 }
 
 /**
@@ -177,7 +200,13 @@ export function optimise(options: WaoOptions = {}): Wao {
   const root = options.root ?? document.documentElement;
   const doc = root.ownerDocument;
   const view = doc.defaultView;
-  const repairs = { clickables: true, names: true, landmarks: true, ...options.repairs };
+  const repairs = {
+    clickables: true,
+    names: true,
+    landmarks: true,
+    dialogs: true,
+    ...options.repairs,
+  };
   const rules = options.rules ?? [];
   const shadow = options.shadow !== false;
 
@@ -209,7 +238,12 @@ export function optimise(options: WaoOptions = {}): Wao {
     if (!saved.has(attribute)) saved.set(attribute, element.getAttribute(attribute));
     element.setAttribute(attribute, value);
     mark(element, kind);
-    changes.push({ kind, element, target: describe(element), attribute, value, source });
+    changes.push(
+      withElement(
+        { kind, target: describe(element), attribute, value, source } as WaoChange,
+        element
+      )
+    );
   }
 
   /** Set only where the page has not: the automatic repairs never overwrite. */
@@ -225,8 +259,13 @@ export function optimise(options: WaoOptions = {}): Wao {
 
   // Open shadow roots under a scope, nested ones included. Closed roots are
   // out of reach, for WAO as for any script outside the component.
+  // Repairs only set attributes, so no root appears mid-pass: one walk per
+  // scope serves every rule and repair in the pass.
+  let shadowCache: Map<Element, ShadowRoot[]> | null = null;
   function shadowRootsUnder(scope: Element): ShadowRoot[] {
     if (!shadow) return [];
+    const cached = shadowCache?.get(scope);
+    if (cached) return cached;
     const found: ShadowRoot[] = [];
     const visit = (host: Element) => {
       const shadowRoot = host.shadowRoot;
@@ -236,7 +275,17 @@ export function optimise(options: WaoOptions = {}): Wao {
     };
     visit(scope);
     for (const el of Array.from(scope.querySelectorAll('*'))) visit(el);
+    shadowCache?.set(scope, found);
     return found;
+  }
+
+  function cachingShadowRoots<T>(run: () => T): T {
+    shadowCache = new Map();
+    try {
+      return run();
+    } finally {
+      shadowCache = null;
+    }
   }
 
   function within(scope: Element, selector: string): Element[] {
@@ -260,6 +309,7 @@ export function optimise(options: WaoOptions = {}): Wao {
         if (rule.role) set(element, 'role', rule.role, 'rule', 'rule');
         if (rule.label) set(element, 'aria-label', rule.label, 'rule', 'rule');
         if (rule.description) set(element, 'aria-description', rule.description, 'rule', 'rule');
+        if (rule.hidden) set(element, 'aria-hidden', 'true', 'rule', 'rule');
       }
     }
   }
@@ -297,6 +347,18 @@ export function optimise(options: WaoOptions = {}): Wao {
     }
   }
 
+  function repairDialogs(scope: Element): void {
+    for (const element of within(scope, DIALOG_CANDIDATES)) {
+      // Only the outermost container, and only when the page has not said what it is.
+      if (element.hasAttribute('role') || element.parentElement?.closest(DIALOG)) continue;
+      fill(element, 'role', 'dialog', 'dialog');
+      if (accessibleName(element)) continue;
+      const heading = element.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]');
+      const name = heading ? contentText(heading) : '';
+      if (name) fill(element, 'aria-label', name, 'dialog', 'heading');
+    }
+  }
+
   function repairLandmarks(): void {
     if (doc.querySelector('main, [role="main"]')) return;
     const candidates = MAIN_CANDIDATES.flatMap((selector) =>
@@ -310,11 +372,15 @@ export function optimise(options: WaoOptions = {}): Wao {
     const found: WaoIssue[] = [];
     for (const element of within(root, INTERACTIVE)) {
       if (isHidden(element) || roleOf(element) === '' || accessibleName(element)) continue;
-      found.push({ kind: 'unnamed-control', element, target: describe(element) });
+      found.push(
+        withElement({ kind: 'unnamed-control', target: describe(element) } as WaoIssue, element)
+      );
     }
     for (const element of within(root, 'img:not([alt])')) {
       if (isHidden(element)) continue;
-      found.push({ kind: 'image-without-alt', element, target: describe(element) });
+      found.push(
+        withElement({ kind: 'image-without-alt', target: describe(element) } as WaoIssue, element)
+      );
     }
     if (!doc.querySelector('main, [role="main"]')) found.push({ kind: 'no-main' });
     return found;
@@ -322,16 +388,19 @@ export function optimise(options: WaoOptions = {}): Wao {
 
   function pass(scope: Element): void {
     applyRules(scope);
+    if (repairs.dialogs) repairDialogs(scope);
     if (repairs.clickables) repairClickables(scope);
     if (repairs.names) repairNames(scope);
   }
 
   function fullPass(): WaoReport {
     if (stopped) return report();
-    pass(root);
-    if (repairs.landmarks) repairLandmarks();
-    issues = collectIssues();
-    observeShadowRoots(root);
+    cachingShadowRoots(() => {
+      pass(root);
+      if (repairs.landmarks) repairLandmarks();
+      issues = collectIssues();
+      observeShadowRoots(root);
+    });
     return notify();
   }
 
@@ -380,12 +449,14 @@ export function optimise(options: WaoOptions = {}): Wao {
     if (stopped) return;
     const scopes = [...pending].filter(inRoot);
     pending = new Set();
-    for (const scope of scopes) {
-      pass(scope);
-      observeShadowRoots(scope);
-    }
-    if (repairs.landmarks) repairLandmarks();
-    issues = collectIssues();
+    cachingShadowRoots(() => {
+      for (const scope of scopes) {
+        pass(scope);
+        observeShadowRoots(scope);
+      }
+      if (repairs.landmarks) repairLandmarks();
+      issues = collectIssues();
+    });
     notify();
   }
   const observer =
@@ -449,4 +520,20 @@ export function optimise(options: WaoOptions = {}): Wao {
     restore,
     [DISPOSE]: restore,
   };
+}
+
+/**
+ * What `optimise` would change and what it would report, with the page left
+ * as it was: one pass, then a restore. For audits, CI and agent harnesses
+ * that must see a page exactly as its users do. The attributes are set and
+ * removed synchronously, so nothing renders in between, though the page's own
+ * attribute observers can see them.
+ */
+export function audit(
+  options: Omit<WaoOptions, 'observe' | 'keyboard' | 'signal' | 'onReport'> = {}
+): WaoReport {
+  const wao = optimise({ ...options, observe: false, keyboard: false });
+  const result = wao.report();
+  wao.restore();
+  return result;
 }

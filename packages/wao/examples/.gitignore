@@ -1,0 +1,3 @@
+# Live sites are third-party content: keep their metrics in summary.md, not their pages.
+results/snapshots/site-*
+results/screenshots/site-*
