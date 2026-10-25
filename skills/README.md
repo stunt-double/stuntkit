@@ -2,14 +2,15 @@
 
 [Agent Skills](https://agentskills.io) for the StuntKit packages. Each one teaches a coding agent when to reach for a package, how to wire it up, and the mistakes to avoid, so it gets the integration right the first time. Longer material (full agent loops, framework recipes, the icon catalogue) sits in each skill's `references/` folder and is read only when needed.
 
-| Skill                                                                     | For                                                                               |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [`stuntkit`](./stuntkit/SKILL.md)                                         | Which package fits a task, installing from GitHub Packages, combining packages    |
-| [`stuntkit-agent-ready-site`](./stuntkit-agent-ready-site/SKILL.md)       | Auditing a site for agents, repairing it with WAO and proving it with an agent    |
-| [`stunt-double-wao`](./stunt-double-wao/SKILL.md)                         | Making sites work for agents, and injecting WAO into an agent's browser           |
-| [`stunt-double-browser-toolset`](./stunt-double-browser-toolset/SKILL.md) | Browser agents on Anthropic's browser use toolset or any model's function calling |
-| [`stunt-double-localeizer`](./stunt-double-localeizer/SKILL.md)           | American, British and Canadian spelling localisation                              |
-| [`stunt-double-icons`](./stunt-double-icons/SKILL.md)                     | The Continuity icon pack in React, SVG and raw markup, and migrating from lucide  |
+| Skill                                                                         | For                                                                               |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`stuntkit`](./stuntkit/SKILL.md)                                             | Which package fits a task, installing from GitHub Packages, combining packages    |
+| [`stuntkit-agent-ready-site`](./stuntkit-agent-ready-site/SKILL.md)           | Auditing a site for agents, repairing it with WAO and proving it with an agent    |
+| [`stunt-double-wao`](./stunt-double-wao/SKILL.md)                             | Making sites work for agents, and injecting WAO into an agent's browser           |
+| [`stunt-double-index-methodology`](./stunt-double-index-methodology/SKILL.md) | How the Stunt Double Index scores a site, explaining a score and raising it       |
+| [`stunt-double-browser-toolset`](./stunt-double-browser-toolset/SKILL.md)     | Browser agents on Anthropic's browser use toolset or any model's function calling |
+| [`stunt-double-localeizer`](./stunt-double-localeizer/SKILL.md)               | American, British and Canadian spelling localisation                              |
+| [`stunt-double-icons`](./stunt-double-icons/SKILL.md)                         | The Continuity icon pack in React, SVG and raw markup, and migrating from lucide  |
 
 ## Agents
 

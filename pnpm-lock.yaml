@@ -93,6 +93,12 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
 
+  packages/index-methodology:
+    devDependencies:
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+
   packages/localeizer: {}
 
   packages/wao:

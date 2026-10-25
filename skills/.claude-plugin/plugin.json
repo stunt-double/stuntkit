@@ -1,8 +1,8 @@
 {
   "name": "stuntkit",
   "displayName": "StuntKit",
-  "version": "1.2.0",
-  "description": "Skills and agents for @stunt-double/browser-toolset, wao, localeizer and icons: when to reach for each package, how to wire it up, the mistakes to avoid, and agents that build and review browser agents",
+  "version": "1.3.0",
+  "description": "Skills and agents for @stunt-double/browser-toolset, wao, localeizer, icons and index-methodology: when to reach for each package, how to wire it up, the mistakes to avoid, and agents that build and review browser agents",
   "author": {
     "name": "Stunt Double",
     "url": "https://stuntdouble.io"
