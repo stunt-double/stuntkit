@@ -1,0 +1,19 @@
+- text: Kettle & Co.
+- link "Home":
+  - /url: shop.html
+- main:
+  - heading "Your basket" [level=1]
+  - list
+  - table:
+    - rowgroup:
+      - row "Email:":
+        - cell "Email:"
+        - cell:
+          - textbox "Email"
+      - 'row "Delivery: Choose delivery"':
+        - cell "Delivery:"
+        - cell "Choose delivery":
+          - button "Choose delivery"
+  - paragraph:
+    - button "Checkout"
+  - paragraph

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kettle &amp; Co. shop</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="hdr">
+      <b>Kettle &amp; Co.</b>
+      <span
+        class="tog"
+        onclick="
+          var m = document.getElementById('menu');
+          m.style.display = m.style.display == 'block' ? 'none' : 'block';
+        "
+        ><i class="fa fa-bars"></i
+      ></span>
+      <input id="q" name="search" type="text" autocomplete="off" />
+      <div
+        class="go"
+        onclick="location.search = '?q=' + encodeURIComponent(document.getElementById('q').value)"
+      >
+        <i class="glyphicon glyphicon-search"></i>
+      </div>
+      <a href="basket.html"><i class="fa fa-shopping-cart"></i></a>
+      <span title="Your wishlist" style="cursor: pointer" onclick="alert('wishlist')"
+        ><i class="fa fa-heart"></i
+      ></span>
+    </div>
+    <div id="menu"><a href="shop.html">Home</a><a href="basket.html">Basket</a></div>
+    <div id="content">
+      <h1>Kettles and toasters</h1>
+      <div id="list"></div>
+    </div>
+    <div class="overlay" id="ov">
+      <div class="modal">
+        <div class="x" onclick="document.getElementById('ov').style.display = 'none'">
+          <i class="fa fa-times"></i>
+        </div>
+        <p>Item added to your basket.</p>
+      </div>
+    </div>
+    <div id="cookie">
+      We use cookies to improve your visit.
+      <div class="ok" onclick="document.getElementById('cookie').remove()">Accept</div>
+    </div>
+    <script>
+      var items = [
+        { id: 'kettle', name: 'Steel Kettle', price: '$39' },
+        { id: 'toaster', name: 'Retro Toaster', price: '$55' },
+        { id: 'mug', name: 'Enamel Mug', price: '$9' },
+      ];
+      var q = (new URLSearchParams(location.search).get('q') || '').toLowerCase();
+      var list = document.getElementById('list');
+      items
+        .filter(function (i) {
+          return i.name.toLowerCase().indexOf(q) > -1;
+        })
+        .forEach(function (i) {
+          var d = document.createElement('div');
+          d.className = 'prod';
+          d.innerHTML =
+            '<span>' +
+            i.name +
+            '</span><span>' +
+            i.price +
+            '</span>' +
+            '<div class="add" data-tooltip="Add ' +
+            i.name +
+            ' to basket"><i class="fa fa-cart-plus"></i></div>';
+          d.querySelector('.add').onclick = function () {
+            var b = JSON.parse(localStorage.getItem('basket') || '[]');
+            b.push(i.name);
+            localStorage.setItem('basket', JSON.stringify(b));
+            document.getElementById('ov').style.display = 'block';
+          };
+          list.appendChild(d);
+        });
+    </script>
+  </body>
+</html>
