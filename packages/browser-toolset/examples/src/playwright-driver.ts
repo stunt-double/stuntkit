@@ -148,6 +148,9 @@ class PlaywrightContext implements DriverContext {
   clearCookies() {
     return this.context.clearCookies();
   }
+  async addInitScript(source: string): Promise<void> {
+    await this.context.addInitScript(source);
+  }
   /** Abort requests to blocked hosts, or to anything outside the allow list. */
   async setDomainPolicy(policy: DriverDomainPolicy): Promise<void> {
     this.policy = policy;
