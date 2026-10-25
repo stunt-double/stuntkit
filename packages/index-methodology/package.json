@@ -1,6 +1,6 @@
 {
   "name": "@stunt-double/index-methodology",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "How the Stunt Double Index scores a website for AI agents: categories and weights, the probe and session blend, the published curve, every agent task and rubric, and the grader's prompt and schema",
   "keywords": [
     "ai",
