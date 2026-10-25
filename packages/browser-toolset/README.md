@@ -156,7 +156,7 @@ Parameters are flat scalars on purpose: unions and nested objects are where prov
 
 The toolset uses `driver.context` (`activePage`, `pages`, `newPage`, `setActivePage`) and these methods on `DriverPage`: `id`, `goto`, `goBack`, `goForward`, `url`, `title`, `screenshot`, `evaluate` (always with a string expression), `click`, `hover`, `scroll`, `dragAndDrop`, `type`, `keyPress`, `waitForTimeout`, `waitForLoadState` and `close`. Keys arrive in Playwright's spelling (`Control+A`, `PageDown`). `DriverPage.id` must be stable for the life of a tab, even if your engine hands back a new page object on every read.
 
-The rest of the interface (`act`, `extract`, `locator`, `setDomainPolicy`, `clearCookies`, ...) is there for callers that also drive the page another way; a driver used only by these tools can throw from them. [`examples/src/playwright-driver.ts`](./examples/src/playwright-driver.ts) is a complete implementation.
+The rest of the interface (`act`, `extract`, `locator`, `setDomainPolicy`, `clearCookies`, `addInitScript`, ...) is there for callers that also drive the page another way; a driver used only by these tools can throw from them. [`examples/src/playwright-driver.ts`](./examples/src/playwright-driver.ts) is a complete implementation.
 
 Pages are read by a script evaluated in the page, which tags each element it reports with a `data-sd-ref` attribute. Refs last as long as the element stays in the DOM. Cross-origin iframes are not walked; the model falls back to coordinates from a screenshot there.
 

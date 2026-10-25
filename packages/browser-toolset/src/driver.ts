@@ -98,6 +98,12 @@ export interface DriverContext {
   setActivePage(page: DriverPage): Promise<void>;
   /** Delete every cookie in the browser, for every site. */
   clearCookies(): Promise<void>;
+  /**
+   * Run `source` in every document the browser loads from now on, before the
+   * page's own scripts. Documents already open are not touched: evaluate the
+   * source on them too if they need it.
+   */
+  addInitScript(source: string): Promise<void>;
 }
 
 /**

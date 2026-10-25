@@ -200,7 +200,13 @@ const SCRIPT = String.raw`
       var href = el.getAttribute('href');
       if (href.indexOf('javascript:') !== 0) line += ' href="' + href.slice(0, 200) + '"';
     }
+    var description = clean(el.getAttribute('aria-description'));
+    if (description) line += ' description="' + description.slice(0, 200).replace(/"/g, "'") + '"';
     if (el.disabled) line += ' disabled';
+    // Semantics WAO (@stunt-double/wao) inferred rather than the page's authors
+    // wrote: \`data-wao="role name"\` lists what it set.
+    var inferred = clean(el.getAttribute('data-wao'));
+    if (inferred) line += ' inferred="' + inferred.replace(/"/g, "'") + '"';
     return line + ' [' + refOf(el) + ']';
   }
 
@@ -256,7 +262,7 @@ const SCRIPT = String.raw`
       var role = roleOf(el);
       var interactive = isInteractive(el, role);
       if (!role && !interactive) continue;
-      var hay = (role + ' ' + nameOf(el, role || 'generic') + ' ' + (el.getAttribute('placeholder') || '') + ' ' + (el.getAttribute('name') || '')).toLowerCase();
+      var hay = (role + ' ' + nameOf(el, role || 'generic') + ' ' + (el.getAttribute('aria-description') || '') + ' ' + (el.getAttribute('placeholder') || '') + ' ' + (el.getAttribute('name') || '')).toLowerCase();
       var score = 0;
       for (var j = 0; j < terms.length; j++) if (hay.indexOf(terms[j]) !== -1) score += 1;
       if (score > 0) scored.push({ el: el, role: role || 'generic', score: score + (interactive ? 0.5 : 0) + (inViewport(el) ? 0.25 : 0) });
