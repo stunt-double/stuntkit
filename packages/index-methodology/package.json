@@ -1,0 +1,75 @@
+{
+  "name": "@stunt-double/index-methodology",
+  "version": "0.0.0",
+  "description": "How the Stunt Double Index scores a website for AI agents: categories and weights, the probe and session blend, the published curve, every agent task and rubric, and the grader's prompt and schema",
+  "keywords": [
+    "ai",
+    "agents",
+    "benchmark",
+    "agent-readiness",
+    "scoring",
+    "rubric",
+    "llm-as-judge",
+    "web"
+  ],
+  "license": "Apache-2.0",
+  "author": "Turnout Labs Ltd",
+  "homepage": "https://github.com/stunt-double/stuntkit/tree/main/packages/index-methodology#readme",
+  "bugs": {
+    "url": "https://github.com/stunt-double/stuntkit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stunt-double/stuntkit.git",
+    "directory": "packages/index-methodology"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@stunt-double/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./rubric-schema": {
+      "@stunt-double/source": "./src/rubric-schema.ts",
+      "types": "./dist/rubric-schema.d.ts",
+      "default": "./dist/rubric-schema.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "METHODOLOGY.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc -p tsconfig.json",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "prepack": "pnpm run build"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "zod": "^4.6.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  }
+}

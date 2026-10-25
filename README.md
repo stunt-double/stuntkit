@@ -6,12 +6,13 @@
 
 Open source building blocks for AI agents that use the web. Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. Releases go to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
 
-| Package                                                       | What                                                                                                                               |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| [`@stunt-double/browser-toolset`](./packages/browser-toolset) | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets |
-| [`@stunt-double/icons`](./packages/icons)                     | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                    |
-| [`@stunt-double/localeizer`](./packages/localeizer)           | Whole-word American, British and Canadian spelling localisation                                                                    |
-| [`@stunt-double/wao`](./packages/wao)                         | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents             |
+| Package                                                           | What                                                                                                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@stunt-double/browser-toolset`](./packages/browser-toolset)     | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets        |
+| [`@stunt-double/icons`](./packages/icons)                         | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                           |
+| [`@stunt-double/index-methodology`](./packages/index-methodology) | How the Stunt Double Index scores a site for agents: categories, weights, blend and curve, every task and rubric, and the grader's prompt |
+| [`@stunt-double/localeizer`](./packages/localeizer)               | Whole-word American, British and Canadian spelling localisation                                                                           |
+| [`@stunt-double/wao`](./packages/wao)                             | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents                    |
 
 ## Agent skills
 

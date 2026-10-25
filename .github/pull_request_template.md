@@ -6,6 +6,7 @@
 
 - [ ] `@stunt-double/browser-toolset`
 - [ ] `@stunt-double/icons`
+- [ ] `@stunt-double/index-methodology`
 - [ ] `@stunt-double/localeizer`
 - [ ] `@stunt-double/wao`
 - [ ] Skills (package and project skills)
