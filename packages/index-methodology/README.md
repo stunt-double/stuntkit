@@ -32,6 +32,24 @@ const overall = weightedOverallScore([
 scoreBand(overall); // 'excellent' | 'good' | 'ok' | 'poor' | 'critical'
 ```
 
+## Run the quick checks on a site
+
+```sh
+npx @stunt-double/index-methodology probe example.com
+```
+
+This runs the probe the Index runs, over plain HTTP, and prints every check with its pass or fail and evidence. Add `--json` for the full report. Agent sessions and the Is Agentic and agent search lookups are not run here: they need a browser and keys the Index holds.
+
+From code, the probe is `@stunt-double/index-methodology/probe`:
+
+```ts
+import { runProbe } from '@stunt-double/index-methodology/probe';
+
+const report = await runProbe('example.com'); // categories, findings, frictions, providers
+```
+
+The probe sends one identifying user agent (`StuntDoubleIndex`, linked to the methodology) and honours robots.txt and `X-Robots-Tag` opt-outs. A caller that holds a Web Bot Auth signing key can add signatures with `setRequestHeaders`. The Is Agentic and agent search reads take keys, so a caller passes their results in through `lookups`.
+
 ## Tasks and grading
 
 ```ts
@@ -56,6 +74,10 @@ const prompt = buildRubricPrompt({
 ```
 
 The grader's reply is validated with `rubricSchema` from `@stunt-double/index-methodology/rubric-schema`, the one entry point that needs `zod` (an optional peer dependency).
+
+## Fix prompts and leverage
+
+`@stunt-double/index-methodology/fix-prompt` turns a report's failing checks into a Markdown brief for a coding agent. `@stunt-double/index-methodology/leverage` says which category, lifted to its next band, would move the overall most.
 
 ## Contributing
 

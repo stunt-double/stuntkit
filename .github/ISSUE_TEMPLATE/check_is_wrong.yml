@@ -1,0 +1,40 @@
+name: A check is wrong for my site
+description: A quick check passed or failed a site it should not have, or its evidence does not match the page.
+labels: [probe]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run the check yourself first: `npx @stunt-double/index-methodology probe <domain>` prints every check with its evidence. If the result is wrong, tell us which check and what the page actually does.
+  - type: input
+    id: domain
+    attributes:
+      label: Site
+      description: The domain, as it is scored (for example example.com).
+      placeholder: example.com
+    validations:
+      required: true
+  - type: input
+    id: check
+    attributes:
+      label: Check
+      description: The check's label, as printed by the probe (for example "robots.txt is served").
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: What went wrong
+      options:
+        - It failed, but the site does what the check asks
+        - It passed, but the site does not do what the check asks
+        - The evidence it shows is not on the page
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: What the site does
+      description: How the site behaves, with the URL, so we can reproduce the probe's request.
+    validations:
+      required: true

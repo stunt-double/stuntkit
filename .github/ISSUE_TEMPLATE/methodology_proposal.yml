@@ -1,0 +1,40 @@
+name: Methodology proposal
+description: Propose a change to how a score is computed (a weight, a task, a rubric, a check, the blend or the curve).
+labels: [methodology]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A change to the methodology changes what every published score means, so it is discussed before any code. Accepted changes ship as a new scoring version. Please search existing issues first.
+  - type: dropdown
+    id: part
+    attributes:
+      label: What would change
+      options:
+        - A quick check (probe): what it measures, its weight or its pass rule
+        - An agent task or its rubric
+        - A category weight
+        - The blend between quick checks and agent sessions
+        - The published curve or bands
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What does the current method get wrong, and for which kinds of site?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposed change
+      description: The exact wording of the new check or rubric, or the new weight or formula, and what it does to a sample site.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Sites, transcripts or probe output that show the problem. Public URLs are best.

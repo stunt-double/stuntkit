@@ -3,7 +3,11 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    probe: 'src/probe/index.ts',
     'rubric-schema': 'src/rubric-schema.ts',
+    'fix-prompt': 'src/fix-prompt.ts',
+    leverage: 'src/leverage.ts',
+    cli: 'src/cli.ts',
   },
   format: ['esm'],
   target: 'es2022',
