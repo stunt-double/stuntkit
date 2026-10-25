@@ -10,7 +10,10 @@
     "scoring",
     "rubric",
     "llm-as-judge",
-    "web"
+    "web",
+    "probe",
+    "robots-txt",
+    "llms-txt"
   ],
   "license": "Apache-2.0",
   "author": "Turnout Labs Ltd",
@@ -31,10 +34,25 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./probe": {
+      "@stunt-double/source": "./src/probe/index.ts",
+      "types": "./dist/probe.d.ts",
+      "default": "./dist/probe.js"
+    },
     "./rubric-schema": {
       "@stunt-double/source": "./src/rubric-schema.ts",
       "types": "./dist/rubric-schema.d.ts",
       "default": "./dist/rubric-schema.js"
+    },
+    "./fix-prompt": {
+      "@stunt-double/source": "./src/fix-prompt.ts",
+      "types": "./dist/fix-prompt.d.ts",
+      "default": "./dist/fix-prompt.js"
+    },
+    "./leverage": {
+      "@stunt-double/source": "./src/leverage.ts",
+      "types": "./dist/leverage.d.ts",
+      "default": "./dist/leverage.js"
     },
     "./package.json": "./package.json"
   },
@@ -71,5 +89,8 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com"
+  },
+  "bin": {
+    "index-methodology": "./dist/cli.js"
   }
 }

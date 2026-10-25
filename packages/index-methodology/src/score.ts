@@ -286,7 +286,7 @@ export function weightedOverallScore(
 
 // Finer-grained vertical than `sector`. Treated as a hint (free text),
 // so new services can be added without a migration. The values below
-// are canonical suggestions shared between the probe, admin UI, and
+// are canonical suggestions shared between the probe, the report, and
 // agent prompts so that the same product is described consistently.
 export const KNOWN_SERVICES = [
   'payments',
