@@ -75,3 +75,11 @@ test('repairRubricText tries every repair', () => {
   assert.ok(repairRubricText(LEAKED));
   assert.equal(repairRubricText('{}'), null);
 });
+
+test('repairs stay fast on hostile markup', () => {
+  const hostile = '</' + '-></'.repeat(50_000);
+  const started = Date.now();
+  repairLeakedArrays(JSON.stringify({ score: 1, evidence: 'e', findings: hostile, frictions: [] }));
+  repairRubricText(JSON.stringify({ findings: '[]' + '</->'.repeat(50_000) }));
+  assert.ok(Date.now() - started < 1000);
+});
