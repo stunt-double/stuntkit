@@ -205,12 +205,39 @@ const ICON_CLASS =
 const ICON_MODIFIERS =
   /^(?:solid|regular|light|thin|duotone|brands|sharp|fw|lg|sm|xs|xl|[0-9]+x|spin|pulse|border|inverse|stack|flip-.*|rotate-.*|pull-.*)$/;
 
+// Icon names that describe the picture, not the action, mapped to the word a
+// person (or an agent asked to "close the dialog") would use.
+const ICON_ACTIONS: Record<string, string> = {
+  times: 'Close',
+  close: 'Close',
+  xmark: 'Close',
+  x: 'Close',
+  'x-lg': 'Close',
+  'x-circle': 'Close',
+  remove: 'Close',
+  bars: 'Menu',
+  navicon: 'Menu',
+  hamburger: 'Menu',
+  list: 'Menu',
+  'magnifying-glass': 'Search',
+  'search-alt': 'Search',
+  cog: 'Settings',
+  gear: 'Settings',
+  pencil: 'Edit',
+  'pen-to-square': 'Edit',
+  'ellipsis-h': 'More',
+  'ellipsis-v': 'More',
+  'ellipsis-vertical': 'More',
+  'three-dots': 'More',
+};
+
 function iconName(element: Element): string {
   const candidates = [element, ...Array.from(element.querySelectorAll('[class]'))];
   for (const el of candidates) {
     for (const cls of Array.from(el.classList)) {
       const match = ICON_CLASS.exec(cls);
-      if (match && !ICON_MODIFIERS.test(match[1])) return humanise(match[1]);
+      if (match && !ICON_MODIFIERS.test(match[1]))
+        return ICON_ACTIONS[match[1]] ?? humanise(match[1]);
     }
   }
   return '';
@@ -272,7 +299,7 @@ function hrefName(element: Element): string {
 /** A name inferred for an unnamed control, and where it came from. */
 export interface InferredName {
   name: string;
-  source: 'tooltip' | 'icon' | 'nearby-text' | 'field-name' | 'href';
+  source: 'tooltip' | 'icon' | 'nearby-text' | 'field-name' | 'href' | 'heading';
 }
 
 /** Infer a name for a control that has none, or `null` when nothing is good enough. */

@@ -1,0 +1,17 @@
+- text: Kettle & Co.
+- button "Menu"
+- textbox "Search"
+- button "Search"
+- link "Shopping cart":
+  - /url: basket.html
+- button "Your wishlist"
+- main:
+  - heading "Kettles and toasters" [level=1]
+  - text: Steel Kettle $39
+  - button "Add Steel Kettle to basket"
+  - text: Retro Toaster $55
+  - button "Add Retro Toaster to basket"
+  - text: Enamel Mug $9
+  - button "Add Enamel Mug to basket"
+- text: We use cookies to improve your visit.
+- button "Accept"

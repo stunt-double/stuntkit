@@ -107,6 +107,18 @@ importers:
         specifier: ^20.14.6
         version: 20.14.6
 
+  packages/wao/examples:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: 0.133.0
+        version: 0.133.0(zod@4.6.5)
+      '@stunt-double/wao':
+        specifier: workspace:*
+        version: link:..
+      playwright:
+        specifier: ^1.64.0
+        version: 1.64.0
+
 packages:
 
   '@ai-sdk/anthropic@4.0.78':

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Your basket - Kettle &amp; Co.</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="hdr">
+      <b>Kettle &amp; Co.</b><a href="shop.html"><i class="glyphicon glyphicon-home"></i></a>
+    </div>
+    <div id="content">
+      <h1>Your basket</h1>
+      <ul id="items"></ul>
+      <table class="form">
+        <tr>
+          <td>Email:</td>
+          <td><input type="text" name="email" id="email" /></td>
+        </tr>
+        <tr>
+          <td>Delivery:</td>
+          <td>
+            <div class="dd">
+              <div
+                id="dd-label"
+                class="btn-dd"
+                style="
+                  cursor: pointer;
+                  border: 1px solid #999;
+                  background: #fff;
+                  padding: 4px 8px;
+                  width: 164px;
+                "
+                onclick="
+                  var l = document.getElementById('dd-list');
+                  l.style.display = l.style.display == 'block' ? 'none' : 'block';
+                "
+              >
+                Choose delivery
+              </div>
+              <div class="dd-list" id="dd-list">
+                <div onclick="pick('Standard')">Standard (5 days)</div>
+                <div onclick="pick('Express')">Express (1 day)</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <p><span class="btn-go" onclick="checkout()">Checkout</span></p>
+      <p id="err" style="color: #c00"></p>
+    </div>
+    <script>
+      var delivery = '';
+      document.getElementById('items').innerHTML = JSON.parse(
+        localStorage.getItem('basket') || '[]'
+      )
+        .map(function (n) {
+          return '<li>' + n + '</li>';
+        })
+        .join('');
+      function pick(d) {
+        delivery = d;
+        document.getElementById('dd-label').textContent = d;
+        document.getElementById('dd-list').style.display = 'none';
+      }
+      function checkout() {
+        var e = document.getElementById('email').value;
+        if (!e || !delivery || !localStorage.getItem('basket')) {
+          document.getElementById('err').textContent = 'Please complete the form.';
+          return;
+        }
+        location.href = 'done.html?d=' + delivery;
+      }
+    </script>
+  </body>
+</html>

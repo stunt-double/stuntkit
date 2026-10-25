@@ -1,0 +1,119 @@
+body {
+  font:
+    14px Verdana,
+    sans-serif;
+  margin: 0;
+  background: #f4f1ea;
+  color: #222;
+}
+#hdr {
+  background: #234;
+  color: #fff;
+  padding: 10px 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+#hdr a,
+#hdr .tog,
+#hdr .go {
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+}
+.glyphicon,
+.fa {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: #fc0;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+#q {
+  padding: 4px;
+  width: 200px;
+}
+#content {
+  padding: 16px;
+}
+.prod {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 8px;
+  margin: 8px 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.add {
+  cursor: pointer;
+  background: #2a7;
+  padding: 4px 8px;
+  color: #fff;
+}
+.btn-go {
+  cursor: pointer;
+  background: #c42;
+  color: #fff;
+  padding: 8px 14px;
+  display: inline-block;
+}
+table.form td {
+  padding: 4px 8px;
+}
+.dd-list {
+  display: none;
+  border: 1px solid #999;
+  background: #fff;
+  width: 180px;
+}
+.dd-list div {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+#menu {
+  display: none;
+  background: #345;
+  padding: 8px 16px;
+}
+#menu a {
+  color: #fff;
+  margin-right: 12px;
+}
+#cookie {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #000;
+  color: #fff;
+  padding: 10px 16px;
+}
+#cookie .ok {
+  cursor: pointer;
+  background: #fff;
+  color: #000;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-left: 12px;
+}
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+.modal {
+  background: #fff;
+  width: 280px;
+  margin: 120px auto;
+  padding: 16px;
+  position: relative;
+}
+.modal .x {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  cursor: pointer;
+}

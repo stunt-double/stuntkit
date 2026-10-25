@@ -20,7 +20,7 @@ Releases are on GitHub Packages: the project `.npmrc` needs `@stunt-double:regis
 | You own the site, no build step           | Serve `@stunt-double/wao/script` (`dist/wao.global.js`); options on `window.waoOptions` first |
 | You own the site, bundled app             | `import { optimise } from '@stunt-double/wao'`, once, on the client                           |
 | You build the agent, not the site         | Inject the script build with one init script per context, before navigating                   |
-| You want to know what an agent cannot see | Run it and read `report().issues`                                                             |
+| You want to know what an agent cannot see | `audit()` (or `waoOptions.auto = false` and `window.waoAudit()`), leaving the page unchanged  |
 
 Framework recipes (React, Next.js, Vue, Svelte, Angular, plain HTML): [references/sites.md](references/sites.md). Harness recipes (Playwright, Puppeteer, CDP, Stagehand, browser-toolset): [references/harness.md](references/harness.md).
 
@@ -60,13 +60,13 @@ optimise({
 });
 ```
 
-An invalid selector is skipped, not thrown. `description` becomes `aria-description`. Patterns for common legacy markup: [references/rules.md](references/rules.md).
+An invalid selector is skipped, not thrown. `description` becomes `aria-description`; `hidden: true` becomes `aria-hidden` (for noise, never for a usable control). Patterns for common legacy markup: [references/rules.md](references/rules.md).
 
 ## Options and handle
 
-`root`, `observe` (default on, `MutationObserver`, 50 ms batch), `keyboard` (Enter and Space click repaired clickables), `shadow` (default on, open shadow roots), `repairs: { clickables, names, landmarks }`, `rules`, `signal` (abort restores), `onReport` (hears every pass). The handle has `report()`, `refresh()` (for changes the observer cannot see, such as a class toggle setting `cursor: pointer`), `restore()` and `[Symbol.dispose]`, so `using wao = optimise()` works. After `restore()`, call `optimise()` again rather than `refresh()`.
+`root`, `observe` (default on, `MutationObserver`, 50 ms batch), `keyboard` (Enter and Space click repaired clickables), `shadow` (default on, open shadow roots), `repairs: { clickables, names, landmarks, dialogs }`, `rules`, `signal` (abort restores), `onReport` (hears every pass). The handle has `report()`, `refresh()` (for changes the observer cannot see, such as a class toggle setting `cursor: pointer`), `restore()` and `[Symbol.dispose]`, so `using wao = optimise()` works. After `restore()`, call `optimise()` again rather than `refresh()`.
 
-`accessibleName(el)` and `inferName(el)` (returns `{ name, source }` or `null`) are exported for tooling.
+`audit(options)` runs one pass, restores the page and returns the report; the script build exposes it as `window.waoAudit()`, and `waoOptions.auto = false` stops it optimising on load. Reports are plain data (`element` is non-enumerable). `accessibleName(el)` and `inferName(el)` (returns `{ name, source }` or `null`) are exported for tooling.
 
 ## Checking the result
 
