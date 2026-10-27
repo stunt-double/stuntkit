@@ -378,3 +378,19 @@ test('the outermost modal container becomes a dialog named by its heading', () =
   assert.equal($('#own').getAttribute('role'), 'region');
   assert.equal($('#link').hasAttribute('role'), false);
 });
+
+test('a link named by a child tooltip keeps its name', () => {
+  // Hacker News: the vote arrow is an empty div with a title inside the link.
+  const { $, run } = page(
+    `<a id="up" href="vote?id=1&how=up"><div class="votearrow" title="upvote"></div></a>
+     <a id="bare" href="/vote"><div></div></a>`
+  );
+  assert.equal(accessibleName($('#up')), 'upvote');
+  const wao = run();
+  assert.equal($('#up').hasAttribute('aria-label'), false);
+  assert.equal($('#bare').getAttribute('aria-label'), 'Vote');
+  assert.deepEqual(
+    wao.report().changes.map((c) => c.target),
+    ['a#bare']
+  );
+});

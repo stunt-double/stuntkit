@@ -76,7 +76,14 @@ export function contentText(element: Element): string {
       parts.push(` ${title?.textContent ?? ''} `);
       return;
     }
+    const start = parts.length;
     for (const child of Array.from(el.childNodes)) walk(child);
+    // A descendant with no text of its own contributes its tooltip, as
+    // browsers do: `<a><div title="upvote"></div></a>` is named "upvote".
+    if (el !== element && !collapse(parts.slice(start).join(''))) {
+      const title = collapse(el.getAttribute('title'));
+      if (title) parts.push(` ${title} `);
+    }
   };
   walk(element);
   return collapse(parts.join(''));
