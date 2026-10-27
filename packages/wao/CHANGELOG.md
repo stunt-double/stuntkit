@@ -1,5 +1,11 @@
 # @stunt-double/wao
 
+## 2.2.1
+
+### Patch Changes
+
+- [#36](https://github.com/stunt-double/stuntkit/pull/36) [`193d758`](https://github.com/stunt-double/stuntkit/commit/193d75895052b33367ba5bd0c26be26e8e8d296a) Thanks [@mrprkr](https://github.com/mrprkr)! - A control named by a descendant's `title` (an empty icon element with a tooltip inside a link, as on Hacker News) now counts as named, as it does in browsers, so WAO no longer replaces "upvote" with a name guessed from the URL.
+
 ## 2.2.0
 
 ### Minor Changes
