@@ -15,6 +15,7 @@ body:
         - '@stunt-double/index-methodology'
         - '@stunt-double/localeizer'
         - '@stunt-double/wao'
+        - stuntdouble (Stunt Double Local)
         - Skills
         - Repository (CI, tooling, docs)
     validations:

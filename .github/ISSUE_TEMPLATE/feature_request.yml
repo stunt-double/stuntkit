@@ -12,6 +12,7 @@ body:
         - '@stunt-double/index-methodology'
         - '@stunt-double/localeizer'
         - '@stunt-double/wao'
+        - stuntdouble (Stunt Double Local)
         - Skills
         - A new package
         - Repository (CI, tooling, docs)
