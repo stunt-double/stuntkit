@@ -302,8 +302,26 @@
       }
 
       const inUnit = (value, unit) => (unit == null ? value + '%' : value + ' ' + unit);
-      const scoreText = (score) =>
-        score && score.score != null ? inUnit(score.score, score.unit) : '';
+      // A checklist with no weights has no score, so the run reads as "3 of 4
+      // passed", the same count the finish_run reply gives. Informational and
+      // skipped checks are left out, as the scorer leaves them out.
+      const tally = (run) => {
+        const checks = (run.checklist_snapshot && run.checklist_snapshot.checks) || [];
+        const status = Object.fromEntries((run.results || []).map((r) => [r.check, r.status]));
+        const scored = checks.filter(
+          (c) => c.type !== 'informational' && status[c.key] !== 'skipped'
+        );
+        return {
+          passed: scored.filter((c) => status[c.key] === 'passed').length,
+          total: scored.length,
+        };
+      };
+      const scoreText = (score, run) => {
+        if (score && score.score != null) return inUnit(score.score, score.unit);
+        if (!score || !run || !run.checklist_snapshot) return '';
+        const t = tally(run);
+        return t.total ? t.passed + ' of ' + t.total + ' passed' : '';
+      };
 
       const runnerPill = (run) =>
         h('span', { class: 'pill' }, run.runner.kind === 'cloud' ? 'Cloud' : 'Local, self-judged');
@@ -367,7 +385,7 @@
                       {},
                       outcomePill(entry),
                       ' ',
-                      h('span', { class: 'muted' }, scoreText(entry.score))
+                      h('span', { class: 'muted' }, scoreText(entry.score, entry))
                     ),
                     h(
                       'span',
@@ -481,12 +499,12 @@
             'div',
             { class: 'meta' },
             outcomePill(run),
-            scoreText(run.score) &&
+            scoreText(run.score, run) &&
               h(
                 'span',
                 {},
-                scoreText(run.score) +
-                  (run.score.pass_threshold == null
+                scoreText(run.score, run) +
+                  (run.score.score == null || run.score.pass_threshold == null
                     ? ''
                     : ', passes at ' + inUnit(run.score.pass_threshold, run.score.unit))
               ),
