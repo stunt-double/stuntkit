@@ -142,8 +142,12 @@
         outline-offset: 2px;
       }
       ::selection {
-        background-color: oklch(0.52 0.22 268);
-        color: oklch(0.985 0.005 250);
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+      }
+      /* A full-bleed row inside a clipped group draws its ring inside. */
+      .group :focus-visible {
+        outline-offset: -2px;
       }
       code,
       .mono {
@@ -431,6 +435,11 @@
         color: var(--foreground);
       }
       .badge.secondary {
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+      }
+      /* Skipped, waiting and stopped: the product's muted override. */
+      .badge.quiet {
         background: var(--muted);
         color: var(--muted-foreground);
       }
@@ -475,6 +484,9 @@
         border-radius: 9999px;
         background: currentColor;
       }
+      /* Ambient status loops (this and .chase) run past the 360ms ceiling on
+         purpose: they are motion.css's --animate-tally and .marquee-chase, not
+         transitions, and they stop under prefers-reduced-motion. */
       .bulb.live {
         animation: marquee-dot 1.6s ease-in-out infinite;
       }
@@ -515,9 +527,11 @@
         cursor: default;
         opacity: 0.45;
       }
+      /* Pending stays readable: its label is the only word that Stop took. */
       .btn[data-pending] {
-        opacity: 0.7;
+        cursor: default;
         box-shadow: none;
+        color: var(--muted-foreground);
       }
       .btn.outline {
         border-color: var(--border);
@@ -784,14 +798,16 @@
         margin-top: 0.125rem;
       }
       .check-body {
+        display: block;
         min-width: 0;
         flex: 1;
       }
-      .check-body > p {
+      .check-desc {
+        display: block;
         font-weight: 500;
         line-height: 1.375;
       }
-      .check.waiting .check-body > p {
+      .check.waiting .check-desc {
         font-weight: 400;
         color: var(--muted-foreground);
       }
@@ -1011,8 +1027,16 @@
       .live-side {
         display: flex;
         flex-shrink: 0;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.75rem;
+        justify-content: flex-end;
+        gap: 0.5rem 0.75rem;
+      }
+      .stop-error {
+        flex-basis: 100%;
+        font-size: 0.75rem;
+        color: var(--destructive);
+        text-align: right;
       }
       .chase {
         display: inline-flex;
@@ -1285,11 +1309,11 @@
       @keyframes marquee-dot {
         0%,
         100% {
-          box-shadow: 0 0 0 3px oklch(0.52 0.22 268 / 0.22);
+          box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 22%, transparent);
           opacity: 1;
         }
         50% {
-          box-shadow: 0 0 0 6px oklch(0.52 0.22 268 / 0);
+          box-shadow: 0 0 0 6px color-mix(in oklch, var(--primary) 0%, transparent);
           opacity: 0.7;
         }
       }
@@ -1319,7 +1343,8 @@
       </div>
     </header>
     <main>
-      <div class="container" id="app" aria-live="polite"></div>
+      <div class="container" id="app"></div>
+      <p class="sr-only" id="status" role="status"></p>
     </main>
     <footer>
       <div class="container">
@@ -1472,7 +1497,7 @@
         if (!outcome)
           return {
             label: run.status === 'stopped' ? 'Stopped' : run.status,
-            tone: 'secondary',
+            tone: 'quiet',
             icon: run.status === 'stopped' ? 'stop' : null,
           };
         const [label, tone, mark] = {
@@ -1532,7 +1557,7 @@
         failed: ['Failed', 'destructive', 'x-circle'],
         informational: ['Observed', 'arc', 'info'],
         error: ['Not judged', 'warning', 'alert-triangle'],
-        skipped: ['Skipped', 'secondary', 'minus-circle'],
+        skipped: ['Skipped', 'quiet', 'minus-circle'],
       };
 
       async function getJson(url) {
@@ -1541,12 +1566,31 @@
         return res.json();
       }
 
+      // A live region outside #app, so a redraw never re-announces the page.
+      const status = document.getElementById('status');
+      const announce = (text) => {
+        if (status.textContent !== text) status.textContent = text;
+      };
+
+      // The label stays short so the header does not shift; the command is
+      // the button's title.
       async function copy(text, button) {
-        await navigator.clipboard.writeText(text);
-        const label = button.lastChild.textContent;
-        button.lastChild.textContent = 'Copied ' + text;
-        setTimeout(() => (button.lastChild.textContent = label), 1600);
+        const label = button.lastChild;
+        label.dataset.label ??= label.textContent;
+        let done = 'Copied';
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          done = 'Copy failed';
+        }
+        label.textContent = done;
+        announce(done === 'Copied' ? 'Copied ' + text : done);
+        clearTimeout(button.resetLabel);
+        button.resetLabel = setTimeout(() => (label.textContent = label.dataset.label), 1600);
       }
+
+      // Set when a Stop is refused, shown beside the button on the next draw.
+      let stopError = null;
 
       function pageHeader({ back, title, badge, description, chips, actions }) {
         return h(
@@ -1677,7 +1721,11 @@
                       h(
                         'div',
                         {},
-                        h('strong', { class: 'truncate', style: 'display:block' }, entry.checklist),
+                        h(
+                          'strong',
+                          { class: 'truncate', style: 'display:block' },
+                          checklistName(entry)
+                        ),
                         h(
                           'span',
                           { class: 'run-id mono truncate', style: 'display:block' },
@@ -1721,7 +1769,7 @@
       function checkMeta(check) {
         const weight = check.weight ?? 1;
         return h(
-          'div',
+          'span',
           { class: 'check-meta' },
           h('code', {}, check.key),
           check.type === 'informational' &&
@@ -1761,8 +1809,13 @@
               'div',
               { class: 'check-head' },
               icon(opts.running ? 'pending' : 'circle-dashed', 'tone-waiting'),
-              h('div', { class: 'check-body' }, h('p', {}, check.description), checkMeta(check)),
-              h('span', { class: 'badge secondary sm' }, opts.running ? 'Waiting' : 'Not reached')
+              h(
+                'span',
+                { class: 'check-body' },
+                h('span', { class: 'check-desc' }, check.description),
+                checkMeta(check)
+              ),
+              h('span', { class: 'badge quiet sm' }, opts.running ? 'Waiting' : 'Not reached')
             )
           );
         }
@@ -1812,6 +1865,8 @@
               class: 'check-head',
               'aria-expanded': String(open),
               'aria-controls': 'detail-' + check.key,
+              'aria-labelledby': 'desc-' + check.key + ' label-' + check.key,
+              'data-focus-key': 'check:' + check.key,
               onclick: () => {
                 const now = detail.hidden;
                 toggled.set(key, now);
@@ -1822,12 +1877,17 @@
               },
             },
             icon(mark, 'tone-' + result.status),
-            h('div', { class: 'check-body' }, h('p', {}, check.description), checkMeta(check)),
+            h(
+              'span',
+              { class: 'check-body' },
+              h('span', { class: 'check-desc', id: 'desc-' + check.key }, check.description),
+              checkMeta(check)
+            ),
             h(
               'span',
               { class: 'check-side' },
               thumb,
-              h('span', { class: 'badge sm ' + tone }, label),
+              h('span', { class: 'badge sm ' + tone, id: 'label-' + check.key }, label),
               icon('chevron-down', 'chevron')
             )
           ),
@@ -1866,15 +1926,15 @@
                   ? inUnit(score.score, score.unit)
                   : [String(t.passed), h('span', { class: 'of' }, '/' + t.total)]
               ),
-              h(
-                'p',
-                { class: 'summary-line' },
-                weighted
-                  ? score.pass_threshold == null
+              // Unweighted, the figure is the tally: no line repeats it.
+              weighted &&
+                h(
+                  'p',
+                  { class: 'summary-line' },
+                  score.pass_threshold == null
                     ? 'No pass threshold set'
                     : 'Passes at ' + inUnit(score.pass_threshold, score.unit)
-                  : scoreText(score, run)
-              )
+                )
             ),
             h(
               'div',
@@ -1940,43 +2000,62 @@
         const fresh = before && before.status === 'running' && !running;
         const arrived = (key) => before && !before.results.has(key);
 
+        // Stop sits in the live card, beside the tally, as CancelRunButton does.
+        const pending = data.stop_requested;
+        const stopButton =
+          running &&
+          h(
+            'button',
+            {
+              type: 'button',
+              class: 'btn outline',
+              'aria-disabled': pending && 'true',
+              'data-pending': pending,
+              'data-focus-key': 'stop',
+              onclick: async (event) => {
+                const button = event.currentTarget;
+                if (button.hasAttribute('data-pending')) return;
+                button.setAttribute('aria-disabled', 'true');
+                button.setAttribute('data-pending', '');
+                button.lastChild.textContent = 'Stopping at the next step';
+                stopError = null;
+                let res = null;
+                try {
+                  res = await fetch('/api/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run: run.id }),
+                  });
+                } catch {
+                  res = null;
+                }
+                if (res && (res.ok || res.status === 409)) return; // 409: it already finished
+                stopError =
+                  res && res.status === 403
+                    ? 'Stop was refused. Open the viewer from the link Claude Code gave you.'
+                    : 'The run could not be stopped. Try again.';
+                announce(stopError);
+                render(false);
+              },
+            },
+            icon('stop'),
+            h('span', {}, pending ? 'Stopping at the next step' : 'Stop')
+          );
+
+        const rerun = '/stuntdouble run ' + run.checklist + (resumable ? ' resume' : '');
+        const cloud = '/stuntdouble cloud ' + run.checklist;
         const actions = running
-          ? [
-              h(
-                'button',
-                {
-                  type: 'button',
-                  class: 'btn outline',
-                  disabled: data.stop_requested,
-                  'data-pending': data.stop_requested,
-                  onclick: async (event) => {
-                    const button = event.currentTarget;
-                    button.disabled = true;
-                    button.setAttribute('data-pending', '');
-                    button.lastChild.textContent = 'Stopping at the next step';
-                    await fetch('/api/stop', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ run: run.id }),
-                    });
-                  },
-                },
-                icon('stop'),
-                h('span', {}, data.stop_requested ? 'Stopping at the next step' : 'Stop')
-              ),
-            ]
+          ? null
           : run.runner.kind === 'local'
             ? [
                 h(
                   'button',
                   {
                     type: 'button',
-                    class: 'btn primary',
-                    onclick: (event) =>
-                      copy(
-                        '/stuntdouble run ' + run.checklist + (resumable ? ' resume' : ''),
-                        event.currentTarget
-                      ),
+                    class: 'btn outline',
+                    title: rerun,
+                    'data-focus-key': 'rerun',
+                    onclick: (event) => copy(rerun, event.currentTarget),
                   },
                   icon('copy'),
                   h('span', {}, resumable ? 'Copy resume command' : 'Copy re-run command')
@@ -1986,8 +2065,9 @@
                   {
                     type: 'button',
                     class: 'btn outline',
-                    onclick: (event) =>
-                      copy('/stuntdouble cloud ' + run.checklist, event.currentTarget),
+                    title: cloud,
+                    'data-focus-key': 'cloud',
+                    onclick: (event) => copy(cloud, event.currentTarget),
                   },
                   icon('copy'),
                   h('span', {}, 'Run in the cloud')
@@ -2030,6 +2110,10 @@
         });
 
         const judged = run.results.length;
+        const checked = pad(judged) + ' of ' + pad(checks.length) + ' checked';
+        if (running) announce(stopError || judged + ' of ' + checks.length + ' checked');
+        else if (fresh) announce(runState(run).label);
+        if (!running) stopError = null;
         const live =
           running &&
           h(
@@ -2061,9 +2145,13 @@
                 { class: 'live-side' },
                 h(
                   'span',
-                  { class: 'tally' },
-                  pad(judged) + ' of ' + pad(checks.length) + ' checked'
-                )
+                  { class: 'badge arc' },
+                  h('span', { class: 'bulb live', 'aria-hidden': 'true' }),
+                  'Live'
+                ),
+                h('span', { class: 'tally' }, checked),
+                stopButton,
+                stopError && h('span', { class: 'stop-error' }, stopError)
               )
             ),
             h(
@@ -2316,7 +2404,15 @@
             ];
           }
           app.classList.toggle('narrow', path === '/definitions');
+          // A live redraw replaces the view: keep keyboard focus where it was.
+          const focused = document.activeElement?.closest?.('[data-focus-key]');
+          const focusKey = focused && app.contains(focused) && focused.dataset.focusKey;
           app.replaceChildren(...[view].flat(2).filter(Boolean));
+          if (focusKey) {
+            app
+              .querySelector('[data-focus-key="' + CSS.escape(focusKey) + '"]')
+              ?.focus({ preventScroll: true });
+          }
           // A view the reader went to rises in once. Redraws for live updates,
           // and anything reached from the keyboard, cut.
           if (enter) {
