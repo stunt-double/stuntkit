@@ -1534,10 +1534,16 @@
         return t.total ? t.passed + ' of ' + t.total + ' passed' : '';
       };
 
-      const runner = (run) =>
+      // A Studio run names its model; the runs list leaves "self-judged" to the run's page.
+      const runner = (run, full) =>
         run.runner.kind === 'cloud'
           ? { icon: 'server', label: 'Cloud' }
-          : { icon: 'monitor', label: 'Local, self-judged' };
+          : {
+              icon: 'monitor',
+              label: run.runner.model
+                ? 'Local, ' + run.runner.model.id + (full ? ', self-judged' : '')
+                : 'Local, self-judged',
+            };
       const checklistName = (run) =>
         run.checklist_name ||
         (run.checklist_snapshot && run.checklist_snapshot.name) ||
@@ -2039,8 +2045,10 @@
 
         // Stop sits in the live card, beside the tally, as CancelRunButton does.
         const pending = data.stop_requested;
+        // A cloud run is polled, not driven from here: nothing to stop.
         const stopButton =
           running &&
+          run.runner.kind === 'local' &&
           h(
             'button',
             {
@@ -2081,50 +2089,52 @@
 
         const rerun = '/stuntdouble run ' + run.checklist + (resumable ? ' resume' : '');
         const cloud = '/stuntdouble cloud ' + run.checklist;
-        const actions = running
-          ? null
-          : run.runner.kind === 'local'
-            ? [
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    class: 'btn outline',
-                    title: rerun,
-                    'data-focus-key': 'rerun',
-                    onclick: (event) => copy(rerun, event.currentTarget),
-                  },
-                  icon('copy'),
-                  h('span', {}, resumable ? 'Copy resume command' : 'Copy re-run command')
-                ),
-                h(
-                  'button',
-                  {
-                    type: 'button',
-                    class: 'btn outline',
-                    title: cloud,
-                    'data-focus-key': 'cloud',
-                    onclick: (event) => copy(cloud, event.currentTarget),
-                  },
-                  icon('copy'),
-                  h('span', {}, 'Copy cloud command')
-                ),
-              ]
-            : webUrl(run.runner.url)
+        const actions = studio.runActions
+          ? studio.runActions(run, running, resumable)
+          : running
+            ? null
+            : run.runner.kind === 'local'
               ? [
                   h(
-                    'a',
+                    'button',
                     {
+                      type: 'button',
                       class: 'btn outline',
-                      href: run.runner.url,
-                      target: '_blank',
-                      rel: 'noopener noreferrer',
+                      title: rerun,
+                      'data-focus-key': 'rerun',
+                      onclick: (event) => copy(rerun, event.currentTarget),
                     },
-                    icon('external-link'),
-                    h('span', {}, 'Open this run in Stunt Double')
+                    icon('copy'),
+                    h('span', {}, resumable ? 'Copy resume command' : 'Copy re-run command')
+                  ),
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      class: 'btn outline',
+                      title: cloud,
+                      'data-focus-key': 'cloud',
+                      onclick: (event) => copy(cloud, event.currentTarget),
+                    },
+                    icon('copy'),
+                    h('span', {}, 'Copy cloud command')
                   ),
                 ]
-              : null;
+              : webUrl(run.runner.url)
+                ? [
+                    h(
+                      'a',
+                      {
+                        class: 'btn outline',
+                        href: run.runner.url,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                      },
+                      icon('external-link'),
+                      h('span', {}, 'Open this run in Stunt Double')
+                    ),
+                  ]
+                : null;
 
         const starts = data.activity.filter((line) => line.tool === 'start_run');
         const sessions = starts.length;
@@ -2141,7 +2151,7 @@
           // A finished run's verdict is the score card's stamp: once is enough.
           badge: run.score && runState(run).outcome ? null : stateBadge(run, 'lg'),
           chips: [
-            { icon: runner(run).icon, label: runner(run).label },
+            { icon: runner(run).icon, label: runner(run, true).label },
             { icon: 'actor', label: actorName(run), title: 'Actor' },
             { icon: 'globe', label: run.url, href: webUrl(run.url), title: 'Target' },
             { icon: 'calendar', label: time(run.started_at), title: 'Started' },
@@ -2214,12 +2224,13 @@
                 style: 'width:' + (checks.length ? (judged / checks.length) * 100 : 0) + '%',
               })
             ),
-            h('img', {
-              class: 'frame',
-              id: 'frame',
-              src: fileUrl('.live/latest.png') + '?v=' + frameVersion,
-              alt: 'The browser now',
-            })
+            run.runner.kind === 'local' &&
+              h('img', {
+                class: 'frame',
+                id: 'frame',
+                src: fileUrl('.live/latest.png') + '?v=' + frameVersion,
+                alt: 'The browser now',
+              })
           );
 
         // What went wrong first, since that is what somebody opens a report to
@@ -2256,6 +2267,7 @@
             'div',
             { class: 'stack' },
             live,
+            studio.runExtras && studio.runExtras(run),
             notice,
             summaryCard(run, fresh),
             groups.map((group) =>
@@ -2442,28 +2454,59 @@
         ];
       }
 
+      // What Stunt Double Studio's script (studio.js) builds on. The viewer on
+      // its own leaves it empty: inside Claude Code it reads and stops, no more.
+      const studio = (window.stuntdouble = {
+        routes: [],
+        runActions: null,
+        runExtras: null,
+        h,
+        icon,
+        ICONS,
+        pageHeader,
+        emptyState,
+        getJson,
+        announce,
+        copy,
+        time,
+        webUrl,
+        checkMeta,
+        renderRuns,
+        render: (enter) => render(enter),
+      });
+
       let rendering = Promise.resolve();
-      function render(enter) {
+      // `live`: a redraw for a file change. A view holding a form the reader
+      // is filling in (`keep`) is left alone.
+      function render(enter, live) {
         rendering = rendering.then(async () => {
           const path = location.pathname;
+          const kept = studio.routes.find((r) => r.match(path));
+          if (live && kept && kept.keep) return;
           for (const link of document.querySelectorAll('.bar nav a')) {
-            const current = link.getAttribute('href') === (path.startsWith('/runs/') ? '/' : path);
+            const href = link.getAttribute('href');
+            const current =
+              href === (path.startsWith('/runs/') ? '/' : path) ||
+              (href !== '/' && path.startsWith(href + '/'));
             if (current) link.setAttribute('aria-current', 'page');
             else link.removeAttribute('aria-current');
           }
           let view;
+          const route = studio.routes.find((r) => r.match(path));
           try {
-            view = path.startsWith('/runs/')
-              ? await renderRun(decodeURIComponent(path.slice('/runs/'.length)))
-              : path === '/definitions'
-                ? await renderDefinitions()
-                : await renderRuns();
+            view = route
+              ? await route.render(path)
+              : path.startsWith('/runs/')
+                ? await renderRun(decodeURIComponent(path.slice('/runs/'.length)))
+                : path === '/definitions'
+                  ? await renderDefinitions()
+                  : await renderRuns();
           } catch (err) {
             view = [
               h('div', { class: 'notice destructive' }, icon('octagon-x'), h('p', {}, err.message)),
             ];
           }
-          app.classList.toggle('narrow', path === '/definitions');
+          app.classList.toggle('narrow', path === '/definitions' || Boolean(route && route.narrow));
           // A live redraw replaces the view: keep keyboard focus where it was.
           const focused = document.activeElement?.closest?.('[data-focus-key]');
           const focusKey = focused && app.contains(focused) && focused.dataset.focusKey;
@@ -2508,12 +2551,13 @@
         queued = true;
         setTimeout(() => {
           queued = false;
-          render(false);
+          render(false, true);
         }, 50);
       };
       // Relative times on the runs list stay current.
       setInterval(() => location.pathname === '/' && render(false), 60_000);
-      render(false);
+      // After every script on the page: the Studio's registers its views first.
+      document.addEventListener('DOMContentLoaded', () => render(false));
     </script>
   </body>
 </html>

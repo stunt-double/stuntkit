@@ -31,6 +31,24 @@ import {
 export const FIRST_PORT = 4747;
 const PORT_TRIES = 20;
 
+/**
+ * What the Studio adds to the viewer (studio.ts). The viewer alone has none of
+ * it: inside Claude Code it reads files and offers Stop, nothing more.
+ */
+export type UiExtension = {
+  /** Paths beyond the viewer's own that serve the page. */
+  pages: RegExp;
+  /** A script the page loads after its own, served by `handle`. */
+  script: string;
+  /** A signed-in request the viewer does not answer. Resolves false for a 404. */
+  handle(req: IncomingMessage, res: ServerResponse, url: URL): Promise<boolean>;
+  /**
+   * `/oauth/callback`, which a cross-site redirect reaches without the
+   * SameSite=Strict cookie: it proves itself with the OAuth state instead.
+   */
+  oauthCallback(req: IncomingMessage, res: ServerResponse, url: URL): Promise<void>;
+};
+
 export type UiServer = {
   port: number;
   token: string;
@@ -47,10 +65,10 @@ const TYPES: Record<string, string> = {
 
 const PAGE_HEADERS = {
   'Content-Security-Policy':
-    "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; form-action 'none'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; frame-ancestors 'none'; form-action 'none'",
 };
 
-function send(
+export function send(
   res: ServerResponse,
   status: number,
   body: string | Uint8Array,
@@ -140,11 +158,17 @@ async function readBody(req: IncomingMessage): Promise<string> {
   return body;
 }
 
-export async function startUi(options: { root: string; port?: number }): Promise<UiServer> {
+export async function startUi(options: {
+  root: string;
+  port?: number;
+  extension?: UiExtension;
+}): Promise<UiServer> {
+  const extension = options.extension;
   const root = resolve(options.root);
   const token = randomBytes(24).toString('base64url');
   const clients = new Set<ServerResponse>();
   let port = 0;
+  let ensureWatch = () => {};
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const host = req.headers.host ?? '';
@@ -155,6 +179,9 @@ export async function startUi(options: { root: string; port?: number }): Promise
     if (url.pathname === '/__stuntdouble') return json(res, { stuntdouble: true });
     // Browsers ask for it unprompted; there is none, and that is not an error.
     if (url.pathname === '/favicon.ico') return send(res, 204, '');
+    if (extension && url.pathname === '/oauth/callback' && req.method === 'GET') {
+      return extension.oauthCallback(req, res, url);
+    }
 
     // Cookies are per host, not per port, so each server names its own.
     const cookieName = `stuntdouble_${port}`;
@@ -188,10 +215,19 @@ export async function startUi(options: { root: string; port?: number }): Promise
       await writeFileAtomic(join(root, '.live', 'stop'), entry.id);
       return send(res, 204, '');
     }
+    if (extension && (await extension.handle(req, res, url))) return;
     if (req.method !== 'GET') return send(res, 405, 'Method not allowed');
 
-    if (path === '/' || path === '/definitions' || /^\/runs\/[^/]+$/.test(path)) {
-      const page = await readFile(new URL('./ui.html', import.meta.url));
+    if (
+      path === '/' ||
+      path === '/definitions' ||
+      /^\/runs\/[^/]+$/.test(path) ||
+      extension?.pages.test(path)
+    ) {
+      let page = await readFile(new URL('./ui.html', import.meta.url), 'utf8');
+      if (extension) {
+        page = page.replace('</body>', `<script src="${extension.script}"></script>\n  </body>`);
+      }
       return send(res, 200, page, 'text/html; charset=utf-8', PAGE_HEADERS);
     }
     if (path === '/api/runs') {
@@ -244,6 +280,7 @@ export async function startUi(options: { root: string; port?: number }): Promise
         'X-Content-Type-Options': 'nosniff',
       });
       res.write(': connected\n\n');
+      ensureWatch();
       clients.add(res);
       req.on('close', () => clients.delete(res));
       return;
@@ -291,20 +328,25 @@ export async function startUi(options: { root: string; port?: number }): Promise
   let watcher: FSWatcher | null = null;
   let pending = new Set<string>();
   let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    watcher = watch(root, { recursive: true }, (_event, name) => {
-      if (!name || name.endsWith('.tmp')) return;
-      pending.add(String(name).split(sep).join('/'));
-      timer ??= setTimeout(() => {
-        const data = `data: ${JSON.stringify({ paths: [...pending] })}\n\n`;
-        for (const client of clients) client.write(data);
-        pending = new Set();
-        timer = undefined;
-      }, 150);
-    });
-  } catch {
-    // No .stuntdouble/ yet: the viewer shows the empty state without live updates.
-  }
+  // Tried again on each new page: the Studio creates .stuntdouble/ after starting.
+  ensureWatch = () => {
+    if (watcher) return;
+    try {
+      watcher = watch(root, { recursive: true }, (_event, name) => {
+        if (!name || name.endsWith('.tmp')) return;
+        pending.add(String(name).split(sep).join('/'));
+        timer ??= setTimeout(() => {
+          const data = `data: ${JSON.stringify({ paths: [...pending] })}\n\n`;
+          for (const client of clients) client.write(data);
+          pending = new Set();
+          timer = undefined;
+        }, 150);
+      });
+    } catch {
+      // No .stuntdouble/ yet: the viewer shows the empty state without live updates.
+    }
+  };
+  ensureWatch();
 
   return {
     port,
