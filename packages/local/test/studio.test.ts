@@ -250,7 +250,7 @@ test('the OAuth callback needs no cookie but only answers a state this process i
   const res = await call('/oauth/callback?state=forged&code=x<script>');
   assert.equal(res.status, 400);
   assert.match(res.body, /This sign-in has expired/);
-  assert.doesNotMatch(res.body, /<script>/);
+  assert.doesNotMatch(res.body, /<script/i);
   assert.match(String(res.headers['content-security-policy']), /default-src 'none'/);
 });
 
