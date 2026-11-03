@@ -13,7 +13,7 @@ import {
 } from '@stunt-double/browser-toolset/direct-tools';
 import { isPrivateHost, redactInput } from '@stunt-double/browser-toolset/executor';
 import { hostMatchesDomain, INDEX_SESSION_SAFETY } from '@stunt-double/browser-toolset/safety';
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -92,10 +92,8 @@ type Active = {
 export function rebase(url: string, localBase: string | null | undefined): string {
   if (!localBase) return url;
   const target = new URL(url);
-  const base = new URL(localBase);
-  target.protocol = base.protocol;
-  target.host = base.host;
-  return target.href;
+  // Not `target.host = base.host`: that keeps the checklist's port when the base has none.
+  return new URL(target.pathname + target.search + target.hash, new URL(localBase).origin).href;
 }
 
 /** `20261103-142210`, in local time, so folders sort by when they started. */
@@ -254,7 +252,7 @@ export class LocalSession {
       }
     }
     const gitignore = join(this.root, '.gitignore');
-    if (!(await stat(gitignore).catch(() => null))) await writeFile(gitignore, '.live/\n');
+    if (!(await stat(gitignore).catch(() => null))) await writeFileAtomic(gitignore, '.live/\n');
 
     this.active = {
       dir,

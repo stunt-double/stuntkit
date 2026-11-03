@@ -134,10 +134,9 @@ export function createServer(session: LocalSession): McpServer {
 export async function serveMcp(): Promise<void> {
   const session = new LocalSession({ project: projectDir() });
   const server = createServer(session);
-  const shutdown = async () => {
-    await session.close();
-    process.exit(0);
-  };
+  // stdin closing and the SIGTERM that follows both land here; close once.
+  let closing: Promise<void> | undefined;
+  const shutdown = () => (closing ??= session.close().finally(() => process.exit(0)));
   process.stdin.on('close', shutdown);
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);

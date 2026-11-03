@@ -4,13 +4,13 @@
  */
 
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 
 import type { LocalDriver } from '../src/driver.ts';
-import { RunSchema, writeFileAtomic } from '../src/files.ts';
+import { appendJsonl, RunSchema, writeFileAtomic } from '../src/files.ts';
 import { LocalSession, rebase } from '../src/run.ts';
 
 /** A page that shows `visible` and nothing else. */
@@ -115,6 +115,24 @@ test('rebase swaps only the origin', () => {
     'http://localhost:4100/shop?ref=1'
   );
   assert.equal(rebase('https://example.com/a', null), 'https://example.com/a');
+  // The checklist's port must not survive a base without one.
+  assert.equal(
+    rebase('https://staging.example.com:8443/a', 'http://localhost'),
+    'http://localhost/a'
+  );
+});
+
+test('writes inside .stuntdouble/ refuse to follow a symlink', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'sd-links-'));
+  after(() => rm(dir, { recursive: true, force: true }));
+  const outside = join(dir, 'outside.txt');
+  const run = join(dir, '.stuntdouble', 'runs', 'r');
+  await mkdir(run, { recursive: true });
+  await symlink(outside, join(run, 'activity.jsonl'));
+  await symlink(dir, join(run, 'shots'));
+  await assert.rejects(appendJsonl(join(run, 'activity.jsonl'), { a: 1 }), /symlink/);
+  await assert.rejects(writeFileAtomic(join(run, 'shots', 'k.png'), 'x'), /symlink/);
+  assert.equal(await stat(outside).catch(() => null), null);
 });
 
 test('start_run names every field to fix in an invalid checklist', async () => {

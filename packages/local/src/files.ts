@@ -8,8 +8,8 @@
 // rather than a setting silently ignored.
 
 import { randomUUID } from 'node:crypto';
-import { appendFile, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { appendFile, lstat, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { dirname, join, sep } from 'node:path';
 import { z } from 'zod';
 
 import { CHECKLIST_RUN_CONDITIONS } from './vendor/scoring/conditions.ts';
@@ -222,6 +222,7 @@ export async function writeJsonAtomic(path: string, data: unknown): Promise<void
 
 export async function writeFileAtomic(path: string, data: string | Uint8Array): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
+  await refuseLinks(path);
   // Unique per write: two writes to one path at once must not share a temp file.
   const tmp = `${path}.${randomUUID()}.tmp`;
   await writeFile(tmp, data, { mode: 0o600 });
@@ -229,7 +230,24 @@ export async function writeFileAtomic(path: string, data: string | Uint8Array): 
 }
 
 export async function appendJsonl(path: string, line: unknown): Promise<void> {
+  await refuseLinks(path);
   await appendFile(path, `${JSON.stringify(line)}\n`);
+}
+
+/**
+ * Refuse a write through a symlink inside `.stuntdouble/`. Run folders are
+ * committed and cloned, so a repo could ship `activity.jsonl -> ~/.ssh/...`.
+ */
+// ponytail: checks the segments after the last `.stuntdouble`; a path without one is not checked.
+async function refuseLinks(path: string): Promise<void> {
+  const parts = path.split(sep);
+  const from = parts.lastIndexOf('.stuntdouble');
+  if (from < 0) return;
+  for (let i = from + 1; i <= parts.length; i++) {
+    const info = await lstat(parts.slice(0, i).join(sep)).catch(() => null);
+    if (info?.isSymbolicLink())
+      throw new Error(`Refusing to write through a symlink: ${parts.slice(0, i).join(sep)}`);
+  }
 }
 
 /** Whether a process is still running. EPERM means it is, under another user. */
