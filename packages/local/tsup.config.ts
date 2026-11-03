@@ -14,5 +14,8 @@ export default defineConfig({
   esbuildOptions(options) {
     options.conditions = ['@stunt-double/source'];
   },
-  onSuccess: () => copyFile('src/ui.html', 'dist/ui.html'),
+  onSuccess: async () => {
+    await copyFile('src/ui.html', 'dist/ui.html');
+    await copyFile('src/studio.js', 'dist/studio.js');
+  },
 });
