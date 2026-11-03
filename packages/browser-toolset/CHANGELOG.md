@@ -1,5 +1,13 @@
 # @stunt-double/browser-toolset
 
+## 0.2.1
+
+### Patch Changes
+
+- [#40](https://github.com/stunt-double/stuntkit/pull/40) [`f2047ed`](https://github.com/stunt-double/stuntkit/commit/f2047edeca2116b0b684ec518de5dfae50d3ff20) Thanks [@mrprkr](https://github.com/mrprkr)! - `DirectBrowserTools` now takes `allowPrivateHosts` and `checkNavigation` and passes them to the executor, so the direct tools can reach a local dev server or an intranet under the caller's own network policy. Both were already executor options; the direct tools refused every private host.
+
+- [#40](https://github.com/stunt-double/stuntkit/pull/40) [`f2047ed`](https://github.com/stunt-double/stuntkit/commit/f2047edeca2116b0b684ec518de5dfae50d3ff20) Thanks [@mrprkr](https://github.com/mrprkr)! - `form_input` results no longer repeat the value that was set: a text field reports its length (`Set ref_4 (12 characters)`) and a missing select option no longer quotes the value. Results are recorded in transcripts and run logs, and the value can be a password or a one-time code. The model still sends the value as before.
+
 ## 0.2.0
 
 ### Minor Changes
