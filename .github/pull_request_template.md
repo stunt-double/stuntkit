@@ -9,6 +9,7 @@
 - [ ] `@stunt-double/index-methodology`
 - [ ] `@stunt-double/localeizer`
 - [ ] `@stunt-double/wao`
+- [ ] `stuntdouble` (Stunt Double Local)
 - [ ] Skills (package and project skills)
 - [ ] Repository only (CI, tooling, docs, examples)
 

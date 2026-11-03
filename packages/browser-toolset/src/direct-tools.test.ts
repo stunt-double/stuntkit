@@ -213,6 +213,27 @@ test('navigate refuses private hosts and non-http schemes', async () => {
   assert.ok(ok.screenshotBase64);
 });
 
+test('navigate reaches a local dev server only with allowPrivateHosts, and checkNavigation still applies', async () => {
+  const { driver, calls } = fakeDriver(pageScript);
+  const refused = await tools(driver).run('navigate', { url: 'http://localhost:3000/' });
+  assert.match(refused.text, /Local and private network addresses/);
+
+  const open = new DirectBrowserTools(driver, {
+    viewport: { width: 1280, height: 720 },
+    settleMs: 0,
+    allowPrivateHosts: true,
+    checkNavigation: (url) => (url.includes(':5432') ? 'Not the app under test.' : null),
+  });
+  const ok = await open.run('navigate', { url: 'http://localhost:3000/' });
+  assert.equal(ok.error, undefined);
+  assert.deepEqual(
+    calls.filter((c) => c.method === 'goto').map((c) => c.args[0]),
+    ['http://localhost:3000/']
+  );
+  const policed = await open.run('navigate', { url: 'http://localhost:5432/' });
+  assert.match(policed.text, /Navigation refused\. Not the app under test\./);
+});
+
 test('an unknown tool names the ones that exist', async () => {
   const { driver } = fakeDriver(pageScript);
   const r = await tools(driver).run('act', { action: 'click buy' });

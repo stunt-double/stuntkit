@@ -18,6 +18,10 @@ permissions:
   # GitHub Packages with GITHUB_TOKEN. Swap back to `id-token: write` (npm
   # trusted publishing and provenance) when releases move to npm.
   packages: write
+  # `stuntdouble` (packages/local) is the one package on npm, published by
+  # trusted publishing with provenance; this lets npm exchange the job's OIDC
+  # token. The other packages are unaffected.
+  id-token: write
 
 jobs:
   release:

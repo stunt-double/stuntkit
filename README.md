@@ -4,15 +4,16 @@
 [![Licence: Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](./LICENSE)
 <a href="https://index.stuntdouble.io/d/stuntdouble.io?ref=badge"><img src="https://index.stuntdouble.io/badge/stuntdouble.io.svg?style=flat" alt="stuntdouble.io Stunt Double Index agent score" width="184" height="20"></a>
 
-Open source building blocks for AI agents that use the web. Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. Releases go to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`.
+Open source building blocks for AI agents that use the web. Extracted from [Stunt Double](https://stuntdouble.io), where AI personas test real products in real browsers. Releases go to [GitHub Packages](https://github.com/orgs/stunt-double/packages): add `@stunt-double:registry=https://npm.pkg.github.com` and a GitHub token with `read:packages` to your `.npmrc`. The one exception is `stuntdouble`, which is on npm.
 
-| Package                                                           | What                                                                                                                                      |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@stunt-double/browser-toolset`](./packages/browser-toolset)     | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets        |
-| [`@stunt-double/icons`](./packages/icons)                         | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                           |
-| [`@stunt-double/index-methodology`](./packages/index-methodology) | How the Stunt Double Index scores a site for agents: categories, weights, blend and curve, every task and rubric, and the grader's prompt |
-| [`@stunt-double/localeizer`](./packages/localeizer)               | Whole-word American, British and Canadian spelling localisation                                                                           |
-| [`@stunt-double/wao`](./packages/wao)                             | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents                    |
+| Package                                                           | What                                                                                                                                                  |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@stunt-double/browser-toolset`](./packages/browser-toolset)     | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets                    |
+| [`@stunt-double/icons`](./packages/icons)                         | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                                       |
+| [`@stunt-double/index-methodology`](./packages/index-methodology) | How the Stunt Double Index scores a site for agents: categories, weights, blend and curve, every task and rubric, and the grader's prompt             |
+| [`@stunt-double/localeizer`](./packages/localeizer)               | Whole-word American, British and Canadian spelling localisation                                                                                       |
+| [`@stunt-double/wao`](./packages/wao)                             | Web Agent Optimiser: a drop-in script that repairs the accessibility tree agents read, so legacy sites work for agents                                |
+| [`stuntdouble`](./packages/local)                                 | Stunt Double Local, on npm: run Stunt Double checklists in a local Chrome from your own agent session, with the runs kept as files and a local viewer |
 
 ## Agent skills
 

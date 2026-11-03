@@ -15,7 +15,7 @@
 // No runtime imports beyond the executor, so it runs under `node --test`.
 
 import type { BrowserDriver, DriverPage } from './driver.ts';
-import { BrowserToolsetExecutor, ToolsetError } from './executor.ts';
+import { BrowserToolsetExecutor, type BrowserToolsetOptions, ToolsetError } from './executor.ts';
 import type { BrowserSafetyOptions } from './safety.ts';
 
 export type DirectToolName =
@@ -257,6 +257,9 @@ export type DirectBrowserToolsOptions = {
    * not yours and must never pay or register for real.
    */
   safety?: BrowserSafetyOptions;
+  /** Passed to the executor: see `BrowserToolsetOptions`. */
+  allowPrivateHosts?: BrowserToolsetOptions['allowPrivateHosts'];
+  checkNavigation?: BrowserToolsetOptions['checkNavigation'];
 };
 
 /**
@@ -276,6 +279,8 @@ export class DirectBrowserTools {
       navigationTimeoutMs: NAVIGATION_TIMEOUT_MS,
       screenshotTimeoutMs: SCREENSHOT_TIMEOUT_MS,
       ...(options.safety ? { safety: options.safety } : {}),
+      ...(options.allowPrivateHosts ? { allowPrivateHosts: true } : {}),
+      ...(options.checkNavigation ? { checkNavigation: options.checkNavigation } : {}),
     });
     this.viewport = options.viewport;
     this.settleMs = options.settleMs ?? SETTLE_MS;

@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stunt Double Local</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: oklch(0.985 0.005 250);
+        --foreground: oklch(0.18 0.016 268);
+        --card: oklch(1 0 0);
+        --muted: oklch(0.955 0.007 255);
+        --muted-foreground: oklch(0.46 0.017 268);
+        --border: oklch(0.88 0.01 255);
+        --primary: oklch(0.52 0.22 268);
+        --primary-foreground: oklch(0.985 0.005 250);
+        --success: oklch(0.6 0.13 160);
+        --warning: oklch(0.75 0.15 75);
+        --destructive: oklch(0.53 0.215 22);
+        --radius: 0.5rem;
+        --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --font-display: 'Space Grotesk', var(--font-sans);
+        --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: oklch(0.14 0.014 265);
+          --foreground: oklch(0.95 0.006 250);
+          --card: oklch(0.17 0.014 265);
+          --muted: oklch(0.22 0.014 265);
+          --muted-foreground: oklch(0.68 0.014 250);
+          --border: oklch(0.95 0.006 250 / 0.1);
+          --primary: oklch(0.68 0.165 276);
+          --primary-foreground: oklch(0.14 0.014 265);
+          --success: oklch(0.68 0.14 160);
+          --warning: oklch(0.82 0.15 75);
+          --destructive: oklch(0.64 0.2 22);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font: 14px/1.5 var(--font-sans);
+      }
+      a {
+        color: inherit;
+      }
+      header,
+      main,
+      footer {
+        max-width: 72rem;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 1.5rem;
+        min-height: 3.5rem;
+        padding-block: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      header strong {
+        font-family: var(--font-display);
+        letter-spacing: -0.012em;
+        white-space: nowrap;
+      }
+      header nav a {
+        margin-right: 1rem;
+        color: var(--muted-foreground);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      header nav a[aria-current='page'] {
+        color: var(--foreground);
+      }
+      main {
+        padding-top: 1.5rem;
+        padding-bottom: 3rem;
+      }
+      h1 {
+        font: 600 1.5rem/1.2 var(--font-display);
+        letter-spacing: -0.025em;
+        margin: 0 0 0.25rem;
+      }
+      h2 {
+        font-size: 1rem;
+        margin: 2rem 0 0.75rem;
+      }
+      .muted {
+        color: var(--muted-foreground);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+      .rows > a,
+      .rows > div {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.25rem 1rem;
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--border);
+        text-decoration: none;
+      }
+      .rows > :first-child {
+        border-top: 0;
+      }
+      .rows > a:hover {
+        background: var(--muted);
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        color: var(--muted-foreground);
+        font-size: 13px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 0 0.5rem;
+        border-radius: 999px;
+        font-size: 12px;
+        line-height: 1.5rem;
+        border: 1px solid var(--border);
+        color: var(--muted-foreground);
+        white-space: nowrap;
+      }
+      .positive {
+        color: var(--success);
+        border-color: color-mix(in oklch, var(--success) 40%, transparent);
+      }
+      .negative {
+        color: var(--destructive);
+        border-color: color-mix(in oklch, var(--destructive) 40%, transparent);
+      }
+      .caution {
+        color: var(--warning);
+        border-color: color-mix(in oklch, var(--warning) 40%, transparent);
+      }
+      .live {
+        color: var(--primary);
+        border-color: color-mix(in oklch, var(--primary) 40%, transparent);
+      }
+      button {
+        font: inherit;
+        padding: 0.4rem 0.9rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--foreground);
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        gap: 1.5rem;
+        align-items: start;
+      }
+      @media (max-width: 52rem) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+      }
+      .frame {
+        width: 100%;
+        display: block;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--muted);
+      }
+      .check {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .check:first-child {
+        border-top: 0;
+      }
+      .check header {
+        all: unset;
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      .check img {
+        margin-top: 0.75rem;
+        max-width: 100%;
+        max-height: 20rem;
+        border-radius: calc(var(--radius) - 2px);
+        border: 1px solid var(--border);
+      }
+      code,
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .timeline {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-size: 13px;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: 5.5rem 7rem 1fr;
+        gap: 0.75rem;
+        padding: 0.4rem 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .timeline li:first-child {
+        border-top: 0;
+      }
+      .timeline span:last-child {
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+      .empty {
+        padding: 2rem 1rem;
+        text-align: center;
+      }
+      footer {
+        padding-bottom: 2rem;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Stunt Double Local</strong>
+      <nav>
+        <a href="/" data-nav>Runs</a>
+        <a href="/definitions" data-nav>Checklists and actors</a>
+      </nav>
+    </header>
+    <main id="app" aria-live="polite"></main>
+    <footer class="muted">
+      Local runs use your own Claude plan and a browser on this machine, one at a time while your
+      session is open. The cloud runs on schedules and in parallel, records every run and shares
+      reports with your team. <a href="https://stuntdouble.io/pricing">See plans</a>
+    </footer>
+    <script>
+      // Every value from a file is set as text, never as markup: verdicts and
+      // activity quote the pages the actor read.
+      function h(tag, attrs, ...children) {
+        const el = document.createElement(tag);
+        for (const [key, value] of Object.entries(attrs || {})) {
+          if (value === false || value == null) continue;
+          if (key.startsWith('on')) el.addEventListener(key.slice(2), value);
+          else el.setAttribute(key, value === true ? '' : String(value));
+        }
+        for (const child of children.flat()) {
+          if (child == null || child === false) continue;
+          el.append(child instanceof Node ? child : document.createTextNode(String(child)));
+        }
+        return el;
+      }
+
+      const app = document.getElementById('app');
+      const when = (iso) => (iso ? new Date(iso).toLocaleString() : '');
+      const fileUrl = (path) => '/files/' + path.split('/').map(encodeURIComponent).join('/');
+      // A committed run.json is someone else's file: only web addresses become links.
+      const webUrl = (url) => (/^https?:\/\//i.test(url || '') ? url : null);
+
+      function outcomePill(run) {
+        if (run.status === 'running') return h('span', { class: 'pill live' }, 'Running');
+        if (run.status === 'interrupted')
+          return h('span', { class: 'pill caution' }, 'Interrupted');
+        if (run.status === 'failed') return h('span', { class: 'pill negative' }, 'Run failed');
+        const outcome = run.score && run.score.outcome;
+        if (!outcome)
+          return h('span', { class: 'pill' }, run.status === 'stopped' ? 'Stopped' : run.status);
+        const label = { passed: 'Passed', failed: 'Failed', inconclusive: 'Inconclusive' }[outcome];
+        const tone = { passed: 'positive', failed: 'negative', inconclusive: '' }[outcome];
+        return h(
+          'span',
+          { class: 'pill ' + tone },
+          run.status === 'stopped' ? label + ', stopped' : label
+        );
+      }
+
+      const inUnit = (value, unit) => (unit == null ? value + '%' : value + ' ' + unit);
+      const scoreText = (score) =>
+        score && score.score != null ? inUnit(score.score, score.unit) : '';
+
+      const runnerPill = (run) =>
+        h('span', { class: 'pill' }, run.runner.kind === 'cloud' ? 'Cloud' : 'Local, self-judged');
+
+      const RESULT = {
+        passed: ['Passed', 'positive'],
+        failed: ['Failed', 'negative'],
+        informational: ['Observed', ''],
+        error: ['Not judged', 'caution'],
+        skipped: ['Skipped', ''],
+      };
+
+      async function getJson(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error((await res.text()) || res.statusText);
+        return res.json();
+      }
+
+      async function copy(text, button) {
+        await navigator.clipboard.writeText(text);
+        const label = button.textContent;
+        button.textContent = 'Copied ' + text;
+        setTimeout(() => (button.textContent = label), 1600);
+      }
+
+      async function renderRuns() {
+        const runs = await getJson('/api/runs');
+        if (runs.length === 0) {
+          return [
+            h('h1', {}, 'Runs'),
+            h(
+              'div',
+              { class: 'card empty muted' },
+              'No runs yet. Type ',
+              h('code', {}, '/stuntdouble run <checklist>'),
+              ' in Claude Code to start one.'
+            ),
+          ];
+        }
+        return [
+          h('h1', {}, 'Runs'),
+          h('p', { class: 'muted' }, 'Local and cloud runs of this project, newest first.'),
+          h(
+            'div',
+            { class: 'card rows' },
+            runs.map((entry) =>
+              'error' in entry
+                ? h(
+                    'div',
+                    {},
+                    h('span', {}, entry.id),
+                    h('span', { class: 'pill caution' }, 'Unreadable'),
+                    h('span', { class: 'meta mono' }, entry.error)
+                  )
+                : h(
+                    'a',
+                    { href: '/runs/' + encodeURIComponent(entry.id), 'data-nav': true },
+                    h('strong', {}, entry.checklist),
+                    h(
+                      'span',
+                      {},
+                      outcomePill(entry),
+                      ' ',
+                      h('span', { class: 'muted' }, scoreText(entry.score))
+                    ),
+                    h(
+                      'span',
+                      { class: 'meta' },
+                      entry.actor,
+                      runnerPill(entry),
+                      when(entry.started_at)
+                    )
+                  )
+            )
+          ),
+        ];
+      }
+
+      function checkCard(run, check, result) {
+        const [label, tone] = result ? RESULT[result.status] : ['Waiting', ''];
+        return h(
+          'div',
+          { class: 'check' },
+          h(
+            'header',
+            {},
+            h('span', {}, h('code', {}, check.key), ' ', check.description),
+            h('span', { class: 'pill ' + tone }, label)
+          ),
+          result && h('p', {}, result.evidence),
+          result &&
+            result.locator &&
+            h(
+              'div',
+              { class: 'meta mono' },
+              'Cited: ' + (result.locator.text || result.locator.selector)
+            ),
+          result &&
+            result.screenshot &&
+            h(
+              'a',
+              { href: fileUrl('runs/' + run.id + '/' + result.screenshot), target: '_blank' },
+              h('img', {
+                src: fileUrl('runs/' + run.id + '/' + result.screenshot),
+                alt: 'The page when ' + check.key + ' was judged',
+                loading: 'lazy',
+              })
+            )
+        );
+      }
+
+      async function renderRun(id) {
+        const data = await getJson('/api/runs/' + encodeURIComponent(id));
+        if (data.error) return [h('h1', {}, id), h('p', { class: 'mono' }, data.error)];
+        const run = data.run;
+        const results = new Map(run.results.map((r) => [r.check, r]));
+        const checks = run.checklist_snapshot.checks;
+        const running = run.status === 'running';
+        const resumable = run.status === 'interrupted' || run.status === 'stopped';
+
+        const actions = running
+          ? h(
+              'div',
+              { class: 'actions' },
+              h(
+                'button',
+                {
+                  disabled: data.stop_requested,
+                  onclick: async (event) => {
+                    event.target.disabled = true;
+                    event.target.textContent = 'Stopping at the next step';
+                    await fetch('/api/stop', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ run: run.id }),
+                    });
+                  },
+                },
+                data.stop_requested ? 'Stopping at the next step' : 'Stop'
+              )
+            )
+          : run.runner.kind === 'local' &&
+            h(
+              'div',
+              { class: 'actions' },
+              h(
+                'button',
+                {
+                  class: 'primary',
+                  onclick: (event) =>
+                    copy(
+                      '/stuntdouble run ' + run.checklist + (resumable ? ' resume' : ''),
+                      event.target
+                    ),
+                },
+                resumable ? 'Copy resume command' : 'Copy re-run command'
+              ),
+              h(
+                'button',
+                { onclick: (event) => copy('/stuntdouble cloud ' + run.checklist, event.target) },
+                'Run in the cloud'
+              )
+            );
+
+        const verdicts = h(
+          'div',
+          { class: 'card' },
+          checks.map((check) => checkCard(run, check, results.get(check.key)))
+        );
+
+        return [
+          h('p', { class: 'meta' }, h('a', { href: '/', 'data-nav': true }, 'Runs'), '/', run.id),
+          h('h1', {}, run.checklist),
+          h(
+            'div',
+            { class: 'meta' },
+            outcomePill(run),
+            scoreText(run.score) &&
+              h(
+                'span',
+                {},
+                scoreText(run.score) +
+                  (run.score.pass_threshold == null
+                    ? ''
+                    : ', passes at ' + inUnit(run.score.pass_threshold, run.score.unit))
+              ),
+            runnerPill(run),
+            h('span', {}, run.actor),
+            webUrl(run.url) ? h('a', { href: run.url }, run.url) : h('span', {}, run.url),
+            h('span', {}, when(run.started_at))
+          ),
+          run.summary && h('p', {}, run.summary),
+          webUrl(run.runner.url) &&
+            h('p', {}, h('a', { href: run.runner.url }, 'Open this run in Stunt Double')),
+          actions,
+          running
+            ? h(
+                'div',
+                { class: 'split' },
+                h(
+                  'div',
+                  {},
+                  h('h2', {}, 'Live'),
+                  h('img', {
+                    class: 'frame',
+                    id: 'frame',
+                    src: fileUrl('.live/latest.png') + '?v=' + Date.now(),
+                    alt: 'The browser now',
+                  })
+                ),
+                h('div', {}, h('h2', {}, 'Checks'), verdicts)
+              )
+            : [h('h2', {}, 'Checks'), verdicts],
+          data.activity.length > 0 && [
+            h('h2', {}, 'Activity'),
+            h(
+              'ol',
+              { class: 'card timeline' },
+              data.activity.map((line) =>
+                h(
+                  'li',
+                  {},
+                  h('span', { class: 'muted' }, new Date(line.at).toLocaleTimeString()),
+                  h('code', {}, line.tool),
+                  h('span', {}, line.text)
+                )
+              )
+            ),
+          ],
+        ];
+      }
+
+      function definitionError(entry) {
+        return h(
+          'div',
+          {},
+          h('code', {}, entry.slug),
+          h('span', { class: 'meta mono' }, entry.error)
+        );
+      }
+
+      async function renderDefinitions() {
+        const { checklists, actors } = await getJson('/api/definitions');
+        const cloudIds = (cloud) =>
+          cloud && Object.values(cloud).some((v) => v && typeof v !== 'object')
+            ? h('span', { class: 'pill live' }, 'Linked to the cloud')
+            : h('span', { class: 'pill' }, 'Local only');
+        return [
+          h('h1', {}, 'Checklists and actors'),
+          h(
+            'p',
+            { class: 'muted' },
+            'Read only. Edit them in Claude Code: they are the JSON files in .stuntdouble/.'
+          ),
+          h('h2', {}, 'Checklists'),
+          checklists.length === 0
+            ? h('div', { class: 'card empty muted' }, 'No checklists yet.')
+            : h(
+                'div',
+                { class: 'card' },
+                checklists.map((entry) =>
+                  entry.error
+                    ? h('div', { class: 'check' }, definitionError(entry))
+                    : h(
+                        'div',
+                        { class: 'check' },
+                        h(
+                          'header',
+                          {},
+                          h('strong', {}, entry.data.name),
+                          cloudIds(entry.data.cloud)
+                        ),
+                        h(
+                          'div',
+                          { class: 'meta' },
+                          h('code', {}, entry.slug),
+                          h('span', {}, 'run by ' + entry.data.actor),
+                          h('span', {}, entry.data.url)
+                        ),
+                        h('p', {}, entry.data.instructions),
+                        h(
+                          'ul',
+                          {},
+                          entry.data.checks.map((c) =>
+                            h(
+                              'li',
+                              {},
+                              h('code', {}, c.key),
+                              ' ',
+                              c.description,
+                              ' ',
+                              h(
+                                'span',
+                                { class: 'muted' },
+                                c.type === 'weighted'
+                                  ? 'weighted x' + (c.weight ?? 1)
+                                  : c.type.replace('_', '/')
+                              )
+                            )
+                          )
+                        )
+                      )
+                )
+              ),
+          h('h2', {}, 'Actors'),
+          actors.length === 0
+            ? h('div', { class: 'card empty muted' }, 'No actors yet.')
+            : h(
+                'div',
+                { class: 'card' },
+                actors.map((entry) =>
+                  entry.error
+                    ? h('div', { class: 'check' }, definitionError(entry))
+                    : h(
+                        'div',
+                        { class: 'check' },
+                        h(
+                          'header',
+                          {},
+                          h('strong', {}, entry.data.name),
+                          cloudIds(entry.data.cloud)
+                        ),
+                        h(
+                          'div',
+                          { class: 'meta' },
+                          h('code', {}, entry.slug),
+                          entry.data.persist_login && 'keeps its logins'
+                        ),
+                        entry.data.description && h('p', {}, entry.data.description),
+                        entry.data.knowledge.length > 0 &&
+                          h(
+                            'p',
+                            { class: 'muted' },
+                            'Knows: ' + entry.data.knowledge.map((k) => k.title).join(', ')
+                          )
+                      )
+                )
+              ),
+        ];
+      }
+
+      let rendering = Promise.resolve();
+      function render() {
+        rendering = rendering.then(async () => {
+          const path = location.pathname;
+          for (const link of document.querySelectorAll('header nav a')) {
+            const current = link.getAttribute('href') === (path.startsWith('/runs/') ? '/' : path);
+            if (current) link.setAttribute('aria-current', 'page');
+            else link.removeAttribute('aria-current');
+          }
+          let view;
+          try {
+            view = path.startsWith('/runs/')
+              ? await renderRun(decodeURIComponent(path.slice('/runs/'.length)))
+              : path === '/definitions'
+                ? await renderDefinitions()
+                : await renderRuns();
+          } catch (err) {
+            view = [h('p', { class: 'mono' }, err.message)];
+          }
+          app.replaceChildren(...[view].flat(2).filter(Boolean));
+        });
+      }
+
+      document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[data-nav]');
+        if (!link || event.metaKey || event.ctrlKey) return;
+        event.preventDefault();
+        history.pushState(null, '', link.getAttribute('href'));
+        render();
+      });
+      window.addEventListener('popstate', render);
+
+      // Live updates: a new frame swaps the picture, anything else redraws the page.
+      let queued = false;
+      new EventSource('/api/events').onmessage = (event) => {
+        const { paths } = JSON.parse(event.data);
+        const frame = document.getElementById('frame');
+        if (frame && paths.includes('.live/latest.png')) {
+          frame.src = fileUrl('.live/latest.png') + '?v=' + Date.now();
+        }
+        if (paths.every((p) => p.startsWith('.live/')) || queued) return;
+        queued = true;
+        setTimeout(() => {
+          queued = false;
+          render();
+        }, 300);
+      };
+      render();
+    </script>
+  </body>
+</html>
