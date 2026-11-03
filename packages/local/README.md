@@ -1,5 +1,7 @@
 # stuntdouble
 
+[![npm](https://img.shields.io/npm/v/stuntdouble.svg)](https://www.npmjs.com/package/stuntdouble) [![License](https://img.shields.io/npm/l/stuntdouble.svg)](./LICENSE)
+
 Stunt Double Local: run [Stunt Double](https://stuntdouble.io) checklists in a Chrome on your own machine, from your own coding agent session, with every run kept as files in your project and a local viewer to watch and review them.
 
 It is an MCP server and nothing more. Your agent session does all of the reasoning: it reads the actor's brief, drives the browser through the tools here and judges each check. This package drives the browser, checks that a passed verdict cites something on the page, scores the run with the same code as the Stunt Double cloud, and writes the files. It never calls a model, never starts an agent, and never reads an agent's credentials (a test fails the build if it tries), so a local run uses whatever account your agent is signed in with, and nothing else.
