@@ -1,6 +1,6 @@
 {
   "name": "stuntdouble",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Stunt Double Local: run Stunt Double checklists in a local Chrome from your own coding agent session, with the runs kept as files and a local viewer",
   "keywords": [
     "stunt-double",
