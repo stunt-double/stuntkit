@@ -161,6 +161,18 @@ export const RunSchema = z.object({
     judged: z.boolean(),
     run_id: z.string().optional(),
     url: z.string().optional(),
+    /** A standalone Studio run: the model on the person's own connection. */
+    model: z.object({ provider: z.string(), id: z.string() }).optional(),
+    /** What a standalone run used, when the provider reports it. */
+    usage: z
+      .object({
+        steps: z.number(),
+        input_tokens: z.number(),
+        output_tokens: z.number(),
+        cache_read_tokens: z.number().optional(),
+        cost_usd: z.number().nullish(),
+      })
+      .optional(),
   }),
   status: z.enum(RUN_STATUSES),
   pid: z.number().optional(),

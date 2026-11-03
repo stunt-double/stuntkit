@@ -127,9 +127,22 @@ export class LocalSession {
   /** The run this session last finished, so a second finish_run is answered, not refused. */
   private finished: { id: string; report: string } | null = null;
 
-  constructor(options: { project: string; launch?: Launch }) {
+  /** Extra `runner` fields for a new run, such as the model a standalone run uses. */
+  private readonly runnerFields: Partial<Run['runner']>;
+  /** A viewer started by someone else (the Studio): its links are used, and it is not closed here. */
+  private readonly sharedUi: boolean;
+
+  constructor(options: {
+    project: string;
+    launch?: Launch;
+    runner?: Partial<Run['runner']>;
+    ui?: UiServer;
+  }) {
     this.root = sdDir(options.project);
     this.launch = options.launch ?? PlaywrightDriver.launch;
+    this.runnerFields = options.runner ?? {};
+    this.ui = options.ui ?? null;
+    this.sharedUi = Boolean(options.ui);
   }
 
   /** The viewer's address, starting it on first use. */
@@ -227,7 +240,7 @@ export class LocalSession {
       run = {
         format: 'stuntdouble.run/1',
         id: '',
-        runner: { kind: 'local', package: PACKAGE, judged: false },
+        runner: { ...this.runnerFields, kind: 'local', package: PACKAGE, judged: false },
         status: 'running',
         pid: process.pid,
         url: rebase(checklist.url, config.local_base_url),
@@ -566,7 +579,7 @@ export class LocalSession {
       await this.save().catch(() => {});
       await this.endBrowser();
     }
-    await this.ui?.close();
+    if (!this.sharedUi) await this.ui?.close();
     this.ui = null;
   }
 
