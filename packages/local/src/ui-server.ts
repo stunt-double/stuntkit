@@ -21,8 +21,11 @@ import {
   ChecklistSchema,
   effectiveStatus,
   readJson,
+  readRun,
   readRuns,
+  tallyRun,
   writeFileAtomic,
+  type Run,
 } from './files.ts';
 
 export const FIRST_PORT = 4747;
@@ -110,6 +113,24 @@ async function definitions(root: string, folder: 'checklists' | 'actors') {
   );
 }
 
+/** Actor slugs to the names people gave them, for labels. */
+async function actorNames(root: string): Promise<Map<string, string>> {
+  const actors = await definitions(root, 'actors');
+  return new Map(actors.flatMap((a) => ('data' in a && a.data ? [[a.slug, a.data.name]] : [])));
+}
+
+/** What the runs list shows of a run: not its snapshot or its results. */
+function runSummary(root: string, run: Run, names: Map<string, string>) {
+  const { checklist_snapshot, results: _results, ...rest } = run;
+  return {
+    ...rest,
+    status: effectiveStatus(root, run),
+    actor_name: names.get(run.actor) ?? null,
+    checklist_name: typeof checklist_snapshot.name === 'string' ? checklist_snapshot.name : null,
+    tally: tallyRun(run),
+  };
+}
+
 async function readBody(req: IncomingMessage): Promise<string> {
   let body = '';
   for await (const chunk of req) {
@@ -132,6 +153,8 @@ export async function startUi(options: { root: string; port?: number }): Promise
     }
     const url = new URL(req.url ?? '/', `http://${host}`);
     if (url.pathname === '/__stuntdouble') return json(res, { stuntdouble: true });
+    // Browsers ask for it unprompted; there is none, and that is not an error.
+    if (url.pathname === '/favicon.ico') return send(res, 204, '');
 
     // Cookies are per host, not per port, so each server names its own.
     const cookieName = `stuntdouble_${port}`;
@@ -158,8 +181,8 @@ export async function startUi(options: { root: string; port?: number }): Promise
       const origin = req.headers.origin;
       if (origin && origin !== `http://${host}`) return send(res, 403, 'Forbidden');
       const { run } = JSON.parse(await readBody(req)) as { run?: unknown };
-      const entry = (await readRuns(root)).find((e) => e.id === run);
-      if (!entry || !('run' in entry) || effectiveStatus(entry.run) !== 'running') {
+      const entry = typeof run === 'string' ? await readRun(root, run) : null;
+      if (!entry || !('run' in entry) || effectiveStatus(root, entry.run) !== 'running') {
         return send(res, 409, 'That run is not going.');
       }
       await writeFileAtomic(join(root, '.live', 'stop'), entry.id);
@@ -172,17 +195,16 @@ export async function startUi(options: { root: string; port?: number }): Promise
       return send(res, 200, page, 'text/html; charset=utf-8', PAGE_HEADERS);
     }
     if (path === '/api/runs') {
+      const [runs, names] = await Promise.all([readRuns(root), actorNames(root)]);
       return json(
         res,
-        (await readRuns(root)).map((e) =>
-          'run' in e ? { ...e.run, status: effectiveStatus(e.run) } : e
-        )
+        runs.map((e) => ('run' in e ? runSummary(root, e.run, names) : e))
       );
     }
     const runMatch = path.match(/^\/api\/runs\/([^/]+)$/);
     if (runMatch) {
       const id = decodeURIComponent(runMatch[1]!);
-      const entry = (await readRuns(root)).find((e) => e.id === id);
+      const entry = await readRun(root, id);
       if (!entry) return send(res, 404, 'No such run');
       const activity = await readFile(join(root, 'runs', entry.id, 'activity.jsonl'), 'utf8')
         .then((text) =>
@@ -193,9 +215,18 @@ export async function startUi(options: { root: string; port?: number }): Promise
         )
         .catch(() => []);
       const stop = await readFile(join(root, '.live', 'stop'), 'utf8').catch(() => '');
+      const names = 'run' in entry ? await actorNames(root) : new Map<string, string>();
       return json(res, {
         ...entry,
-        ...('run' in entry ? { run: { ...entry.run, status: effectiveStatus(entry.run) } } : {}),
+        ...('run' in entry
+          ? {
+              run: {
+                ...entry.run,
+                status: effectiveStatus(root, entry.run),
+                actor_name: names.get(entry.run.actor) ?? null,
+              },
+            }
+          : {}),
         activity,
         stop_requested: stop.trim() === entry.id,
       });
