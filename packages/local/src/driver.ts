@@ -220,6 +220,13 @@ export class PlaywrightDriver implements LocalDriver {
         channel: 'chrome',
       });
     } catch (chromeError) {
+      // A kept profile in use by another run is locked; another browser will not help.
+      if (/ProcessSingleton|SingletonLock|already in use/i.test((chromeError as Error).message)) {
+        throw new Error(
+          "Another run is already using this actor's kept login (persist_login). Finish that run first, or try again when it ends.",
+          { cause: chromeError }
+        );
+      }
       try {
         context = await chromium.launchPersistentContext(options.profileDir, settings);
       } catch {

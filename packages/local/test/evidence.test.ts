@@ -73,3 +73,13 @@ test('evidence is matched against what is rendered', async (t) => {
   assert.equal(await found({ selector: 'h1', text: 'Order confirmed' }), null);
   assert.equal(await found({ selector: 'address', text: 'London' }), 'selector');
 });
+
+test('a page that never answers is a miss, not a run that hangs', async () => {
+  const hung = { evaluate: () => new Promise(() => {}), waitForTimeout: async () => {} };
+  const via = await focusEvidence(
+    hung as unknown as Parameters<typeof focusEvidence>[0],
+    cleanLocator({ text: 'Basket' }),
+    20
+  );
+  assert.equal(via, null);
+});

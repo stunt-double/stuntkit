@@ -4,8 +4,8 @@
 // Everything a run produces is a file under `.stuntdouble/runs/<id>/`, written
 // as it happens: `run.json` is rewritten atomically after every verdict, and
 // `activity.jsonl` gains a line per tool call. A run whose process dies stays
-// `running` on disk with a dead pid, and the next start_run marks it
-// interrupted, so it can be resumed.
+// `running` on disk with no live marker (files.ts `isLive`), and the next
+// start_run marks it interrupted, so it can be resumed.
 
 import {
   DirectBrowserTools,
@@ -13,7 +13,8 @@ import {
 } from '@stunt-double/browser-toolset/direct-tools';
 import { isPrivateHost, redactInput } from '@stunt-double/browser-toolset/executor';
 import { hostMatchesDomain, INDEX_SESSION_SAFETY } from '@stunt-double/browser-toolset/safety';
-import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -30,13 +31,16 @@ import {
   ChecklistSchema,
   type Config,
   ConfigSchema,
-  isAlive,
+  effectiveStatus,
+  isLive,
   type Locator,
   readJson,
   readRuns,
   type Result,
   type Run,
+  runningMarker,
   sdDir,
+  tallyRun,
   writeFileAtomic,
   writeJsonAtomic,
 } from './files.ts';
@@ -63,6 +67,7 @@ const STOPPED =
 const NOT_JUDGED = 'Not judged before the run finished.';
 const PRIVATE_REFUSED =
   'Local and private addresses other than the app under test are not reachable.';
+const SETUP = 'Run /stuntdouble setup to create one.';
 /** activity.jsonl is committed, so a page read is kept to its opening lines. */
 const LOG_TEXT_CHARS = 500;
 
@@ -104,11 +109,23 @@ function stamp(date = new Date()): string {
 
 const now = () => new Date().toISOString();
 
+/** `5 min ago`, for a run listed in a reply. */
+function ago(iso: string | null): string {
+  if (!iso) return 'not started';
+  const minutes = Math.round((Date.now() - Date.parse(iso)) / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  return hours < 48 ? `${hours} h ago` : `${Math.round(hours / 24)} days ago`;
+}
+
 export class LocalSession {
   readonly root: string;
   private readonly launch: Launch;
   private active: Active | null = null;
   private ui: UiServer | null = null;
+  /** The run this session last finished, so a second finish_run is answered, not refused. */
+  private finished: { id: string; report: string } | null = null;
 
   constructor(options: { project: string; launch?: Launch }) {
     this.root = sdDir(options.project);
@@ -126,6 +143,27 @@ export class LocalSession {
     return this.ui.link(path);
   }
 
+  /** The viewer's port while it is running in this process. */
+  get viewerPort(): number | null {
+    return this.ui?.port ?? null;
+  }
+
+  /** open_ui: the link, and a line on each of the latest runs. */
+  async overview(): Promise<string> {
+    const link = await this.openUi();
+    const runs = (await readRuns(this.root)).slice(0, 5);
+    if (runs.length === 0) return `${link}\n\nNo runs yet.`;
+    const lines = runs.map((e) => {
+      if (!('run' in e)) return `- ${e.id}: unreadable (${e.error.split('\n')[0]})`;
+      const { run } = e;
+      const status = effectiveStatus(this.root, run);
+      const t = tallyRun(run);
+      const outcome = run.score ? `${status}, ${run.score.outcome}` : status;
+      return `- ${run.checklist}: ${outcome}, ${t.passed}/${t.total} checks passed, started ${ago(run.started_at)} (${run.id})`;
+    });
+    return [link, `Latest runs, newest first:\n${lines.join('\n')}`].join('\n\n');
+  }
+
   async startRun(input: { checklist: string; resume?: boolean }): Promise<string> {
     if (this.active) return this.resumeActive(input);
     if (!/^[a-z0-9][a-z0-9-]*$/.test(input.checklist)) {
@@ -135,12 +173,22 @@ export class LocalSession {
       join(this.root, 'stuntdouble.json'),
       ConfigSchema,
       '.stuntdouble/stuntdouble.json'
-    );
+    ).catch((err: Error) => {
+      throw /file not found$/.test(err.message) ? new Error(`${err.message}. ${SETUP}`) : err;
+    });
     let checklist = await readJson(
       join(this.root, 'checklists', `${input.checklist}.json`),
       ChecklistSchema,
       `.stuntdouble/checklists/${input.checklist}.json`
-    );
+    ).catch(async (err: Error) => {
+      if (!/file not found$/.test(err.message)) throw err;
+      const slugs = (await readdir(join(this.root, 'checklists')).catch(() => []))
+        .filter((f) => f.endsWith('.json'))
+        .map((f) => f.slice(0, -'.json'.length));
+      throw new Error(
+        `${err.message}. ${slugs.length ? `The checklists here are: ${slugs.join(', ')}.` : SETUP}`
+      );
+    });
     const actor = await readJson(
       join(this.root, 'actors', `${checklist.actor}.json`),
       ActorSchema,
@@ -219,7 +267,10 @@ export class LocalSession {
     const tempProfile = actor.persist_login
       ? null
       : await mkdtemp(join(tmpdir(), 'stuntdouble-profile-'));
-    const profileDir = tempProfile ?? join(homedir(), '.stuntdouble', 'profiles', checklist.actor);
+    // Kept per project: two projects with a `shopper` must not share its cookies.
+    const project = createHash('sha256').update(this.root).digest('hex').slice(0, 12);
+    const profileDir =
+      tempProfile ?? join(homedir(), '.stuntdouble', 'profiles', project, checklist.actor);
     await mkdir(profileDir, { recursive: true });
     let driver: LocalDriver;
     try {
@@ -270,7 +321,9 @@ export class LocalSession {
       everyScreenshot: config.model_screenshots === 'every_action',
       stopped: false,
     };
+    this.finished = null;
     await this.save();
+    await this.markRunning();
     await this.log('start_run', input, input.resume ? 'Resumed' : 'Started');
 
     const opened = await this.browserTool('navigate', { url: run.url });
@@ -278,6 +331,7 @@ export class LocalSession {
     const viewer = await this.openUi(`/runs/${run.id}`);
     return [
       `Run ${run.id} ${input.resume ? 'resumed' : 'started'}. Watch it or stop it at ${viewer}`,
+      unweightedNote(checklist),
       buildBrief({
         actor,
         checklist,
@@ -285,11 +339,15 @@ export class LocalSession {
         checks: pending,
         resumed: Boolean(input.resume),
       }),
+      // Not the navigate result: it carries the page title, and this reply is
+      // read by the main session, which never reads page content.
       opened.isError
         ? `The start page did not load: ${opened.text}\nTry navigate again, or judge the checks you cannot reach as "blocked".`
-        : opened.text,
+        : `The browser is open at ${run.url}: read the page with read_page before acting.`,
       this.nextStep(),
-    ].join('\n\n');
+    ]
+      .filter(Boolean)
+      .join('\n\n');
   }
 
   /** One of the browser toolset's direct tools, on the active run's browser. */
@@ -299,9 +357,7 @@ export class LocalSession {
     const page = await active.driver.context.activePage();
     const host = page ? (URL.parse(await page.url())?.hostname ?? '') : '';
     const tools =
-      active.guarded && host && !active.trustedHosts.some((t) => hostMatchesDomain(host, t))
-        ? active.guarded
-        : active.trusted;
+      active.guarded && !isTrustedHost(host, active.trustedHosts) ? active.guarded : active.trusted;
     const result = await tools.run(name, input);
     // The browser refused a navigation the tool did not make itself (driver.ts).
     // A redirect may have shown the page for a moment, so nothing read is kept.
@@ -327,6 +383,7 @@ export class LocalSession {
     evidence: string;
     locator?: Locator;
   }): Promise<string> {
+    if (!this.active && this.finished) return this.alreadyFinished();
     const active = this.requireActive();
     if (await this.stopRequested(active)) throw new Error(STOPPED);
     const { run, checklist } = active;
@@ -417,6 +474,7 @@ export class LocalSession {
   }
 
   async finishRun(input: { summary: string }): Promise<string> {
+    if (!this.active && this.finished) return this.alreadyFinished();
     const active = this.requireActive();
     const stopped = await this.stopRequested(active);
     const { run, checklist } = active;
@@ -454,8 +512,12 @@ export class LocalSession {
       passedCount: run.results.filter((r) => r.status === 'passed').length,
       totalCount: checklist.checks.length,
     });
+    // The tally is in every reply, weighted or not, so the actor can relay it.
+    const t = tallyRun(run);
+    const tally = score.weighted ? ` ${t.passed}/${t.total} checks passed.` : '';
+    this.finished = { id: run.id, report: viewer };
     return [
-      `Run ${run.id} ${run.status}: ${score.outcome}. ${counts}. Self-judged: the actor recorded its own verdicts.`,
+      `Run ${run.id} ${run.status}: ${score.outcome}. ${counts}.${tally} ${score.weighted ? '' : `${unweightedNote(checklist, true)} `}Self-judged: the actor recorded its own verdicts.`,
       failed.length ? `Failed:\n${failed.map(line).join('\n')}` : '',
       blocked.length ? `Not judged:\n${blocked.map(line).join('\n')}` : '',
       `Report: ${viewer}`,
@@ -480,6 +542,7 @@ export class LocalSession {
     run.status = 'running';
     await this.clearStop(run.id);
     await this.save();
+    await this.markRunning();
     await this.log('start_run', input, 'Resumed');
     const viewer = await this.openUi(`/runs/${run.id}`);
     return [
@@ -505,6 +568,11 @@ export class LocalSession {
     }
     await this.ui?.close();
     this.ui = null;
+  }
+
+  private alreadyFinished(): string {
+    const { id, report } = this.finished!;
+    return `Run ${id} has already finished: its report is at ${report}. Start another with start_run.`;
   }
 
   private requireActive(): Active {
@@ -554,7 +622,7 @@ export class LocalSession {
   private async markInterrupted(): Promise<void> {
     for (const entry of await readRuns(this.root)) {
       if (!('run' in entry) || entry.run.status !== 'running') continue;
-      if (entry.run.pid !== process.pid && isAlive(entry.run.pid)) continue;
+      if (entry.run.pid !== process.pid && isLive(this.root, entry.run)) continue;
       await writeJsonAtomic(join(this.root, 'runs', entry.id, 'run.json'), {
         ...entry.run,
         status: 'interrupted',
@@ -569,6 +637,12 @@ export class LocalSession {
     await active.driver.close().catch(() => {});
     if (active.tempProfile) await rm(active.tempProfile, { recursive: true, force: true });
     await this.clearStop(active.run.id);
+    await rm(runningMarker(this.root, active.run.id), { force: true });
+  }
+
+  private async markRunning(): Promise<void> {
+    const { run } = this.requireActive();
+    await writeFileAtomic(runningMarker(this.root, run.id), String(run.pid));
   }
 
   private async clearStop(id: string): Promise<void> {
@@ -596,6 +670,30 @@ export class LocalSession {
   private async saveFrame(png: Uint8Array): Promise<void> {
     await writeFileAtomic(join(this.root, '.live', 'latest.png'), png).catch(() => {});
   }
+}
+
+/**
+ * Whether a page's host is the app under test. A page with no host (about:blank,
+ * data:, blob:) is not: a third party can open a blob: form, and the guard
+ * costs a blank page nothing.
+ */
+export function isTrustedHost(host: string, trustedHosts: string[]): boolean {
+  return host !== '' && trustedHosts.some((t) => hostMatchesDomain(host, t));
+}
+
+/**
+ * Why a checklist with no weighted checks has no score. finish_run always says
+ * it; start_run only when a pass_threshold is set that will not be used. Null
+ * for a weighted checklist.
+ */
+export function unweightedNote(checklist: Checklist, atFinish = false): string | null {
+  if (checklist.checks.some((c) => c.type === 'weighted')) return null;
+  const threshold =
+    checklist.pass_threshold == null
+      ? ''
+      : ` Its pass_threshold (${checklist.pass_threshold}) applies to weighted checks only.`;
+  if (!atFinish && !threshold) return null;
+  return `No score: this checklist has no weighted checks, so it passes only when every pass/fail check passes.${threshold}`;
 }
 
 /** A finished run's verdict, by the same code that scores a cloud run. */

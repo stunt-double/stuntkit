@@ -2,10 +2,10 @@
 // stuntdouble mcp | view [dir] | doctor
 
 import { existsSync } from 'node:fs';
-import { createServer } from 'node:net';
 import { join, resolve } from 'node:path';
 
-import { ConfigSchema, projectDir, readJson, sdDir } from './files.ts';
+import { MIN_NODE, nodeSupported } from './doctor.ts';
+import { projectDir } from './files.ts';
 
 const USAGE = `Usage: stuntdouble <command>
 
@@ -22,82 +22,25 @@ async function view(dir: string | undefined): Promise<void> {
   process.on('SIGINT', () => ui.close().then(() => process.exit(0)));
 }
 
-function portFree(port: number): Promise<boolean> {
-  return new Promise((ok) => {
-    const probe = createServer()
-      .once('error', () => ok(false))
-      .listen(port, '127.0.0.1', () => probe.close(() => ok(true)));
-  });
-}
-
-async function doctor(): Promise<boolean> {
-  const { chromium } = await import('playwright-core');
-  const { FIRST_PORT } = await import('./ui-server.ts');
-  const lines: string[] = [];
-  let ok = true;
-  const say = (pass: boolean, text: string) => {
-    lines.push(`${pass ? 'ok  ' : 'FAIL'} ${text}`);
-    if (!pass) ok = false;
-  };
-
-  const [major = 0, minor = 0] = process.versions.node.split('.').map(Number);
-  say(
-    major > 22 || (major === 22 && minor >= 18),
-    `Node ${process.versions.node} (needs 22.18 or later)`
-  );
-
-  let browser = '';
-  for (const channel of ['chrome', undefined]) {
-    try {
-      const b = await chromium.launch({ headless: true, ...(channel ? { channel } : {}) });
-      browser = `${channel ? 'Google Chrome' : "Playwright's Chromium"} ${b.version()}`;
-      await b.close();
-      break;
-    } catch {
-      // Try the next one.
-    }
-  }
-  say(
-    Boolean(browser),
-    browser || 'No Chrome found: install Google Chrome, or run `npx playwright install chromium`'
-  );
-
-  const free = await portFree(FIRST_PORT);
-  lines.push(
-    `ok   Viewer port ${FIRST_PORT} ${free ? 'is free' : 'is taken: the viewer will use the next free port'}`
-  );
-
-  const project = projectDir();
-  const configPath = join(sdDir(project), 'stuntdouble.json');
-  if (existsSync(configPath)) {
-    try {
-      await readJson(configPath, ConfigSchema, '.stuntdouble/stuntdouble.json');
-      lines.push(`ok   Project ${project}`);
-    } catch (err) {
-      say(false, (err as Error).message);
-    }
-  } else {
-    lines.push(`--   No .stuntdouble/stuntdouble.json in ${project} yet`);
-  }
-
-  // Whether it is set, never what it is.
-  lines.push(
-    'ANTHROPIC_API_KEY' in process.env
-      ? 'note ANTHROPIC_API_KEY is set, so Claude Code bills local runs to that API key, not your Claude plan'
-      : 'ok   Local runs count against your Claude plan (no ANTHROPIC_API_KEY is set)'
-  );
-  console.log(lines.join('\n'));
-  return ok;
-}
-
 const [command, arg] = process.argv.slice(2);
+// npx does not enforce `engines`, and on an older Node the tools fail later and
+// stranger. stderr lands in the MCP client's log.
+if (!nodeSupported() && command !== 'doctor') {
+  process.stderr.write(
+    `Stunt Double Local needs Node ${MIN_NODE.join('.')} or later (this is ${process.versions.node}). Update Node, then restart Claude Code.\n`
+  );
+  process.exit(1);
+}
 if (command === 'mcp') {
   const { serveMcp } = await import('./mcp.ts');
   await serveMcp();
 } else if (command === 'view') {
   await view(arg);
 } else if (command === 'doctor') {
-  process.exitCode = (await doctor()) ? 0 : 1;
+  const { doctor } = await import('./doctor.ts');
+  const { ok, lines } = await doctor();
+  console.log(lines.join('\n'));
+  process.exitCode = ok ? 0 : 1;
 } else {
   console.log(USAGE);
   process.exitCode = command && command !== 'help' && command !== '--help' ? 1 : 0;

@@ -122,3 +122,69 @@ test('Stop refuses another origin and a run that is not going', async () => {
   assert.equal(foreign.status, 403);
   assert.equal((await get('/api/stop', headers, 'POST', '{"run":"r1"}')).status, 409);
 });
+
+test('the runs list sends a summary per run, and one run is read alone', async () => {
+  const root = join(dir, '.stuntdouble');
+  await mkdir(join(root, 'actors'), { recursive: true });
+  await writeFile(join(root, 'actors', 'shopper.json'), '{"name":"First-time shopper"}');
+  await mkdir(join(root, 'runs', 'r2'), { recursive: true });
+  await writeFile(
+    join(root, 'runs', 'r2', 'run.json'),
+    JSON.stringify({
+      format: 'stuntdouble.run/1',
+      id: 'r2',
+      runner: { kind: 'local', judged: false },
+      status: 'completed',
+      url: 'http://localhost:3000',
+      started_at: '2026-11-03T04:00:00Z',
+      finished_at: '2026-11-03T04:01:00Z',
+      checklist: 'sign-up',
+      actor: 'shopper',
+      checklist_snapshot: {
+        name: 'Sign-up',
+        checks: [
+          { key: 'a', description: 'A' },
+          { key: 'b', description: 'B' },
+          { key: 'c', description: 'C', type: 'informational' },
+        ],
+      },
+      results: [
+        { check: 'a', status: 'passed', evidence: 'x' },
+        { check: 'b', status: 'failed', evidence: 'y' },
+      ],
+      score: { score: null, outcome: 'failed' },
+      summary: 'Half.',
+      cloud: null,
+    })
+  );
+  const list = JSON.parse((await get('/api/runs', { Cookie: cookie })).body);
+  const r2 = list.find((e: { id: string }) => e.id === 'r2');
+  assert.deepEqual(r2.tally, { passed: 1, total: 2 });
+  assert.equal(r2.checklist_name, 'Sign-up');
+  assert.equal(r2.actor_name, 'First-time shopper');
+  assert.equal(r2.results, undefined);
+  assert.equal(r2.checklist_snapshot, undefined);
+  const one = JSON.parse((await get('/api/runs/r2', { Cookie: cookie })).body);
+  assert.equal(one.run.results.length, 2);
+  assert.equal(one.run.actor_name, 'First-time shopper');
+  for (const id of ['..', '.live', 'r2%2f..', 'nope']) {
+    assert.equal((await get(`/api/runs/${id}`, { Cookie: cookie })).status, 404, id);
+  }
+});
+
+test('the favicon request is answered without the key, with nothing', async () => {
+  const res = await get('/favicon.ico');
+  assert.equal(res.status, 204);
+  assert.equal(res.body, '');
+});
+
+test('the viewer shows no collapsed-row thumbnail and says why an unweighted run has no score', async () => {
+  const page = (await get('/', { Cookie: cookie })).body;
+  assert.doesNotMatch(page, /class: 'thumb'/);
+  assert.match(
+    page,
+    /No score: with no weighted checks, it passes only when every pass\/fail check passes/
+  );
+  assert.match(page, /Copy cloud command/);
+  assert.doesNotMatch(page, /'\?v=' \+ Date\.now\(\)/);
+});

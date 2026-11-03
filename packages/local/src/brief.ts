@@ -37,7 +37,7 @@ export function buildBrief(input: {
 }): string {
   const { actor, checklist, url, checks, resumed } = input;
   const persona = [
-    `You are ${actor.name}${actor.description ? `: ${actor.description}` : ''}.`,
+    `You are ${actor.name}${actor.description ? `: ${actor.description.replace(/[.\s]+$/, '')}` : ''}.`,
     actor.system_prompt ?? '',
   ]
     .filter(Boolean)
@@ -58,6 +58,7 @@ export function buildBrief(input: {
       'How to work:',
       '- Stay in persona: act and judge as this person would, not as a tester.',
       '- Read the page with read_page and find. Ask for a screenshot only when how something looks is the question.',
+      '- get_page_text and read_page "all" return up to 20,000 characters: keep them for long text such as a policy.',
       '- Judge each check with evaluate_check as soon as you have observed it, while the evidence is on screen.',
       '- A passed verdict needs a locator: text visible on the page, or a CSS selector, that shows the evidence. A failure may describe something missing.',
       '- Cite only what you saw in this run. Never pass a check on what a page probably does.',

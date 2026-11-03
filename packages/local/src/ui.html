@@ -831,21 +831,6 @@
         align-items: center;
         gap: 0.5rem;
       }
-      .thumb {
-        display: none;
-        width: 3rem;
-        height: 2rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        object-fit: cover;
-        object-position: top;
-        background: var(--muted);
-      }
-      @media (min-width: 40rem) {
-        .thumb {
-          display: block;
-        }
-      }
       .chevron {
         color: var(--muted-foreground);
       }
@@ -1102,14 +1087,15 @@
         color: var(--muted-foreground);
         white-space: nowrap;
       }
-      .activity code {
-        font-size: 0.75rem;
-      }
       .activity .text {
         grid-column: 1 / -1;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         color: var(--muted-foreground);
+      }
+      .activity summary {
+        cursor: pointer;
+        white-space: normal;
       }
       @media (min-width: 40rem) {
         .activity li {
@@ -1349,9 +1335,10 @@
     <footer>
       <div class="container">
         <p>
-          Local runs use your own Claude plan and a browser on this machine, one at a time while
-          your session is open. The cloud runs on schedules and in parallel, records every run and
-          shares reports with your team. <a href="https://stuntdouble.io/pricing">See plans</a>
+          Local runs use the account Claude Code is signed in with and a browser on this machine,
+          one at a time while your session is open. The cloud runs on schedules and in parallel,
+          records every run and shares reports with your team.
+          <a href="https://stuntdouble.io/pricing">See plans</a>
         </p>
       </div>
     </footer>
@@ -1476,8 +1463,9 @@
         if (style === 'relative') return h('time', { datetime: iso, title: exact }, ago(date));
         return h('time', { datetime: iso }, style === 'clock' ? clock.format(date) : exact);
       }
-      function took(start, end) {
-        const seconds = Math.round((new Date(end) - new Date(start)) / 1000);
+      const between = (start, end) => (new Date(end) - new Date(start)) / 1000;
+      function took(seconds) {
+        seconds = Math.round(seconds);
         if (!(seconds >= 0)) return null;
         if (seconds < 60) return seconds + 's';
         const minutes = Math.floor(seconds / 60);
@@ -1528,6 +1516,7 @@
       // passed", the same count the finish_run reply gives. Informational and
       // skipped checks are left out, as the scorer leaves them out.
       const tally = (run) => {
+        if (run.tally) return run.tally;
         const checks = (run.checklist_snapshot && run.checklist_snapshot.checks) || [];
         const status = Object.fromEntries((run.results || []).map((r) => [r.check, r.status]));
         const scored = checks.filter(
@@ -1550,7 +1539,48 @@
           ? { icon: 'server', label: 'Cloud' }
           : { icon: 'monitor', label: 'Local, self-judged' };
       const checklistName = (run) =>
-        (run.checklist_snapshot && run.checklist_snapshot.name) || run.checklist;
+        run.checklist_name ||
+        (run.checklist_snapshot && run.checklist_snapshot.name) ||
+        run.checklist;
+      const actorName = (run) => run.actor_name || run.actor;
+
+      // What each tool call did, in words. Page reads fold away: they are the
+      // page's own text, long and full of refs.
+      const ACTIVITY = {
+        start_run: 'Started',
+        navigate: 'Opened a page',
+        read_page: 'Read the page',
+        get_page_text: 'Read the page text',
+        find: 'Looked for',
+        click: 'Clicked',
+        type: 'Typed',
+        form_input: 'Filled a field',
+        key: 'Pressed a key',
+        scroll: 'Scrolled',
+        screenshot: 'Took a screenshot',
+        evaluate_check: 'Judged a check',
+        finish_run: 'Finished',
+        stop: 'Stopped',
+      };
+      const PAGE_READS = new Set(['read_page', 'get_page_text', 'find']);
+
+      // How long the actor worked: a resumed run's idle gap left out. Each
+      // start_run opens a session that ends at its last line.
+      function activeSeconds(run, activity) {
+        let total = 0;
+        let from = null;
+        let last = null;
+        for (const line of activity) {
+          if (line.tool === 'start_run') {
+            if (from && last) total += between(from, last);
+            from = line.at;
+          }
+          last = line.at;
+        }
+        const end = run.finished_at || last;
+        if (from && end) total += between(from, end);
+        return activity.length ? total : between(run.started_at, run.finished_at);
+      }
 
       const RESULT = {
         passed: ['Passed', 'success', 'check-circle'],
@@ -1747,7 +1777,7 @@
                         'span',
                         { class: 'fact' },
                         icon('actor'),
-                        h('span', { class: 'truncate' }, entry.actor)
+                        h('span', { class: 'truncate' }, actorName(entry))
                       ),
                       h(
                         'span',
@@ -1799,6 +1829,9 @@
       // were and only something that just landed moves.
       const toggled = new Map();
       const seen = new Map();
+      // Bumped only when the live frame changes, so a redraw reuses the
+      // picture already loaded rather than fetching it again.
+      let frameVersion = Date.now();
 
       function checkRow(run, check, result, opts) {
         if (!result) {
@@ -1853,8 +1886,6 @@
               })
             )
         );
-        const thumb =
-          shot && h('img', { class: 'thumb', src: shot, alt: '', loading: 'lazy', hidden: open });
         const row = h(
           'li',
           { class: 'check' + (open ? ' open' : '') + (opts.arrived ? ' animate-rise' : '') },
@@ -1871,7 +1902,6 @@
                 const now = detail.hidden;
                 toggled.set(key, now);
                 detail.hidden = !now;
-                if (thumb) thumb.hidden = now;
                 row.classList.toggle('open', now);
                 row.firstChild.setAttribute('aria-expanded', String(now));
               },
@@ -1886,7 +1916,12 @@
             h(
               'span',
               { class: 'check-side' },
-              thumb,
+              opts.earlier &&
+                h(
+                  'span',
+                  { class: 'badge outline sm', title: 'Judged before the run was resumed' },
+                  'Earlier'
+                ),
               h('span', { class: 'badge sm ' + tone, id: 'label-' + check.key }, label),
               icon('chevron-down', 'chevron')
             )
@@ -1926,15 +1961,17 @@
                   ? inUnit(score.score, score.unit)
                   : [String(t.passed), h('span', { class: 'of' }, '/' + t.total)]
               ),
-              // Unweighted, the figure is the tally: no line repeats it.
-              weighted &&
-                h(
-                  'p',
-                  { class: 'summary-line' },
-                  score.pass_threshold == null
+              // Unweighted, there is no score: say how the outcome was decided,
+              // in the words finish_run uses.
+              h(
+                'p',
+                { class: 'summary-line' },
+                !weighted
+                  ? 'No score: with no weighted checks, it passes only when every pass/fail check passes'
+                  : score.pass_threshold == null
                     ? 'No pass threshold set'
                     : 'Passes at ' + inUnit(score.pass_threshold, score.unit)
-                )
+              )
             ),
             h(
               'div',
@@ -2070,7 +2107,7 @@
                     onclick: (event) => copy(cloud, event.currentTarget),
                   },
                   icon('copy'),
-                  h('span', {}, 'Run in the cloud')
+                  h('span', {}, 'Copy cloud command')
                 ),
               ]
             : webUrl(run.runner.url)
@@ -2089,21 +2126,30 @@
                 ]
               : null;
 
-        const duration = run.finished_at && took(run.started_at, run.finished_at);
+        const starts = data.activity.filter((line) => line.tool === 'start_run');
+        const sessions = starts.length;
+        const duration =
+          run.finished_at &&
+          took(activeSeconds(run, data.activity)) +
+            (sessions > 1 ? ' over ' + sessions + ' sessions' : '');
+        // Resumed: the verdicts from before the last start_run stood.
+        const resumedAt = sessions > 1 ? new Date(starts[sessions - 1].at) : null;
+        const earlier = (result) => resumedAt && result.at && new Date(result.at) < resumedAt;
         const header = pageHeader({
           back: { href: '/', label: 'Runs', trail: run.id },
           title: checklistName(run),
-          badge: stateBadge(run, 'lg'),
+          // A finished run's verdict is the score card's stamp: once is enough.
+          badge: run.score && runState(run).outcome ? null : stateBadge(run, 'lg'),
           chips: [
             { icon: runner(run).icon, label: runner(run).label },
-            { icon: 'actor', label: run.actor, title: 'Actor' },
+            { icon: 'actor', label: actorName(run), title: 'Actor' },
             { icon: 'globe', label: run.url, href: webUrl(run.url), title: 'Target' },
             { icon: 'calendar', label: time(run.started_at), title: 'Started' },
             duration && {
               icon: 'timer',
               label: duration,
               mono: true,
-              title: 'How long the run took',
+              title: 'How long the actor worked, idle time between sessions left out',
             },
           ].filter(Boolean),
           actions,
@@ -2171,7 +2217,7 @@
             h('img', {
               class: 'frame',
               id: 'frame',
-              src: fileUrl('.live/latest.png') + '?v=' + Date.now(),
+              src: fileUrl('.live/latest.png') + '?v=' + frameVersion,
               alt: 'The browser now',
             })
           );
@@ -2230,6 +2276,7 @@
                       running,
                       openByDefault: group.openByDefault,
                       arrived: results.has(check.key) && arrived(check.key),
+                      earlier: results.has(check.key) && earlier(results.get(check.key)),
                     })
                   )
                 )
@@ -2253,8 +2300,21 @@
                       'li',
                       {},
                       time(line.at, 'clock'),
-                      h('code', {}, line.tool),
-                      h('span', { class: 'text' }, line.text)
+                      h('span', { title: line.tool }, ACTIVITY[line.tool] || line.tool),
+                      PAGE_READS.has(line.tool)
+                        ? h(
+                            'details',
+                            { class: 'text' },
+                            h(
+                              'summary',
+                              {},
+                              line.tool === 'find' && line.input && line.input.query
+                                ? '"' + line.input.query + '": show matches'
+                                : 'Show page text'
+                            ),
+                            line.text
+                          )
+                        : h('span', { class: 'text' }, line.text)
                     )
                   )
                 )
@@ -2433,20 +2493,23 @@
       });
       window.addEventListener('popstate', () => render(false));
 
-      // Live updates: a new frame swaps the picture, anything else redraws the page.
+      // Live updates: a new frame swaps the picture, anything else redraws the
+      // page. The server already coalesces changes, so a redraw waits only long
+      // enough to fold a burst into one.
       let queued = false;
       new EventSource('/api/events').onmessage = (event) => {
         const { paths } = JSON.parse(event.data);
-        const frame = document.getElementById('frame');
-        if (frame && paths.includes('.live/latest.png')) {
-          frame.src = fileUrl('.live/latest.png') + '?v=' + Date.now();
+        if (paths.includes('.live/latest.png')) {
+          frameVersion++;
+          const frame = document.getElementById('frame');
+          if (frame) frame.src = fileUrl('.live/latest.png') + '?v=' + frameVersion;
         }
         if (paths.every((p) => p.startsWith('.live/')) || queued) return;
         queued = true;
         setTimeout(() => {
           queued = false;
           render(false);
-        }, 300);
+        }, 50);
       };
       // Relative times on the runs list stay current.
       setInterval(() => location.pathname === '/' && render(false), 60_000);

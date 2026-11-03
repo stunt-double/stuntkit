@@ -4,14 +4,21 @@
  */
 
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 
-import type { LocalDriver } from '../src/driver.ts';
-import { appendJsonl, RunSchema, writeFileAtomic } from '../src/files.ts';
-import { LocalSession, rebase } from '../src/run.ts';
+import { nodeSupported } from '../src/doctor.ts';
+import type { LaunchOptions, LocalDriver } from '../src/driver.ts';
+import {
+  appendJsonl,
+  effectiveStatus,
+  readJson,
+  RunSchema,
+  writeFileAtomic,
+} from '../src/files.ts';
+import { isTrustedHost, LocalSession, rebase } from '../src/run.ts';
 
 /** A page that shows `visible` and nothing else. */
 function fakeBrowser(visible: string[]) {
@@ -376,4 +383,176 @@ test('a failed stop check skips the rest, and Stop ends the run at the next call
   assert.equal((await runJson(dir, next)).results.length, 0);
   await session.close();
   assert.equal((await runJson(dir, next)).status, 'interrupted');
+});
+
+const PASS_FAIL = {
+  checks: [
+    { key: 'search-box', description: 'The home page shows a search box' },
+    { key: 'guest-checkout', description: 'Guest checkout needs no account' },
+  ],
+  pass_threshold: 50,
+};
+
+test('a checklist without weights says it has no score, at start and finish', async () => {
+  const dir = await project(PASS_FAIL, { description: 'New to the site.' });
+  const session = new LocalSession({
+    project: dir,
+    launch: async () => fakeBrowser(['Search mugs']).driver,
+  });
+  const started = await session.startRun({ checklist: 'checkout' });
+  assert.match(started, /pass_threshold \(50\) applies to weighted checks only/);
+  // The description's own full stop is not doubled.
+  assert.match(started, /You are First-time shopper: New to the site\.\n/);
+  await session.evaluateCheck({
+    check: 'search-box',
+    status: 'passed',
+    evidence: 'In the header.',
+    locator: { text: 'Search mugs' },
+  });
+  await session.evaluateCheck({ check: 'guest-checkout', status: 'failed', evidence: 'No.' });
+  const finished = await session.finishRun({ summary: 'Half.' });
+  assert.match(
+    finished,
+    /completed: failed\. 1\/2 checks passed\. No score: this checklist has no weighted checks, so it passes only when every pass\/fail check passes\. Its pass_threshold \(50\) applies/
+  );
+  // A second finish_run, which subagents send, is answered rather than refused.
+  assert.match(
+    await session.finishRun({ summary: 'Again.' }),
+    /has already finished: its report is at http/
+  );
+  assert.match(
+    await session.evaluateCheck({ check: 'search-box', status: 'failed', evidence: 'x' }),
+    /has already finished/
+  );
+  await session.close();
+});
+
+test('start_run keeps the start page out of its reply', async () => {
+  const dir = await project();
+  const session = new LocalSession({ project: dir, launch: async () => fakeBrowser([]).driver });
+  const started = await session.startRun({ checklist: 'checkout' });
+  assert.match(
+    started,
+    /The browser is open at http:\/\/localhost:4100\/shop\?ref=1: read the page/
+  );
+  assert.doesNotMatch(started, /Now on|Navigated to/);
+  await session.close();
+});
+
+test('a missing file says what exists, or how to make one', async () => {
+  const dir = await project();
+  const session = new LocalSession({ project: dir, launch: async () => fakeBrowser([]).driver });
+  await assert.rejects(
+    session.startRun({ checklist: 'nope' }),
+    /checklists\/nope\.json: file not found\. The checklists here are: checkout\./
+  );
+  await rm(join(dir, '.stuntdouble', 'stuntdouble.json'));
+  await assert.rejects(
+    session.startRun({ checklist: 'checkout' }),
+    /stuntdouble\.json: file not found\. Run \/stuntdouble setup/
+  );
+  // A file that is there but unreadable is not "not found".
+  const file = join(dir, 'locked.json');
+  await writeFile(file, '{}');
+  await chmod(file, 0o000);
+  await assert.rejects(readJson(file, RunSchema), /could not read \(EACCES\)/);
+  await session.close();
+});
+
+test('a page with no host gets the third-party guard', () => {
+  const trusted = ['localhost', 'staging.example.com'];
+  for (const url of ['about:blank', 'data:,', 'blob:https://evil.example/123']) {
+    assert.equal(isTrustedHost(URL.parse(url)?.hostname ?? '', trusted), false, url);
+  }
+  assert.equal(isTrustedHost('evil.example', trusted), false);
+  assert.equal(isTrustedHost('localhost', trusted), true);
+});
+
+test('a kept login is kept per project, not shared by actor name', async () => {
+  const home = await mkdtemp(join(tmpdir(), 'sd-home-'));
+  projects.push(home);
+  const before = process.env.HOME;
+  process.env.HOME = home;
+  try {
+    const dirs: string[] = [];
+    for (let i = 0; i < 2; i++) {
+      const dir = await project({}, { persist_login: true });
+      const session = new LocalSession({
+        project: dir,
+        launch: async (options: LaunchOptions) => {
+          dirs.push(options.profileDir);
+          return fakeBrowser([]).driver;
+        },
+      });
+      await session.startRun({ checklist: 'checkout' });
+      await session.close();
+    }
+    assert.equal(dirs.length, 2);
+    assert.notEqual(dirs[0], dirs[1]);
+    for (const d of dirs) assert.match(d, /\.stuntdouble\/profiles\/[0-9a-f]{12}\/shopper$/);
+  } finally {
+    process.env.HOME = before;
+  }
+});
+
+test('a running run.json whose pid was reused is still interrupted', async () => {
+  const dir = await project();
+  const session = new LocalSession({ project: dir, launch: async () => fakeBrowser([]).driver });
+  const id = runId(await session.startRun({ checklist: 'checkout' }));
+  const root = join(dir, '.stuntdouble');
+  assert.equal(effectiveStatus(root, await runJson(dir, id)), 'running');
+  await session.close();
+  // A clone, or a crash: no marker, and a pid that answers (this process).
+  const path = join(root, 'runs', id, 'run.json');
+  await writeFile(
+    path,
+    JSON.stringify({ ...(await runJson(dir, id)), status: 'running', pid: process.pid })
+  );
+  assert.equal(effectiveStatus(root, await runJson(dir, id)), 'interrupted');
+  await writeFile(path, JSON.stringify({ ...(await runJson(dir, id)), pid: 1 }));
+  const again = new LocalSession({ project: dir, launch: async () => fakeBrowser([]).driver });
+  assert.equal(runId(await again.startRun({ checklist: 'checkout', resume: true })), id);
+  await again.close();
+});
+
+test('open_ui lists the latest runs with their outcome and tally', async () => {
+  const dir = await project(PASS_FAIL);
+  const session = new LocalSession({ project: dir, launch: async () => fakeBrowser([]).driver });
+  const id = runId(await session.startRun({ checklist: 'checkout' }));
+  await session.evaluateCheck({ check: 'guest-checkout', status: 'failed', evidence: 'No.' });
+  await session.finishRun({ summary: 'Failed.' });
+  const overview = await session.overview();
+  assert.match(overview, /^http:\/\/127\.0\.0\.1:\d+\/\?t=/);
+  assert.match(
+    overview,
+    new RegExp(`- checkout: completed, failed, 0/2 checks passed, started just now \\(${id}\\)`)
+  );
+  await session.close();
+});
+
+test('a cloud run pulled back before it started still reads', () => {
+  const run = RunSchema.parse({
+    format: 'stuntdouble.run/1',
+    id: 'r',
+    runner: { kind: 'cloud', judged: true },
+    status: 'running',
+    url: 'https://example.com',
+    started_at: null,
+    finished_at: null,
+    checklist: 'c',
+    actor: 'a',
+    checklist_snapshot: { checks: [] },
+    results: [],
+    score: null,
+    summary: null,
+    cloud: null,
+  });
+  assert.equal(run.started_at, null);
+});
+
+test('the CLI refuses a Node older than 22.18', () => {
+  assert.equal(nodeSupported('22.17.1'), false);
+  assert.equal(nodeSupported('20.19.0'), false);
+  assert.equal(nodeSupported('22.18.0'), true);
+  assert.equal(nodeSupported('24.1.0'), true);
 });
