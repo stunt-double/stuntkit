@@ -19,8 +19,8 @@ permissions:
   # trusted publishing and provenance) when releases move to npm.
   packages: write
   # `stuntdouble` (packages/local) is the one package on npm, published by
-  # trusted publishing with provenance; this lets npm exchange the job's OIDC
-  # token. The other packages are unaffected.
+  # scripts/publish-npm.mjs with npm trusted publishing and provenance; this
+  # lets npm exchange the job's OIDC token. The other packages are unaffected.
   id-token: write
 
 jobs:
@@ -41,6 +41,8 @@ jobs:
           cache: pnpm
           registry-url: https://npm.pkg.github.com
           scope: '@stunt-double'
+      # npm 11.5.1 or later does the OIDC exchange for trusted publishing.
+      - run: npm install -g npm@11.19.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm type-check
