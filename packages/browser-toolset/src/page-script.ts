@@ -303,7 +303,7 @@ const SCRIPT = String.raw`
           return { ok: true, description: 'Selected "' + clean(o.text) + '"' };
         }
       }
-      return { ok: false, error: 'No option "' + value + '" in ' + ref + '.' };
+      return { ok: false, error: 'No option in ' + ref + ' matches that value. Read the page to see its options.' };
     }
     if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {
       var on = value === true || String(value).toLowerCase() === 'true' || String(value).toLowerCase() === 'checked';
@@ -316,7 +316,8 @@ const SCRIPT = String.raw`
       el.focus();
       setter.call(el, String(value));
       fire('input'); fire('change');
-      return { ok: true, description: 'Set ' + ref + ' to "' + String(value).slice(0, 80) + '"' };
+      // The value can be a password or a code, and results are recorded, so only its length.
+      return { ok: true, description: 'Set ' + ref + ' (' + String(value).length + ' characters)' };
     }
     if (el.isContentEditable) {
       el.focus(); el.textContent = String(value); fire('input');
