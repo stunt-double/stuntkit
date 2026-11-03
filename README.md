@@ -8,7 +8,7 @@ Open source building blocks for AI agents that use the web. Extracted from [Stun
 
 | Package                                                           | What                                                                                                                                                  |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@stunt-double/browser-toolset`](./packages/browser-toolset)     | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets                    |
+| [`@stuntkit/browser-toolset`](./packages/browser-toolset)         | Browser tools for AI agents over a provider-neutral `BrowserDriver`, with opt-in guards that refuse payments, sign-ups and secrets                    |
 | [`@stunt-double/icons`](./packages/icons)                         | The Continuity icon pack: 235 icons as geometry, SVG files and React components                                                                       |
 | [`@stunt-double/index-methodology`](./packages/index-methodology) | How the Stunt Double Index scores a site for agents: categories, weights, blend and curve, every task and rubric, and the grader's prompt             |
 | [`@stunt-double/localeizer`](./packages/localeizer)               | Whole-word American, British and Canadian spelling localisation                                                                                       |

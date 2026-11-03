@@ -1,14 +1,14 @@
 ---
 name: stunt-double-browser-toolset
-description: Use when building an AI agent that drives a real browser with @stunt-double/browser-toolset, on Anthropic's browser use toolset (BrowserToolsetExecutor) or on any model's function calling (DirectBrowserTools, the Vercel AI SDK, OpenAI, Gemini), including writing the agent loop, implementing BrowserDriver over Playwright, Puppeteer, Stagehand, a hosted browser or CDP, turning on the payment, sign-up and secret guards, blocking payment providers at the network layer, pruning screenshots from long transcripts, and debugging an agent that halts, loops or cannot see a control.
+description: Use when building an AI agent that drives a real browser with @stuntkit/browser-toolset, on Anthropic's browser use toolset (BrowserToolsetExecutor) or on any model's function calling (DirectBrowserTools, the Vercel AI SDK, OpenAI, Gemini), including writing the agent loop, implementing BrowserDriver over Playwright, Puppeteer, Stagehand, a hosted browser or CDP, turning on the payment, sign-up and secret guards, blocking payment providers at the network layer, pruning screenshots from long transcripts, and debugging an agent that halts, loops or cannot see a control.
 ---
 
-# Browser toolset (`@stunt-double/browser-toolset`)
+# Browser toolset (`@stuntkit/browser-toolset`)
 
 Browser tools for agents over a provider-neutral `BrowserDriver`. No tool calls a model: pages are read as an accessibility-style tree with `ref_N` handles and acted on by ref or screenshot coordinate, so the agent's own model does the reasoning. No runtime dependencies; `@anthropic-ai/sdk` and `ai` are optional peers used for types only.
 
 ```sh
-pnpm add @stunt-double/browser-toolset
+pnpm add @stuntkit/browser-toolset
 ```
 
 Releases are on GitHub Packages: the project `.npmrc` needs `@stunt-double:registry=https://npm.pkg.github.com` and a token with `read:packages`. Node 20+, or any runtime with `Buffer` (Workers with `nodejs_compat`, Bun, Deno).

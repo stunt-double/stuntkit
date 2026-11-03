@@ -2,7 +2,7 @@
 
 **Web Agent Optimiser.** A small drop-in script that makes existing and legacy websites work for AI agents, without a rebuild.
 
-Agents read a page through its accessibility tree (Playwright's aria snapshot, CDP's Accessibility domain, `read_page` in [`@stunt-double/browser-toolset`](../browser-toolset)) and through screenshots. Legacy pages fail the first. A `<div onclick>` is not a button, an icon link has no name, and a field's label is the table cell beside it. To an agent, those controls are missing or unnamed. WAO repairs them in place:
+Agents read a page through its accessibility tree (Playwright's aria snapshot, CDP's Accessibility domain, `read_page` in [`@stuntkit/browser-toolset`](../browser-toolset)) and through screenshots. Legacy pages fail the first. A `<div onclick>` is not a button, an icon link has no name, and a field's label is the table cell beside it. To an agent, those controls are missing or unnamed. WAO repairs them in place:
 
 Before (Chromium's aria snapshot of a legacy page):
 
@@ -120,7 +120,7 @@ console.log(await page.locator('body').ariaSnapshot()); // The repaired tree.
 const { changes, issues } = await page.evaluate(() => window.wao!.report());
 ```
 
-A report is plain data: each entry's `element` is a non-enumerable property, so it stays in the page and the rest serialises. With Puppeteer, pass the same combined content to `page.evaluateOnNewDocument`. Over raw CDP, pass it as the `source` of `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stunt-double/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
+A report is plain data: each entry's `element` is a non-enumerable property, so it stays in the page and the rest serialises. With Puppeteer, pass the same combined content to `page.evaluateOnNewDocument`. Over raw CDP, pass it as the `source` of `Page.addScriptToEvaluateOnNewDocument`. Pair it with [`@stuntkit/browser-toolset`](../browser-toolset), whose `read_page` reads the same tree.
 
 With Playwright MCP, write the options and the script into one file and pass it as an init script:
 

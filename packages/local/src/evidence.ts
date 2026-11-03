@@ -10,7 +10,7 @@
 // verdict has to cite something that is on the page right now. A failure may
 // cite an absence, so for a failure the search is only for the screenshot.
 
-import type { DriverPage } from '@stunt-double/browser-toolset/driver';
+import type { DriverPage } from '@stuntkit/browser-toolset/driver';
 
 import type { Locator } from './files.ts';
 

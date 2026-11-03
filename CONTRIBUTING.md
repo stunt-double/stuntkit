@@ -27,7 +27,7 @@ pnpm format        # Prettier
 pnpm build         # tsup: ESM plus .d.ts into each package's dist/
 ```
 
-Run one package with `pnpm --filter @stunt-double/browser-toolset test`.
+Run one package with `pnpm --filter @stuntkit/browser-toolset test`.
 
 Conventions:
 
@@ -82,9 +82,9 @@ Then, in the monorepo, override the package with a link to your checkout. pnpm 1
 ```yaml
 # stuntdouble/pnpm-workspace.yaml (do not commit)
 overrides:
-  '@stunt-double/browser-toolset': link:../stuntkit/packages/browser-toolset
+  '@stuntkit/browser-toolset': link:../stuntkit/packages/browser-toolset
 ```
 
-Run `pnpm install` in the monorepo. The link resolves through the package's `exports`, so either build here once and keep it fresh with `pnpm --filter @stunt-double/browser-toolset exec tsup --watch`, or, in a monorepo project whose TypeScript and runtime can read source, add the `@stunt-double/source` condition (`customConditions` in its `tsconfig.json`, `--conditions=@stunt-double/source` for Node) to use the TypeScript source directly.
+Run `pnpm install` in the monorepo. The link resolves through the package's `exports`, so either build here once and keep it fresh with `pnpm --filter @stuntkit/browser-toolset exec tsup --watch`, or, in a monorepo project whose TypeScript and runtime can read source, add the `@stunt-double/source` condition (`customConditions` in its `tsconfig.json`, `--conditions=@stunt-double/source` for Node) to use the TypeScript source directly.
 
 Remove the override and run `pnpm install` again before committing in the monorepo; once the change is released, bump the version there instead.

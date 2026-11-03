@@ -5,7 +5,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { DIRECT_TOOL_SPECS } from '@stunt-double/browser-toolset/direct-tools';
+import { DIRECT_TOOL_SPECS } from '@stuntkit/browser-toolset/direct-tools';
 import { dirname } from 'node:path';
 import { z } from 'zod';
 

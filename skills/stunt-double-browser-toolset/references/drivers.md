@@ -1,6 +1,6 @@
 # Implementing `BrowserDriver`
 
-Types come from `@stunt-double/browser-toolset/driver`. The tools use only:
+Types come from `@stuntkit/browser-toolset/driver`. The tools use only:
 
 - `driver.context`: `activePage()`, `pages()`, `newPage(url?)`, `setActivePage(page)`. `activePage` and `pages` may be sync or async.
 - On `DriverPage`: `id`, `goto`, `goBack`, `goForward`, `url`, `title`, `screenshot`, `evaluate` (always a **string** expression), `click(x, y, { button, clickCount })`, `hover`, `scroll(x, y, dx, dy)`, `dragAndDrop`, `type` (into the focused element), `keyPress` (one key or chord in Playwright spelling, `Control+A`, `PageDown`), `waitForTimeout`, `waitForLoadState` and `close`.

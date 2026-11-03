@@ -10,9 +10,9 @@
 import {
   DirectBrowserTools,
   type DirectBrowserToolsOptions,
-} from '@stunt-double/browser-toolset/direct-tools';
-import { isPrivateHost, redactInput } from '@stunt-double/browser-toolset/executor';
-import { hostMatchesDomain, INDEX_SESSION_SAFETY } from '@stunt-double/browser-toolset/safety';
+} from '@stuntkit/browser-toolset/direct-tools';
+import { isPrivateHost, redactInput } from '@stuntkit/browser-toolset/executor';
+import { hostMatchesDomain, INDEX_SESSION_SAFETY } from '@stuntkit/browser-toolset/safety';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';

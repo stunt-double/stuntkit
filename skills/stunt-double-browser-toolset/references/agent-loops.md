@@ -11,8 +11,8 @@ import {
   BrowserToolsetExecutor,
   INDEX_SESSION_SAFETY,
   isBrowserToolsetCall,
-} from '@stunt-double/browser-toolset';
-import { pruneAnthropicImages } from '@stunt-double/browser-toolset/prune';
+} from '@stuntkit/browser-toolset';
+import { pruneAnthropicImages } from '@stuntkit/browser-toolset/prune';
 import { chromium } from 'playwright';
 
 import { PlaywrightDriver } from './playwright-driver.ts';
@@ -68,8 +68,8 @@ import {
   DirectBrowserTools,
   type DirectToolResult,
   INDEX_SESSION_SAFETY,
-} from '@stunt-double/browser-toolset';
-import { pruneAiSdkImages } from '@stunt-double/browser-toolset/prune';
+} from '@stuntkit/browser-toolset';
+import { pruneAiSdkImages } from '@stuntkit/browser-toolset/prune';
 import { generateText, jsonSchema, type JSONSchema7, stepCountIs, tool, type ToolSet } from 'ai';
 
 const VIEWPORT = { width: 1280, height: 800 };
@@ -122,7 +122,7 @@ const answer = done ? (done.input as { message?: string }).message : result.text
 `DIRECT_TOOL_SPECS` entries are `{ name, description, parameters }` with a plain JSON Schema object, so they map one to one onto most function-calling formats:
 
 ```ts
-import { DIRECT_TOOL_SPECS, DirectBrowserTools } from '@stunt-double/browser-toolset/direct-tools';
+import { DIRECT_TOOL_SPECS, DirectBrowserTools } from '@stuntkit/browser-toolset/direct-tools';
 
 const functions = DIRECT_TOOL_SPECS.map((s) => ({
   type: 'function' as const,
@@ -153,7 +153,7 @@ Gemini takes the same specs as `functionDeclarations`. The parameters are flat s
 import {
   STEP_BUDGET_FALLBACK_OUTPUT,
   STEP_BUDGET_FINAL_NOTE,
-} from '@stunt-double/browser-toolset/direct-tools';
+} from '@stuntkit/browser-toolset/direct-tools';
 
 // After the last allowed step, one more call that can only answer:
 const final = await generateText({

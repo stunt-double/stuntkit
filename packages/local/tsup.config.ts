@@ -10,7 +10,7 @@ export default defineConfig({
   clean: true,
   // browser-toolset is on GitHub Packages, not npm: bundled from its source, so
   // installing this package needs nothing from there.
-  noExternal: ['@stunt-double/browser-toolset'],
+  noExternal: ['@stuntkit/browser-toolset'],
   esbuildOptions(options) {
     options.conditions = ['@stunt-double/source'];
   },

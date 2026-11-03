@@ -6,7 +6,7 @@
 // Policy line: this is the only importer of model.ts. It is reached from the
 // Studio (studio.ts) and `stuntdouble run` (cli.ts), never from mcp.ts.
 
-import { DIRECT_TOOL_SPECS } from '@stunt-double/browser-toolset/direct-tools';
+import { DIRECT_TOOL_SPECS } from '@stuntkit/browser-toolset/direct-tools';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';

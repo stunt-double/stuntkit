@@ -1,19 +1,19 @@
 ---
 name: stuntkit
-description: Use when deciding which StuntKit package (@stunt-double/browser-toolset, wao, localeizer, icons) fits a task, when installing any @stunt-double package from GitHub Packages (.npmrc, tokens, CI), or when combining them, for example a browser agent that also repairs legacy pages, or a site made ready for AI agents and checked by one. Routes to the per-package skills.
+description: Use when deciding which StuntKit package (@stuntkit/browser-toolset, wao, localeizer, icons) fits a task, when installing any @stunt-double package from GitHub Packages (.npmrc, tokens, CI), or when combining them, for example a browser agent that also repairs legacy pages, or a site made ready for AI agents and checked by one. Routes to the per-package skills.
 ---
 
 # StuntKit
 
 Open source building blocks for AI agents that use the web, extracted from [Stunt Double](https://stuntdouble.io). Four independent packages with no runtime dependencies; use one or any combination.
 
-| Task                                                               | Package                         | Skill                          |
-| ------------------------------------------------------------------ | ------------------------------- | ------------------------------ |
-| An agent that drives a real browser (any model)                    | `@stunt-double/browser-toolset` | `stunt-double-browser-toolset` |
-| A site, legacy page or web app that agents struggle to read or use | `@stunt-double/wao`             | `stunt-double-wao`             |
-| American, British and Canadian spelling from one source            | `@stunt-double/localeizer`      | `stunt-double-localeizer`      |
-| Icons (lucide-compatible) or AI provider and coding agent logos    | `@stunt-double/icons`           | `stunt-double-icons`           |
-| Make a site agent-ready and prove it with an agent                 | wao + browser-toolset           | `stuntkit-agent-ready-site`    |
+| Task                                                               | Package                     | Skill                          |
+| ------------------------------------------------------------------ | --------------------------- | ------------------------------ |
+| An agent that drives a real browser (any model)                    | `@stuntkit/browser-toolset` | `stunt-double-browser-toolset` |
+| A site, legacy page or web app that agents struggle to read or use | `@stunt-double/wao`         | `stunt-double-wao`             |
+| American, British and Canadian spelling from one source            | `@stunt-double/localeizer`  | `stunt-double-localeizer`      |
+| Icons (lucide-compatible) or AI provider and coding agent logos    | `@stunt-double/icons`       | `stunt-double-icons`           |
+| Make a site agent-ready and prove it with an agent                 | wao + browser-toolset       | `stuntkit-agent-ready-site`    |
 
 Load the matching skill before writing code; each has references for the details.
 

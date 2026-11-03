@@ -1,8 +1,8 @@
 {
-  "name": "@stunt-double/browser-toolset-examples",
+  "name": "@stuntkit/browser-toolset-examples",
   "version": "0.0.0",
   "private": true,
-  "description": "Runnable examples for @stunt-double/browser-toolset",
+  "description": "Runnable examples for @stuntkit/browser-toolset",
   "type": "module",
   "scripts": {
     "type-check": "tsc -p tsconfig.json",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.78",
     "@anthropic-ai/sdk": "0.133.0",
-    "@stunt-double/browser-toolset": "workspace:*",
+    "@stuntkit/browser-toolset": "workspace:*",
     "ai": "^7.0.137",
     "playwright": "^1.64.0",
     "zod": "^4.6.5"

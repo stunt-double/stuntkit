@@ -15,7 +15,7 @@ import type {
   OAuthClientMetadata,
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
-import { isPrivateHost } from '@stunt-double/browser-toolset/executor';
+import { isPrivateHost } from '@stuntkit/browser-toolset/executor';
 import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { basename, join } from 'node:path';
