@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const NPM_PACKAGES = ['packages/local'];
+const NPM_PACKAGES = ['packages/browser-toolset', 'packages/local'];
 
 const run = (cmd, args, cwd) =>
   execFileSync(cmd, args, { cwd, stdio: ['ignore', 'pipe', 'inherit'] })

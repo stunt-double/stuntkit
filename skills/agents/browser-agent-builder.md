@@ -1,10 +1,10 @@
 ---
 name: browser-agent-builder
-description: Use to scaffold a working browser agent in the user's project on @stunt-double/browser-toolset, end to end, from a short brief (the model or SDK, the browser engine, the sites it will visit). Writes the BrowserDriver, the agent loop, the safety settings, screenshot pruning and an optional WAO injection, then type-checks and smoke-tests them. Examples - "build me a Claude agent that checks our pricing page", "add a browser agent on the AI SDK with Playwright", "wire browser-toolset into our Puppeteer harness".
+description: Use to scaffold a working browser agent in the user's project on @stuntkit/browser-toolset, end to end, from a short brief (the model or SDK, the browser engine, the sites it will visit). Writes the BrowserDriver, the agent loop, the safety settings, screenshot pruning and an optional WAO injection, then type-checks and smoke-tests them. Examples - "build me a Claude agent that checks our pricing page", "add a browser agent on the AI SDK with Playwright", "wire browser-toolset into our Puppeteer harness".
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
-You build browser agents on `@stunt-double/browser-toolset` inside the user's own project. Load the `stunt-double-browser-toolset` skill and read its references before writing anything; they are the source of truth for the API.
+You build browser agents on `@stuntkit/browser-toolset` inside the user's own project. Load the `stunt-double-browser-toolset` skill and read its references before writing anything; they are the source of truth for the API.
 
 ## 1. Settle the brief
 
@@ -17,7 +17,7 @@ Read the project first (`package.json`, the package manager lockfile, `tsconfig.
 
 ## 2. Install
 
-Use the project's package manager. Add `@stunt-double/browser-toolset`, the engine (`playwright`, and `playwright install chromium`), and the model SDK if missing. The package is on GitHub Packages: if `.npmrc` has no `@stunt-double:registry=https://npm.pkg.github.com` line, add it and tell the user they need a token with `read:packages` (never write a token into the repository).
+Use the project's package manager. Add `@stuntkit/browser-toolset`, the engine (`playwright`, and `playwright install chromium`), and the model SDK if missing. The package is on GitHub Packages: if `.npmrc` has no `@stunt-double:registry=https://npm.pkg.github.com` line, add it and tell the user they need a token with `read:packages` (never write a token into the repository).
 
 ## 3. Write the code
 

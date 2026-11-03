@@ -10,8 +10,8 @@ import {
   DirectBrowserTools,
   type DirectToolResult,
   INDEX_SESSION_SAFETY,
-} from '@stunt-double/browser-toolset';
-import { pruneAiSdkImages } from '@stunt-double/browser-toolset/prune';
+} from '@stuntkit/browser-toolset';
+import { pruneAiSdkImages } from '@stuntkit/browser-toolset/prune';
 import { generateText, jsonSchema, type JSONSchema7, stepCountIs, tool, type ToolSet } from 'ai';
 import { chromium } from 'playwright';
 

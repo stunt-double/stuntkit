@@ -11,10 +11,10 @@ From the repository root:
 
 ```sh
 pnpm install
-pnpm --filter @stunt-double/browser-toolset-examples exec playwright install chromium
+pnpm --filter @stuntkit/browser-toolset-examples exec playwright install chromium
 export ANTHROPIC_API_KEY=...
-pnpm --filter @stunt-double/browser-toolset-examples anthropic "What is the heading on https://example.com?"
-pnpm --filter @stunt-double/browser-toolset-examples ai-sdk "What is the heading on https://example.com?"
+pnpm --filter @stuntkit/browser-toolset-examples anthropic "What is the heading on https://example.com?"
+pnpm --filter @stuntkit/browser-toolset-examples ai-sdk "What is the heading on https://example.com?"
 ```
 
 The scripts run the TypeScript directly (Node 22.18 or later strips the types) against the package source, through the `@stunt-double/source` export condition, so there is no build step. CI type-checks the examples but does not run them.

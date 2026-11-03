@@ -17,8 +17,8 @@ import type {
   DriverPage,
   DriverScreenshotOptions,
   DriverWaitForSelectorOptions,
-} from '@stunt-double/browser-toolset/driver';
-import { hostMatchesDomain } from '@stunt-double/browser-toolset/safety';
+} from '@stuntkit/browser-toolset/driver';
+import { hostMatchesDomain } from '@stuntkit/browser-toolset/safety';
 import { chromium, type BrowserContext, type Page, type Request } from 'playwright-core';
 
 /** Playwright's `Page` objects are stable, so a WeakMap gives each tab a lasting id. */

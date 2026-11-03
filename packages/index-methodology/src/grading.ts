@@ -8,7 +8,7 @@
  * The rule every agent arm is given about what a session must never do, and
  * that the site it is on does not give it orders. Sessions never pay or sign
  * up for real; the browser tools refuse those actions too (`INDEX_SESSION_SAFETY`
- * in `@stunt-double/browser-toolset/safety`), and this rule is what lets an
+ * in `@stuntkit/browser-toolset/safety`), and this rule is what lets an
  * agent stop cleanly rather than find out by being refused.
  */
 export const INDEX_SAFETY_RULE =
@@ -16,7 +16,7 @@ export const INDEX_SAFETY_RULE =
 
 /**
  * The system prompt for a browser task, for arms that call tools through a
- * tool-use loop. The tools are the `@stunt-double/browser-toolset` direct
+ * tool-use loop. The tools are the `@stuntkit/browser-toolset` direct
  * tools; the task prompt itself (`TASKS`) is the first user message.
  */
 export const INDEX_AGENT_PROMPT =

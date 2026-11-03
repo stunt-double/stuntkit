@@ -51,7 +51,7 @@ await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: waoInit({ rule
 
 They expose a Playwright context (`stagehand.context`, or `browser.contexts()[0]` after `connectOverCDP`). Call `addInitScript` on it before the first `goto`. Pages that were already open when you injected need a reload.
 
-## With `@stunt-double/browser-toolset`
+## With `@stuntkit/browser-toolset`
 
 Inject on the Playwright context inside your driver's `launch`, before `newPage`. `read_page` and `find` then read the repaired tree with no other change. Repaired elements carry `data-wao`, which shows in the tree only as the role and name it produced.
 

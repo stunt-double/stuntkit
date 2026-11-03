@@ -1,11 +1,11 @@
 ---
 name: stuntkit-agent-ready-site
-description: Use when asked to make a website or web app work for AI agents (agent-ready, agent-friendly, "agents can't use our site", browser-use or computer-use agents failing on it), or to audit how an agent sees a site. A workflow over @stunt-double/wao and @stunt-double/browser-toolset - measure the accessibility tree an agent reads, repair it with WAO and rules, fix the source where you can, and prove the result with a real agent task.
+description: Use when asked to make a website or web app work for AI agents (agent-ready, agent-friendly, "agents can't use our site", browser-use or computer-use agents failing on it), or to audit how an agent sees a site. A workflow over @stunt-double/wao and @stuntkit/browser-toolset - measure the accessibility tree an agent reads, repair it with WAO and rules, fix the source where you can, and prove the result with a real agent task.
 ---
 
 # Making a site agent-ready
 
-Agents read a page through its accessibility tree and screenshots. A control with no role or name is, to an agent, missing. This workflow finds those gaps, repairs them, and proves the repair with an agent. It uses `@stunt-double/wao` (see `stunt-double-wao`) and, for the proof, `@stunt-double/browser-toolset` (see `stunt-double-browser-toolset`).
+Agents read a page through its accessibility tree and screenshots. A control with no role or name is, to an agent, missing. This workflow finds those gaps, repairs them, and proves the repair with an agent. It uses `@stunt-double/wao` (see `stunt-double-wao`) and, for the proof, `@stuntkit/browser-toolset` (see `stunt-double-browser-toolset`).
 
 Work on the user's own site, or one they are authorised to test. Turn on `INDEX_SESSION_SAFETY` for any agent run on a site with real payments or sign-ups.
 

@@ -4,7 +4,7 @@
 
 ## Packages touched
 
-- [ ] `@stunt-double/browser-toolset`
+- [ ] `@stuntkit/browser-toolset`
 - [ ] `@stunt-double/icons`
 - [ ] `@stunt-double/index-methodology`
 - [ ] `@stunt-double/localeizer`

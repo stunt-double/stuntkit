@@ -20,7 +20,7 @@ A prompt saying "never pay or sign up" is a request the model may ignore. The gu
 The guards read the DOM, so a page built to disguise a payment form can get past them. Block payment providers too:
 
 ```ts
-import { paymentBlocklistFor } from '@stunt-double/browser-toolset/safety';
+import { paymentBlocklistFor } from '@stuntkit/browser-toolset/safety';
 
 const target = new URL(startUrl).hostname;
 await driver.context.setDomainPolicy({ blockedDomains: paymentBlocklistFor(target) });
