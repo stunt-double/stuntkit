@@ -8,6 +8,7 @@
 // rather than a setting silently ignored.
 
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { appendFile, lstat, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join, sep } from 'node:path';
 import { z } from 'zod';
@@ -72,7 +73,7 @@ export const ActorSchema = z.strictObject({
       })
     )
     .default([]),
-  /** Keep this actor's cookies between runs, in ~/.stuntdouble/profiles/<actor>. */
+  /** Keep this actor's cookies between runs, in ~/.stuntdouble/profiles/<project>/<actor>. */
   persist_login: z.boolean().default(false),
   cloud,
 });
@@ -164,7 +165,8 @@ export const RunSchema = z.object({
   status: z.enum(RUN_STATUSES),
   pid: z.number().optional(),
   url: z.string(),
-  started_at: z.string(),
+  // A run pulled back from the cloud may not have started.
+  started_at: z.string().nullable(),
   finished_at: z.string().nullable(),
   checklist: z.string(),
   actor: z.string(),
@@ -201,8 +203,14 @@ export async function readJson<S extends z.ZodType>(
   let raw: string;
   try {
     raw = await readFile(path, 'utf8');
-  } catch {
-    throw new Error(`${label}: file not found`);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    throw new Error(
+      `${label}: ${code === 'ENOENT' ? 'file not found' : `could not read (${code})`}`,
+      {
+        cause: err,
+      }
+    );
   }
   let data: unknown;
   try {
@@ -250,20 +258,68 @@ async function refuseLinks(path: string): Promise<void> {
   }
 }
 
-/** Whether a process is still running. EPERM means it is, under another user. */
+/**
+ * Whether a process is still running. EPERM counts as gone: a run is always the
+ * person's own process, so a pid owned by another user is a reused one.
+ */
 export function isAlive(pid: number | undefined): boolean {
   if (!pid) return false;
   try {
     process.kill(pid, 0);
     return true;
-  } catch (err) {
-    return (err as NodeJS.ErrnoException).code === 'EPERM';
+  } catch {
+    return false;
   }
 }
 
+/**
+ * While a run is going, `.live/running/<id>` holds its pid. `.live/` is never
+ * committed, so a run.json cloned or left by a crash has no marker, and a pid
+ * that happens to be reused does not make it look live.
+ */
+export const runningMarker = (root: string, id: string): string =>
+  join(root, '.live', 'running', id);
+
+export function isLive(root: string, run: Run): boolean {
+  let marker: string;
+  try {
+    marker = readFileSync(runningMarker(root, run.id), 'utf8').trim();
+  } catch {
+    return false;
+  }
+  return marker === String(run.pid) && isAlive(run.pid);
+}
+
 /** A run left `running` by a process that has gone is an interrupted run. */
-export const effectiveStatus = (run: Run): Run['status'] =>
-  run.status === 'running' && !isAlive(run.pid) ? 'interrupted' : run.status;
+export const effectiveStatus = (root: string, run: Run): Run['status'] =>
+  run.status === 'running' && !isLive(root, run) ? 'interrupted' : run.status;
+
+/** Passed over scored checks, as the scorer counts them: informational and skipped left out. */
+export function tallyRun(run: Pick<Run, 'checklist_snapshot' | 'results'>): {
+  passed: number;
+  total: number;
+} {
+  const status = new Map(run.results.map((r) => [r.check, r.status]));
+  const scored = run.checklist_snapshot.checks.filter(
+    (c) => c.type !== 'informational' && status.get(c.key) !== 'skipped'
+  );
+  return {
+    passed: scored.filter((c) => status.get(c.key) === 'passed').length,
+    total: scored.length,
+  };
+}
+
+/** One run, by the folder name it was given. A name that is not one is a miss. */
+export async function readRun(root: string, id: string): Promise<RunEntry | null> {
+  if (!/^[\w.-]+$/.test(id) || id.startsWith('.')) return null;
+  const path = join(root, 'runs', id, 'run.json');
+  if (!(await lstat(join(root, 'runs', id)).catch(() => null))) return null;
+  try {
+    return { id, run: await readJson(path, RunSchema) };
+  } catch (err) {
+    return { id, error: (err as Error).message };
+  }
+}
 
 export type RunEntry = { id: string; run: Run } | { id: string; error: string };
 

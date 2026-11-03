@@ -19,6 +19,8 @@ export const MAX_LOCATOR_TEXT = 120;
 const MAX_LOCATOR_SELECTOR = 400;
 /** Lets lazy images and sticky headers settle after the scroll. */
 const SETTLE_MS = 350;
+/** A hung page must not hold the run: every tool call waits on this one. */
+const FIND_TIMEOUT_MS = 5_000;
 
 type Query = { selector: string | null; text: string | null };
 export type FoundVia = 'selector' | 'text' | null;
@@ -36,9 +38,19 @@ export function cleanLocator(locator: Locator | undefined): Query {
  * Find the evidence and scroll it to the centre. Never throws: a page that is
  * navigating or a selector the page rejects is a miss, not a lost verdict.
  */
-export async function focusEvidence(page: DriverPage, query: Query): Promise<FoundVia> {
+export async function focusEvidence(
+  page: DriverPage,
+  query: Query,
+  timeoutMs = FIND_TIMEOUT_MS
+): Promise<FoundVia> {
   if (!query.selector && !query.text) return null;
-  const via = await page.evaluate(findAndScroll, query).catch(() => null);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const via = await Promise.race([
+    page.evaluate(findAndScroll, query),
+    new Promise<null>((ok) => (timer = setTimeout(() => ok(null), timeoutMs))),
+  ])
+    .catch(() => null)
+    .finally(() => clearTimeout(timer));
   if (via) await page.waitForTimeout(SETTLE_MS).catch(() => {});
   return via;
 }
