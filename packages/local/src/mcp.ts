@@ -19,14 +19,24 @@ const reply = ({ text, image, isError }: ToolOutput): CallToolResult => ({
   ...(isError ? { isError: true } : {}),
 });
 
-/** Run a tool, turning a thrown error into a result the model reads and acts on. */
-async function attempt(work: () => Promise<string | ToolOutput>): Promise<CallToolResult> {
-  try {
-    const out = await work();
-    return reply(typeof out === 'string' ? { text: out } : out);
-  } catch (err) {
-    return reply({ text: (err as Error).message, isError: true });
-  }
+let queue: Promise<unknown> = Promise.resolve();
+
+/**
+ * Run a tool, turning a thrown error into a result the model reads and acts on.
+ * Calls can arrive at once (two verdicts in one turn) but share one page and
+ * one run.json, so they take turns.
+ */
+function attempt(work: () => Promise<string | ToolOutput>): Promise<CallToolResult> {
+  const run = queue.then(async () => {
+    try {
+      const out = await work();
+      return reply(typeof out === 'string' ? { text: out } : out);
+    } catch (err) {
+      return reply({ text: (err as Error).message, isError: true });
+    }
+  });
+  queue = run;
+  return run;
 }
 
 type PropertySpec = { type: string; enum?: string[]; description?: string };
@@ -64,7 +74,7 @@ export function createServer(session: LocalSession): McpServer {
     'start_run',
     {
       description:
-        "Start a local run of a checklist from .stuntdouble/checklists/<checklist>.json: opens a fresh Chrome at the checklist's URL, and returns the viewer link, the actor's brief and the checks to judge. If a file is invalid, returns each field to fix. With resume, continues the newest interrupted or stopped run of that checklist, judging only the checks without a verdict.",
+        "Start a local run of a checklist from .stuntdouble/checklists/<checklist>.json: opens a fresh Chrome at the checklist's URL, and returns the viewer link, the actor's brief and the checks to judge. If a file is invalid, returns each field to fix. With resume, continues the run still open in this session, or else the newest interrupted or stopped run of that checklist, judging only the checks without a verdict.",
       inputSchema: {
         checklist: z.string().describe('The checklist slug, e.g. "checkout".'),
         resume: z.boolean().optional().describe('Continue the last unfinished run instead.'),

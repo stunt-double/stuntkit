@@ -1,8 +1,10 @@
 // A `BrowserDriver` over Playwright, adapted from the browser toolset's example
 // (`packages/browser-toolset/examples/src/playwright-driver.ts`), as its header
-// invites. The changes: playwright-core instead of playwright, and a persistent
+// invites. The changes: playwright-core instead of playwright, a persistent
 // context on a profile directory, so a run gets the person's own Chrome with a
-// fresh profile (or the actor's kept one), never their everyday profile.
+// fresh profile (or the actor's kept one), never their everyday profile, and the
+// run's rule on private addresses applied to every navigation, not only the
+// navigate tool's.
 
 import type {
   BrowserDriver,
@@ -17,7 +19,7 @@ import type {
   DriverWaitForSelectorOptions,
 } from '@stunt-double/browser-toolset/driver';
 import { hostMatchesDomain } from '@stunt-double/browser-toolset/safety';
-import { chromium, type BrowserContext, type Page } from 'playwright-core';
+import { chromium, type BrowserContext, type Page, type Request } from 'playwright-core';
 
 /** Playwright's `Page` objects are stable, so a WeakMap gives each tab a lasting id. */
 const pageIds = new WeakMap<Page, string>();
@@ -181,11 +183,19 @@ export type LaunchOptions = {
   viewport: { width: number; height: number };
   touch: boolean;
   locale?: string;
+  /** Why the browser may not open `href`, or null when it may. */
+  refuseNavigation: (href: string) => string | null;
 };
 
-export class PlaywrightDriver implements BrowserDriver {
+export type LocalDriver = BrowserDriver & {
+  /** Why the browser refused to open a page since the last call, if it did; reading it resets it. */
+  takeRefusal(): string | null;
+};
+
+export class PlaywrightDriver implements LocalDriver {
   readonly context: PlaywrightContext;
   private readonly browserContext: BrowserContext;
+  private refusal: string | null = null;
 
   private constructor(context: BrowserContext) {
     this.browserContext = context;
@@ -219,8 +229,35 @@ export class PlaywrightDriver implements BrowserDriver {
       }
     }
     const driver = new PlaywrightDriver(context);
+    // The navigate tool checks its own URL, but links, scripts, popups and frames
+    // navigate without it, so every navigation is checked here too. A refusal in
+    // a tab's main frame is kept for the next tool result to explain.
+    const refuse = (request: Request) => {
+      const reason = request.isNavigationRequest() ? options.refuseNavigation(request.url()) : null;
+      if (reason && !request.frame().parentFrame()) driver.refusal = reason;
+      return reason;
+    };
+    await context.route('**/*', (route) =>
+      refuse(route.request()) ? route.abort('blockedbyclient') : route.fallback()
+    );
+    // A route never sees a redirect's later hops: Playwright sends them on before
+    // any handler runs. So a frame redirected somewhere refused goes to about:blank.
+    context.on('request', (request) => {
+      if (request.redirectedFrom() && refuse(request)) {
+        request
+          .frame()
+          .goto('about:blank')
+          .catch(() => {});
+      }
+    });
     if (context.pages().length === 0) await driver.context.newPage();
     return driver;
+  }
+
+  takeRefusal(): string | null {
+    const refusal = this.refusal;
+    this.refusal = null;
+    return refusal;
   }
 
   /** Instruction-style actions need a model of their own. Nothing here calls them. */

@@ -27,20 +27,32 @@ const PKG = fileURLToPath(new URL('..', import.meta.url));
 const PAGES: Record<string, string> = {
   '/': `<!doctype html><title>Mug Shop</title>
     <header><h1>Mug Shop</h1><input type="search" placeholder="Search mugs"></header>
-    <main style="height: 3000px"><a href="/checkout">Checkout</a></main>
+    <main style="height: 3000px"><a href="/checkout">Checkout</a>
+      <a href="__INTERNAL__">Staff admin</a>
+      <input type="password" aria-label="Password">
+      <div style="display:none">Free shipping on every order</div></main>
     <footer>Prices include GST</footer>`,
   '/checkout': `<!doctype html><title>Checkout</title>
     <h1>Checkout</h1><button id="guest">Continue as guest</button>`,
 };
 
 let site: Server;
+/** Another service on this machine, which the actor must never reach. */
+let internal: Server;
+let internalUrl: string;
 let dir: string;
 let client: Client;
 
 before(async () => {
   execFileSync('pnpm', ['run', 'build'], { cwd: PKG, stdio: 'ignore' });
+  internal = createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' }).end('<title>Admin</title>SECRET-DATA');
+  });
+  await new Promise<void>((ok) => internal.listen(0, '127.0.0.1', ok));
+  internalUrl = `http://127.0.0.1:${(internal.address() as AddressInfo).port}/`;
   site = createServer((req, res) => {
-    const page = PAGES[req.url ?? '/'];
+    if (req.url === '/away') return res.writeHead(302, { Location: internalUrl }).end();
+    const page = PAGES[req.url ?? '/']?.replace('__INTERNAL__', internalUrl);
     res.writeHead(page ? 200 : 404, { 'Content-Type': 'text/html' }).end(page ?? 'Not found');
   });
   await new Promise<void>((ok) => site.listen(0, '127.0.0.1', ok));
@@ -98,6 +110,7 @@ before(async () => {
 after(async () => {
   await client?.close();
   site?.close();
+  internal?.close();
   if (dir) await rm(dir, { recursive: true, force: true });
 });
 
@@ -136,8 +149,31 @@ test('a checklist runs end to end over MCP in headless Chrome', { timeout: 60_00
   assert.match(started.text, /Now on http:\/\/127\.0\.0\.1:\d+\/ \(Mug Shop\)/);
   assert.equal(started.images.length, 0, 'screenshots go to the model only on request');
 
-  assert.match((await call('read_page', { filter: 'all' })).text, /Search mugs/);
+  const read = (await call('read_page', { filter: 'all' })).text;
+  assert.match(read, /Search mugs/);
   assert.equal((await call('screenshot')).images.length, 1);
+  const base = started.text.match(/Now on (http:\/\/127\.0\.0\.1:\d+)\//)![1];
+
+  // A form value can be a password: it reaches the page, never the log.
+  const password = read.match(/textbox "Password"[^\n]*?\b(ref_\d+)/)![1];
+  const filled = await call('form_input', { ref: password, value: 'hunter2-real-password' });
+  assert.doesNotMatch(filled.text, /hunter2/);
+
+  // Other services on this machine stay out of reach, however the browser is
+  // sent there: the viewer and another port on the app's own host included.
+  for (const url of [internalUrl, link!]) {
+    assert.match((await call('navigate', { url })).text, /Navigation refused/, url);
+  }
+  const redirected = await call('navigate', { url: `${base}/away` });
+  assert.equal(redirected.result.isError, true);
+  assert.match(redirected.text, /Navigation refused/);
+  assert.doesNotMatch((await call('get_page_text')).text, /SECRET-DATA/);
+  await call('navigate', { url: `${base}/` });
+  const reread = (await call('read_page', { filter: 'all' })).text;
+  const admin = reread.match(/link "Staff admin"[^\n]*?\b(ref_\d+)/)![1];
+  assert.match((await call('click', { ref: admin })).text, /Navigation refused/);
+  assert.doesNotMatch((await call('get_page_text')).text, /SECRET-DATA/);
+  await call('navigate', { url: `${base}/` });
 
   const uncited = await call('evaluate_check', {
     check: 'search-box',
@@ -148,25 +184,33 @@ test('a checklist runs end to end over MCP in headless Chrome', { timeout: 60_00
   assert.equal(uncited.result.isError, true);
   assert.match(uncited.text, /not visible on the current page/);
 
-  assert.match(
-    (
-      await call('evaluate_check', {
-        check: 'search-box',
-        status: 'passed',
-        evidence: 'A search field reading "Search mugs" sits in the header.',
-        locator: { text: 'Search mugs' },
-      })
-    ).text,
-    /Recorded \[search-box\] as passed/
-  );
-  await call('evaluate_check', {
+  // Text in the page but hidden is not evidence.
+  const hidden = await call('evaluate_check', {
     check: 'free-shipping',
-    status: 'failed',
-    evidence:
-      'Nothing on the home page mentions shipping; the footer only says prices include GST.',
-    locator: { text: 'Prices include GST' },
+    status: 'passed',
+    evidence: 'Free shipping on every order.',
+    locator: { text: 'Free shipping on every order' },
   });
-  const base = started.text.match(/Now on (http:\/\/127\.0\.0\.1:\d+)\//)![1];
+  assert.match(hidden.text, /not visible on the current page/);
+
+  // Two verdicts at once (one turn, two checks) are both recorded.
+  const [search, shipping] = await Promise.all([
+    call('evaluate_check', {
+      check: 'search-box',
+      status: 'passed',
+      evidence: 'A search field reading "Search mugs" sits in the header.',
+      locator: { text: 'Search mugs' },
+    }),
+    call('evaluate_check', {
+      check: 'free-shipping',
+      status: 'failed',
+      evidence:
+        'Nothing on the home page mentions shipping; the footer only says prices include GST.',
+      locator: { text: 'Prices include GST' },
+    }),
+  ]);
+  assert.match(search.text, /Recorded \[search-box\] as passed/);
+  assert.match(shipping.text, /Recorded \[free-shipping\] as failed/);
   await call('navigate', { url: `${base}/checkout` });
   await call('evaluate_check', {
     check: 'guest-checkout',
@@ -192,7 +236,10 @@ test('a checklist runs end to end over MCP in headless Chrome', { timeout: 60_00
     pass_threshold: 70,
     grade: null,
   });
-  const activity = (await readFile(join(runDir, 'activity.jsonl'), 'utf8')).trim().split('\n');
+  const log = await readFile(join(runDir, 'activity.jsonl'), 'utf8');
+  assert.doesNotMatch(log, /hunter2/);
+  assert.doesNotMatch(log, /SECRET-DATA/);
+  const activity = log.trim().split('\n');
   assert.ok(activity.length >= 8, `${activity.length} activity lines`);
   for (const key of ['search-box', 'free-shipping', 'guest-checkout']) {
     const png = await readFile(join(runDir, 'shots', `${key}.png`));

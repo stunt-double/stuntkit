@@ -9,9 +9,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 
-import type { BrowserDriver } from '@stunt-double/browser-toolset/driver';
-
-import { RunSchema } from '../src/files.ts';
+import type { LocalDriver } from '../src/driver.ts';
+import { RunSchema, writeFileAtomic } from '../src/files.ts';
 import { LocalSession, rebase } from '../src/run.ts';
 
 /** A page that shows `visible` and nothing else. */
@@ -40,17 +39,21 @@ function fakeBrowser(visible: string[]) {
   let closed = false;
   const driver = {
     context: { activePage: async () => page, pages: async () => [page] },
+    takeRefusal: () => null,
     close: async () => {
       closed = true;
     },
-  } as unknown as BrowserDriver;
+  } as unknown as LocalDriver;
   return { driver, visited, isClosed: () => closed };
 }
 
 const projects: string[] = [];
 after(() => Promise.all(projects.map((p) => rm(p, { recursive: true, force: true }))));
 
-async function project(checklist: Record<string, unknown> = {}): Promise<string> {
+async function project(
+  checklist: Record<string, unknown> = {},
+  actor: Record<string, unknown> = {}
+): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'stuntdouble-run-'));
   projects.push(dir);
   const sd = join(dir, '.stuntdouble');
@@ -63,7 +66,12 @@ async function project(checklist: Record<string, unknown> = {}): Promise<string>
   );
   await writeFile(
     join(sd, 'actors', 'shopper.json'),
-    json({ name: 'First-time shopper', description: 'New to the site', persist_login: false })
+    json({
+      name: 'First-time shopper',
+      description: 'New to the site',
+      persist_login: false,
+      ...actor,
+    })
   );
   await writeFile(
     join(sd, 'checklists', 'checkout.json'),
@@ -122,6 +130,52 @@ test('start_run names every field to fix in an invalid checklist', async () => {
     return true;
   });
   await session.close();
+});
+
+test('start_run refuses an actor the hosted inputs would refuse', async () => {
+  const dir = await project(
+    {},
+    {
+      system_prompt: 'x'.repeat(1001),
+      knowledge: [{ title: 't'.repeat(121), content: 'c'.repeat(8001) }],
+    }
+  );
+  const session = new LocalSession({ project: dir, launch: async () => fakeBrowser([]).driver });
+  await assert.rejects(session.startRun({ checklist: 'checkout' }), (err: Error) => {
+    assert.match(err.message, /actors\/shopper\.json: system_prompt:/);
+    assert.match(err.message, /knowledge\.0\.title:/);
+    assert.match(err.message, /knowledge\.0\.content:/);
+    return true;
+  });
+  await session.close();
+});
+
+test('a cloud run written in the documented shape is listed, not unreadable', () => {
+  const run = RunSchema.parse({
+    format: 'stuntdouble.run/1',
+    id: '20261103-150000-checkout-cloud',
+    runner: { kind: 'cloud', run_id: 'r1', judged: true, url: 'https://app.stuntdouble.io/w/x' },
+    status: 'completed',
+    url: 'https://staging.example.com',
+    started_at: '2026-11-03T04:00:00Z',
+    finished_at: '2026-11-03T04:05:00Z',
+    checklist: 'checkout',
+    actor: 'shopper',
+    checklist_snapshot: { checks: [{ key: 'search-box', description: 'A search box' }] },
+    results: [{ check: 'search-box', status: 'passed', evidence: 'In the header.' }],
+    score: { score: 100, outcome: 'passed', inconclusive: false },
+    summary: 'Fine.',
+    cloud: null,
+  });
+  assert.equal(run.score?.outcome, 'passed');
+});
+
+test('writes to one path at the same moment all land', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'stuntdouble-write-'));
+  projects.push(dir);
+  const path = join(dir, 'run.json');
+  await Promise.all(Array.from({ length: 8 }, (_, i) => writeFileAtomic(path, String(i))));
+  assert.match(await readFile(path, 'utf8'), /^[0-7]$/);
 });
 
 test('a run starts, refuses bad verdicts, is interrupted, resumes and finishes', async () => {
@@ -283,6 +337,19 @@ test('a failed stop check skips the rest, and Stop ends the run at the next call
   const finished = await session.finishRun({ summary: 'Stopped before judging anything.' });
   assert.match(finished, /stopped: inconclusive/);
   await assert.rejects(stat(join(dir, '.stuntdouble', '.live', 'stop')));
+
+  // A run still open in this process (the actor was interrupted) is resumed in place.
+  const open = runId(await session.startRun({ checklist: 'checkout' }));
+  await session.evaluateCheck({ check: 'shipping-early', status: 'failed', evidence: 'Late.' });
+  await assert.rejects(
+    session.startRun({ checklist: 'checkout' }),
+    new RegExp(`Run ${open} of checkout is still going: .*resume`)
+  );
+  const carried = await session.startRun({ checklist: 'checkout', resume: true });
+  assert.equal(runId(carried), open);
+  assert.match(carried, /still open where the run left off/);
+  assert.doesNotMatch(carried, /- \[shipping-early\]/);
+  await session.finishRun({ summary: 'Carried on.' });
 
   // A stopped run resumes with every check nobody judged.
   const resumed = await session.startRun({ checklist: 'checkout', resume: true });

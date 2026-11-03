@@ -11,7 +11,6 @@ import {
   DirectBrowserTools,
   type DirectBrowserToolsOptions,
 } from '@stunt-double/browser-toolset/direct-tools';
-import type { BrowserDriver } from '@stunt-double/browser-toolset/driver';
 import { isPrivateHost, redactInput } from '@stunt-double/browser-toolset/executor';
 import { hostMatchesDomain, INDEX_SESSION_SAFETY } from '@stunt-double/browser-toolset/safety';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
@@ -20,9 +19,10 @@ import { join } from 'node:path';
 
 import pkg from '../package.json' with { type: 'json' };
 import { buildBrief, checkLabel } from './brief.ts';
-import { type LaunchOptions, PlaywrightDriver } from './driver.ts';
+import { type LaunchOptions, type LocalDriver, PlaywrightDriver } from './driver.ts';
 import { cleanLocator, focusEvidence } from './evidence.ts';
 import {
+  type Actor,
   ActorSchema,
   appendJsonl,
   type Check,
@@ -51,7 +51,7 @@ import {
 
 export const PACKAGE = `${pkg.name}@${pkg.version}`;
 
-export type Launch = (options: LaunchOptions) => Promise<BrowserDriver>;
+export type Launch = (options: LaunchOptions) => Promise<LocalDriver>;
 
 export type Verdict = 'passed' | 'failed' | 'informational' | 'blocked';
 
@@ -61,6 +61,8 @@ const STOPPED =
   'This run was stopped from the viewer. Do not use the browser again: call finish_run now with a summary of what you found.';
 /** What finish_run records for a check nobody judged; a resume judges it after all. */
 const NOT_JUDGED = 'Not judged before the run finished.';
+const PRIVATE_REFUSED =
+  'Local and private addresses other than the app under test are not reachable.';
 /** activity.jsonl is committed, so a page read is kept to its opening lines. */
 const LOG_TEXT_CHARS = 500;
 
@@ -74,7 +76,8 @@ type Active = {
   dir: string;
   run: Run;
   checklist: Checklist;
-  driver: BrowserDriver;
+  actor: Actor;
+  driver: LocalDriver;
   trusted: DirectBrowserTools;
   /** The same tools with the pay, sign-up and secrets guards on, for other hosts. */
   guarded: DirectBrowserTools | null;
@@ -126,9 +129,7 @@ export class LocalSession {
   }
 
   async startRun(input: { checklist: string; resume?: boolean }): Promise<string> {
-    if (this.active) {
-      throw new Error(`Run ${this.active.run.id} is still going: call finish_run first.`);
-    }
+    if (this.active) return this.resumeActive(input);
     if (!/^[a-z0-9][a-z0-9-]*$/.test(input.checklist)) {
       throw new Error(`"${input.checklist}" is not a checklist slug (checklists/<slug>.json).`);
     }
@@ -196,23 +197,24 @@ export class LocalSession {
       };
     }
 
-    const trustedHosts = [
-      ...new Set(
-        [run.url, checklist.url, config.local_base_url]
-          .filter((u): u is string => Boolean(u))
-          .map((u) => new URL(u).hostname)
-      ),
-    ];
+    const trusted = [run.url, checklist.url, config.local_base_url]
+      .filter((u): u is string => Boolean(u))
+      .map((u) => new URL(u));
+    const trustedHosts = [...new Set(trusted.map((u) => u.hostname))];
+    // A private host is trusted by exact origin: trusting localhost:3000 must not
+    // open every other local service (the viewer, a database console) to the actor.
+    const trustedOrigins = new Set(trusted.map((u) => u.origin));
+    const refuseNavigation = (href: string) => {
+      const url = URL.parse(href);
+      return url && isPrivateHost(url.hostname) && !trustedOrigins.has(url.origin)
+        ? PRIVATE_REFUSED
+        : null;
+    };
     const preset = PRESETS[checklist.browser_config?.preset ?? 'desktop'];
     const toolOptions: DirectBrowserToolsOptions = {
       viewport: checklist.browser_config?.viewport ?? preset,
       allowPrivateHosts: true,
-      checkNavigation: (href) => {
-        const host = new URL(href).hostname;
-        return isPrivateHost(host) && !trustedHosts.some((t) => hostMatchesDomain(host, t))
-          ? 'Local and private addresses other than the app under test are not reachable.'
-          : null;
-      },
+      checkNavigation: refuseNavigation,
     };
 
     // The browser first: a run folder is only made for a run that can start.
@@ -221,7 +223,7 @@ export class LocalSession {
       : await mkdtemp(join(tmpdir(), 'stuntdouble-profile-'));
     const profileDir = tempProfile ?? join(homedir(), '.stuntdouble', 'profiles', checklist.actor);
     await mkdir(profileDir, { recursive: true });
-    let driver: BrowserDriver;
+    let driver: LocalDriver;
     try {
       driver = await this.launch({
         profileDir,
@@ -229,6 +231,7 @@ export class LocalSession {
         viewport: toolOptions.viewport,
         touch: checklist.browser_config?.touch ?? preset.touch,
         locale: checklist.browser_config?.locale,
+        refuseNavigation,
       });
     } catch (err) {
       if (tempProfile) await rm(tempProfile, { recursive: true, force: true });
@@ -257,6 +260,7 @@ export class LocalSession {
       dir,
       run,
       checklist,
+      actor,
       driver,
       trusted: new DirectBrowserTools(driver, toolOptions),
       guarded:
@@ -301,6 +305,14 @@ export class LocalSession {
         ? active.guarded
         : active.trusted;
     const result = await tools.run(name, input);
+    // The browser refused a navigation the tool did not make itself (driver.ts).
+    // A redirect may have shown the page for a moment, so nothing read is kept.
+    const refusal = active.driver.takeRefusal();
+    if (refusal) {
+      const text = `Error: Navigation refused. ${refusal}`;
+      await this.log(name, redactInput(name, input), text);
+      return { text, isError: true };
+    }
     if (result.screenshotBase64)
       await this.saveFrame(Buffer.from(result.screenshotBase64, 'base64'));
     await this.log(name, redactInput(name, input), result.text);
@@ -454,6 +466,38 @@ export class LocalSession {
       .join('\n\n');
   }
 
+  /**
+   * start_run while this process still has a run open, as when the person
+   * interrupts the actor: resume carries on with it in the same browser.
+   */
+  private async resumeActive(input: { checklist: string; resume?: boolean }): Promise<string> {
+    const active = this.requireActive();
+    const { run } = active;
+    if (!input.resume || run.checklist !== input.checklist) {
+      throw new Error(
+        `Run ${run.id} of ${run.checklist} is still going: call start_run with checklist "${run.checklist}" and resume to carry on with it, or finish_run to end it.`
+      );
+    }
+    active.stopped = false;
+    run.status = 'running';
+    await this.clearStop(run.id);
+    await this.save();
+    await this.log('start_run', input, 'Resumed');
+    const viewer = await this.openUi(`/runs/${run.id}`);
+    return [
+      `Run ${run.id} resumed. Watch it or stop it at ${viewer}`,
+      buildBrief({
+        actor: active.actor,
+        checklist: active.checklist,
+        url: run.url,
+        checks: this.pending(),
+        resumed: true,
+      }),
+      'The browser is still open where the run left off: read the page before acting.',
+      this.nextStep(),
+    ].join('\n\n');
+  }
+
   /** On shutdown: an unfinished run is marked interrupted, so it can be resumed. */
   async close(): Promise<void> {
     if (this.active) {
@@ -550,9 +594,9 @@ export class LocalSession {
     });
   }
 
-  /** The viewer's live frame. ponytail: one per project, so two sessions running at once share it. */
+  /** The viewer's live frame, best effort. ponytail: one per project, so two sessions running at once share it. */
   private async saveFrame(png: Uint8Array): Promise<void> {
-    await writeFileAtomic(join(this.root, '.live', 'latest.png'), png);
+    await writeFileAtomic(join(this.root, '.live', 'latest.png'), png).catch(() => {});
   }
 }
 

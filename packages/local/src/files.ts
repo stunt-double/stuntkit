@@ -3,9 +3,11 @@
 //
 // Actors and checklists are the hosted MCP's `create_actor` and
 // `create_checklist` inputs with slugs in place of ids, so the same files push
-// to the cloud unchanged. They are strict: a misspelt key is an error naming
-// the field rather than a setting silently ignored.
+// to the cloud unchanged, except `browser_config`, which the hosted inputs do
+// not take yet. They are strict: a misspelt key is an error naming the field
+// rather than a setting silently ignored.
 
+import { randomUUID } from 'node:crypto';
 import { appendFile, mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
@@ -51,16 +53,22 @@ export const ConfigSchema = z.strictObject({
 });
 export type Config = z.infer<typeof ConfigSchema>;
 
+// The hosted update_actor and add_actor_knowledge limits, so a push is never
+// refused for a file that runs locally.
+const ACTOR_INSTRUCTIONS_MAX_LENGTH = 1000;
+const ACTOR_KNOWLEDGE_TITLE_MAX_LENGTH = 120;
+const ACTOR_KNOWLEDGE_CONTENT_MAX_LENGTH = 8000;
+
 export const ActorSchema = z.strictObject({
   name: z.string().min(1),
   description: z.string().optional(),
-  system_prompt: z.string().optional(),
+  system_prompt: z.string().max(ACTOR_INSTRUCTIONS_MAX_LENGTH).optional(),
   knowledge: z
     .array(
       z.strictObject({
         kind: z.enum(['expertise', 'process', 'reference', 'account']).default('reference'),
-        title: z.string().min(1),
-        content: z.string().min(1),
+        title: z.string().min(1).max(ACTOR_KNOWLEDGE_TITLE_MAX_LENGTH),
+        content: z.string().min(1).max(ACTOR_KNOWLEDGE_CONTENT_MAX_LENGTH),
       })
     )
     .default([]),
@@ -165,10 +173,11 @@ export const RunSchema = z.object({
   score: z
     .object({
       score: z.number().nullable(),
-      unit: z.string().nullable(),
       outcome: z.enum(['passed', 'failed', 'inconclusive']),
-      pass_threshold: z.number(),
-      grade: z.string().nullable(),
+      // A local run writes all three; a cloud run written by hand may leave them out.
+      unit: z.string().nullish(),
+      pass_threshold: z.number().nullish(),
+      grade: z.string().nullish(),
     })
     .nullable(),
   summary: z.string().nullable(),
@@ -213,7 +222,8 @@ export async function writeJsonAtomic(path: string, data: unknown): Promise<void
 
 export async function writeFileAtomic(path: string, data: string | Uint8Array): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
-  const tmp = `${path}.${process.pid}.tmp`;
+  // Unique per write: two writes to one path at once must not share a temp file.
+  const tmp = `${path}.${randomUUID()}.tmp`;
   await writeFile(tmp, data, { mode: 0o600 });
   await rename(tmp, path);
 }

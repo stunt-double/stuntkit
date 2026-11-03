@@ -486,8 +486,9 @@
                 'span',
                 {},
                 scoreText(run.score) +
-                  ', passes at ' +
-                  inUnit(run.score.pass_threshold, run.score.unit)
+                  (run.score.pass_threshold == null
+                    ? ''
+                    : ', passes at ' + inUnit(run.score.pass_threshold, run.score.unit))
               ),
             runnerPill(run),
             h('span', {}, run.actor),

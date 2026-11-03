@@ -20,13 +20,13 @@ Needs Node 22.18 or later and Google Chrome (or Playwright's Chromium, from `npx
 
 ## Tools
 
-| Tool                                                                                                           | What it does                                                                                                                                                                                       |
-| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `navigate`, `read_page`, `find`, `get_page_text`, `click`, `type`, `form_input`, `key`, `scroll`, `screenshot` | The direct tools from [`@stunt-double/browser-toolset`](../browser-toolset). Screenshots go back to the model only from `screenshot`, unless `model_screenshots` is `every_action`.                |
-| `start_run`                                                                                                    | Validates the files (naming every field to fix), opens a fresh Chrome at the checklist's URL and returns the viewer link, the actor's brief and the checks. `resume` continues an interrupted run. |
-| `evaluate_check`                                                                                               | Records one verdict. A pass must cite text or a selector that is on the page now. Scrolls the evidence into view and saves `shots/<check>.png`.                                                    |
-| `finish_run`                                                                                                   | Settles the checks left, scores the run and closes the browser.                                                                                                                                    |
-| `open_ui`                                                                                                      | The viewer's link.                                                                                                                                                                                 |
+| Tool                                                                                                           | What it does                                                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `navigate`, `read_page`, `find`, `get_page_text`, `click`, `type`, `form_input`, `key`, `scroll`, `screenshot` | The direct tools from [`@stunt-double/browser-toolset`](../browser-toolset). Screenshots go back to the model only from `screenshot`, unless `model_screenshots` is `every_action`.                                                   |
+| `start_run`                                                                                                    | Validates the files (naming every field to fix), opens a fresh Chrome at the checklist's URL and returns the viewer link, the actor's brief and the checks. `resume` continues an interrupted run, or one still open in this session. |
+| `evaluate_check`                                                                                               | Records one verdict. A pass must cite text or a selector that is on the page now. Scrolls the evidence into view and saves `shots/<check>.png`.                                                                                       |
+| `finish_run`                                                                                                   | Settles the checks left, scores the run and closes the browser.                                                                                                                                                                       |
+| `open_ui`                                                                                                      | The viewer's link.                                                                                                                                                                                                                    |
 
 ## Files
 
@@ -42,14 +42,14 @@ Everything lives in `.stuntdouble/` in your project, and everything but `.live/`
   .live/                    the viewer's address and key, the latest frame, the stop flag
 ```
 
-Actors and checklists use the same fields as the Stunt Double MCP server's `create_actor` and `create_checklist`, so the same files run in the cloud. A local run swaps the checklist URL's origin for `local_base_url`, so one checklist covers `localhost` here and the public address there.
+Actors and checklists use the same fields, and the same limits, as the Stunt Double MCP server's `create_actor` and `create_checklist`, so the same files run in the cloud. The exception is `browser_config` (a preset, viewport, touch or locale), which the cloud inputs do not take yet, so a cloud run uses the default desktop browser. A local run swaps the checklist URL's origin for `local_base_url`, so one checklist covers `localhost` here and the public address there.
 
 Local results are self-judged: the actor records its own verdicts. Cloud runs add a second judge.
 
 ## Safety
 
 - Every run gets a fresh Chrome profile, deleted afterwards. An actor with `persist_login` keeps its own profile in `~/.stuntdouble/profiles/<actor>`, never yours.
-- The browser reaches local and private addresses only for the app under test (the checklist's host and `local_base_url`).
+- The browser reaches local and private addresses only for the app under test: the exact origins (scheme, host and port) of the checklist's URL and `local_base_url`. The rule holds however the browser gets there, by a link, a script, a popup, a frame or a redirect; a redirect's request is still sent, but the page is cleared before any tool reads it.
 - With `safety` at `third_party` (the default), on any other host the tools refuse to pay, subscribe, create an account or type a password or card number. Set it to `off` when your app signs in on another domain.
 - The viewer listens on `127.0.0.1` only (port 4747, or the next free one), answers only to its own Host header, needs the key from the printed link (kept as an HttpOnly, SameSite=Strict cookie), sends no CORS headers and serves files from `.stuntdouble/` only. Its one control is Stop.
 
