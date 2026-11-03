@@ -6,6 +6,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { DIRECT_TOOL_SPECS } from '@stunt-double/browser-toolset/direct-tools';
+import { dirname } from 'node:path';
 import { z } from 'zod';
 
 import { projectDir } from './files.ts';
@@ -123,9 +124,28 @@ export function createServer(session: LocalSession): McpServer {
     'open_ui',
     {
       description:
-        'The local viewer for this project: every run with its verdicts, screenshots and activity, and the checklists and actors. Returns a link to open in a browser.',
+        'The local viewer for this project: every run with its verdicts, screenshots and activity, and the checklists and actors. Returns a link to open in a browser and a line on each of the latest runs.',
     },
-    () => attempt(() => session.openUi())
+    () => attempt(() => session.overview())
+  );
+
+  server.registerTool(
+    'doctor',
+    {
+      description:
+        "Check what local runs need: Node, Chrome, the viewer port, this project's stuntdouble.json and how runs are billed. Read only. Returns one line per check, each starting ok, FAIL, note or --.",
+      annotations: { readOnlyHint: true },
+    },
+    () =>
+      attempt(async () => {
+        const { doctor } = await import('./doctor.ts');
+        // A FAIL line says what is wrong; the call itself succeeded.
+        const { lines } = await doctor({
+          project: dirname(session.root),
+          viewerPort: session.viewerPort,
+        });
+        return lines.join('\n');
+      })
   );
 
   return server;

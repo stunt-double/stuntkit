@@ -139,20 +139,27 @@ test('a checklist runs end to end over MCP in headless Chrome', { timeout: 60_00
       'evaluate_check',
       'finish_run',
       'open_ui',
+      'doctor',
     ]
   );
+  // doctor needs no shell: the same lines as the CLI, read only.
+  const checked = await call('doctor');
+  assert.match(checked.text, /^ok {3}Node /m);
+  assert.match(checked.text, /^ok {3}Project /m);
 
   const started = await call('start_run', { checklist: 'shop' });
   if (/Could not start Chrome/.test(started.text)) return t.skip('No Chrome on this machine');
   assert.equal(started.result.isError, undefined, started.text);
   const [, link, id] = started.text.match(/(http:\/\/127\.0\.0\.1:\d+\/runs\/(\S+)\?t=\S+)/)!;
-  assert.match(started.text, /Now on http:\/\/127\.0\.0\.1:\d+\/ \(Mug Shop\)/);
+  // The main session reads this reply: the page's own text, title included, stays out.
+  assert.match(started.text, /The browser is open at http:\/\/127\.0\.0\.1:\d+\/: read the page/);
+  assert.doesNotMatch(started.text, /Mug Shop/);
   assert.equal(started.images.length, 0, 'screenshots go to the model only on request');
 
   const read = (await call('read_page', { filter: 'all' })).text;
   assert.match(read, /Search mugs/);
   assert.equal((await call('screenshot')).images.length, 1);
-  const base = started.text.match(/Now on (http:\/\/127\.0\.0\.1:\d+)\//)![1];
+  const base = started.text.match(/open at (http:\/\/127\.0\.0\.1:\d+)\//)![1];
 
   // A form value can be a password: it reaches the page, never the log.
   const password = read.match(/textbox "Password"[^\n]*?\b(ref_\d+)/)![1];
@@ -222,8 +229,19 @@ test('a checklist runs end to end over MCP in headless Chrome', { timeout: 60_00
   const finished = await call('finish_run', {
     summary: 'Search and guest checkout work; no free shipping.',
   });
-  assert.match(finished.text, /completed: passed\. Scored 75% against a 70% threshold/);
-  assert.match((await call('open_ui')).text, /^http:\/\/127\.0\.0\.1:\d+\/\?t=/);
+  assert.match(
+    finished.text,
+    /completed: passed\. Scored 75% against a 70% threshold\. 2\/3 checks passed\./
+  );
+  const opened = (await call('open_ui')).text;
+  assert.match(opened, /^http:\/\/127\.0\.0\.1:\d+\/\?t=/);
+  assert.match(opened, /- shop: completed, passed, 2\/3 checks passed, started just now/);
+  // Once finished, another finish_run says so rather than inviting a new run.
+  assert.match((await call('finish_run', { summary: 'Again.' })).text, /has already finished/);
+  assert.match(
+    (await call('doctor')).text,
+    new RegExp(`^ok   Viewer running on port ${new URL(link!).port}$`, 'm')
+  );
 
   const runDir = join(dir, '.stuntdouble', 'runs', id!);
   const run = RunSchema.parse(JSON.parse(await readFile(join(runDir, 'run.json'), 'utf8')));
@@ -254,7 +272,13 @@ test('a checklist runs end to end over MCP in headless Chrome', { timeout: 60_00
   const cookie = signIn.headers.get('set-cookie')!.split(';')[0]!;
   const runs = await fetch(`${origin}/api/runs`, { headers: { Cookie: cookie } });
   assert.equal(runs.status, 200);
-  assert.equal(((await runs.json()) as Array<{ id: string }>)[0]!.id, id);
+  // The list carries a summary per run, not every result.
+  const [listed] = (await runs.json()) as Array<Record<string, unknown>>;
+  assert.equal(listed!.id, id);
+  assert.deepEqual(listed!.tally, { passed: 2, total: 3 });
+  assert.equal(listed!.actor_name, 'First-time shopper');
+  assert.equal(listed!.results, undefined);
+  assert.equal((await fetch(`${origin}/favicon.ico`)).status, 204);
   const page = await fetch(`${origin}/runs/${id}`, { headers: { Cookie: cookie } });
   assert.match(await page.text(), /<title>Stunt Double Local<\/title>/);
 });
