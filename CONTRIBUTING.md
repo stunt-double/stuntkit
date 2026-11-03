@@ -52,6 +52,8 @@ Releases are automatic. On every push to `main`, `.github/workflows/release.yml`
 
 Packages publish to GitHub Packages: each package's `publishConfig.registry` is `https://npm.pkg.github.com`, and the workflow authenticates with its own `GITHUB_TOKEN`, so no secret is needed.
 
+The exception is `stuntdouble` (`packages/local`), which is on npm. `scripts/publish-npm.mjs` publishes it with `npm publish --provenance` before `changeset publish` runs, through npm trusted publishing: npm exchanges the job's GitHub OIDC token, so there is no npm token or secret. Its tag is `stuntdouble@<version>`. The trust relationship is configured once on npm (`npm trust github stuntdouble --repo stunt-double/stuntkit --file release.yml --allow-publish`, which needs 2FA). Never publish `stuntdouble` from a laptop: a version published by hand skips provenance, and npm refuses the same version from CI afterwards.
+
 ## Adding a package
 
 1. Create `packages/<name>/` with:
